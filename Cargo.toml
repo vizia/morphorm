@@ -1,0 +1,12 @@
+[package]
+name = "morphorm"
+version = "0.1.0"
+edition = "2018"
+author = "George Atkinson"
+license = "MIT"
+description = "A UI layout engine"
+repository = "https://github.com/geom3trik/morphorm"
+keywords = ["ui", "gui", "layout"]
+
+
+[dependencies]
