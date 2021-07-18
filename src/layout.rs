@@ -831,8 +831,7 @@ where
 
                     match position_type {
                         PositionType::SelfDirected => {
-                            vertical_free_space =
-                                parent_height - cache.vertical_free_space(&node);
+                            vertical_free_space = cache.vertical_free_space(&node);
                             vertical_stretch_sum = cache.vertical_stretch_sum(&node);
                         }
 
