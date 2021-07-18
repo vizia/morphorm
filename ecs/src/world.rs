@@ -1,4 +1,6 @@
-use morphorm::Units;
+use std::alloc::Layout;
+
+use morphorm::{Units, LayoutType, PositionType};
 
 use crate::entity::{Entity, EntityManager};
 use crate::implementations::NodeCache;
@@ -31,6 +33,16 @@ impl World {
         self.store.green.insert(entity, random_green);
         self.store.blue.insert(entity, random_blue);
         entity
+    }
+
+    /// Set the desired layout type
+    pub fn set_layout_type(&mut self, entity: Entity, value: LayoutType) {
+        self.store.layout_type.insert(entity, value);
+    }
+
+    /// Set the desired position type
+    pub fn set_position_type(&mut self, entity: Entity, value: PositionType) {
+        self.store.position_type.insert(entity, value);
     }
 
     /// Set the desired width
