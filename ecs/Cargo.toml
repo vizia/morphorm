@@ -1,0 +1,8 @@
+[package]
+name = "morphorm-ecs"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+morphorm = {version = "0.1.0", path = "../"}
+rand = "0.8.4"

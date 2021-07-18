@@ -1,11 +1,9 @@
 
-mod entity;
-mod store;
-mod tree;
-mod world;
-use world::World;
 
-mod implementations;
+
+use morphorm_ecs::{
+    World,
+};
 
 use morphorm::*;
 
@@ -38,17 +36,14 @@ fn main() {
     world.set_left(root, Units::Pixels(0.0));
     world.set_top(root, Units::Pixels(0.0));
 
-    world.node_cache.set_width(&root, 1000.0);
-    world.node_cache.set_height(&root, 600.0);
-
     let child = world.add(Some(root));
-    world.set_width(child, Units::Stretch(1.0));
+    world.set_width(child, Units::Percentage(50.0));
     world.set_height(child, Units::Stretch(1.0));
 
-    let _child2 = world.add(Some(root));
-    world.set_width(child, Units::Stretch(1.0));
-    world.set_height(child, Units::Stretch(1.0));
-    world.set_left(child, Units::Pixels(50.0));
+    // let _child2 = world.add(Some(root));
+    // world.set_width(child, Units::Stretch(1.0));
+    // world.set_height(child, Units::Stretch(1.0));
+    // world.set_left(child, Units::Pixels(50.0));
 
 
     layout(&mut world.node_cache, &world.visual_tree, &world.components);
@@ -73,8 +68,6 @@ fn main() {
             .with_inner_size(winit::dpi::PhysicalSize::new(1000, 600))
             .with_title("Morphorm Demo");
 
-        //let windowed_context = ContextBuilder::new().with_gl(GlRequest::Specific(Api::OpenGlEs, (2, 0))).with_vsync(false).build_windowed(wb, &el).unwrap();
-        //let windowed_context = ContextBuilder::new().with_vsync(false).with_multisampling(8).build_windowed(wb, &el).unwrap();
         let windowed_context = ContextBuilder::new().with_vsync(false).build_windowed(wb, &el).unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
@@ -97,8 +90,9 @@ fn main() {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    world.node_cache.set_width(&root, physical_size.width as f32);
-                    world.node_cache.set_height(&root, physical_size.height as f32);
+                    world.set_width(root, Units::Pixels(physical_size.width as f32));
+                    world.set_height(root, Units::Pixels(physical_size.height as f32));
+
                     layout(&mut world.node_cache, &world.visual_tree, &world.components);
 
                 }

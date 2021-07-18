@@ -43,18 +43,22 @@ where
         
         let parent = hierarchy.parent(&node);
 
-        if parent.is_none() {
-            break;
-        }
+        // if parent.is_none() {
+        //     break;
+        // }
 
-        let parent = parent.unwrap();
+        //let parent = parent.unwrap();
 
-        let parent_width = cache.width(&parent);
-        let parent_height = cache.height(&parent);
+        // let parent_width = cache.width(&parent);
+        // let parent_height = cache.height(&parent);
+
+        let (parent_width, parent_height) = if let Some(parent) = &parent {
+            (cache.width(parent), cache.height(parent))
+        } else {
+            (0.0, 0.0)
+        };
 
         let parent_layout_type = parent.layout_type(store).unwrap_or_default();
-        
-        let layout_type = node.layout_type(store).unwrap_or_default();
 
         let child_left = parent.child_left(store).unwrap_or_default();
         let child_right = parent.child_left(store).unwrap_or_default();
@@ -65,6 +69,7 @@ where
         let col_between = parent.col_between(store).unwrap_or_default();
 
 
+        let layout_type = node.layout_type(store).unwrap_or_default();
 
         let mut left = node.left(store).unwrap_or_default();
         let mut right = node.right(store).unwrap_or_default();
@@ -273,35 +278,38 @@ where
 
                 let position_type = node.position_type(store).unwrap_or_default();
 
-                if position_type == PositionType::ParentDirected {
-                    cache.set_child_height_sum(
-                        &parent,
-                        cache.child_height_sum(&parent) + vertical_used_space,
-                    );
-        
-                    cache.set_child_height_max(
-                        &parent,
-                        vertical_used_space.max(cache.child_height_max(&parent)),
-                    );
-        
-                    cache.set_child_width_sum(
-                        &parent,
-                        cache.child_width_sum(&parent) + horizontal_used_space,
-                    );
-        
-                    cache.set_child_width_max(
-                        &parent,
-                        horizontal_used_space.max(cache.child_width_max(&parent)),
-                    );
-                }
-
                 cache.set_width(&node, new_width);
                 cache.set_height(&node, new_height);
                 cache.set_left(&node, new_left);
                 cache.set_right(&node, new_right);
                 cache.set_top(&node, new_top);
                 cache.set_bottom(&node, new_bottom);
-
+                
+                if let Some(parent) = &parent {
+                    if position_type == PositionType::ParentDirected {
+                        cache.set_child_height_sum(
+                            &parent,
+                            cache.child_height_sum(&parent) + vertical_used_space,
+                        );
+            
+                        cache.set_child_height_max(
+                            &parent,
+                            vertical_used_space.max(cache.child_height_max(&parent)),
+                        );
+            
+                        cache.set_child_width_sum(
+                            &parent,
+                            cache.child_width_sum(&parent) + horizontal_used_space,
+                        );
+            
+                        cache.set_child_width_max(
+                            &parent,
+                            horizontal_used_space.max(cache.child_width_max(&parent)),
+                        );
+                    }                    
+                } else {
+                    break;
+                }
             }
 
             LayoutType::Grid => {
