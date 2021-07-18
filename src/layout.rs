@@ -61,9 +61,9 @@ where
         let parent_layout_type = parent.layout_type(store).unwrap_or_default();
 
         let child_left = parent.child_left(store).unwrap_or_default();
-        let child_right = parent.child_left(store).unwrap_or_default();
-        let child_top = parent.child_left(store).unwrap_or_default();
-        let child_bottom = parent.child_left(store).unwrap_or_default();
+        let child_right = parent.child_right(store).unwrap_or_default();
+        let child_top = parent.child_top(store).unwrap_or_default();
+        let child_bottom = parent.child_bottom(store).unwrap_or_default();
 
         let row_between = parent.row_between(store).unwrap_or_default();
         let col_between = parent.col_between(store).unwrap_or_default();

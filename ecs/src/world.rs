@@ -63,5 +63,26 @@ impl World {
         self.store.bottom.insert(entity, value);
     }
 
+    /// Set the desired left space
+    pub fn set_child_left(&mut self, entity: Entity, value: Units) {
+        self.store.child_left.insert(entity, value);
+    }
+
+    /// Set the desired right space
+    pub fn set_child_right(&mut self, entity: Entity, value: Units) {
+        self.store.child_right.insert(entity, value);
+    }
+
+    /// Set the desired top space
+    pub fn set_child_top(&mut self, entity: Entity, value: Units) {
+        self.store.child_top.insert(entity, value);
+    }
+
+    /// Set the desired bottom space
+    pub fn set_child_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.child_bottom.insert(entity, value);
+    }
+
+
     
 }

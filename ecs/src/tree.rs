@@ -1,4 +1,3 @@
-use morphorm::Hierarchy;
 
 use crate::entity::Entity;
 
@@ -67,10 +66,9 @@ impl Tree {
     }
 
     pub fn get_next_sibling(&self, entity: Entity) -> Option<Entity> {
-        if let Some(parent) = self.parent(&entity) {
-            if let Some(next_sibling) = self.next_sibling.get(parent.index()) {
-                return *next_sibling;
-            }
+
+        if let Some(next_sibling) = self.next_sibling.get(entity.index()) {
+            return *next_sibling;
         }
 
         None
