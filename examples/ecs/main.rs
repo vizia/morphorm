@@ -46,12 +46,12 @@ fn main() {
     // world.set_left(child, Units::Pixels(50.0));
 
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.node_cache.width(&child);
-    let computed_height = world.node_cache.height(&child);
-    let computed_posx = world.node_cache.posx(&child);
-    let computed_posy = world.node_cache.posy(&child);
+    let computed_width = world.cache.width(&child);
+    let computed_height = world.cache.height(&child);
+    let computed_posx = world.cache.posx(&child);
+    let computed_posy = world.cache.posy(&child);
 
     println!("Computed Width: {}", computed_width);
     println!("Computed Height: {}", computed_height);
@@ -93,7 +93,7 @@ fn main() {
                     world.set_width(root, Units::Pixels(physical_size.width as f32));
                     world.set_height(root, Units::Pixels(physical_size.height as f32));
 
-                    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+                    layout(&mut world.cache, &world.tree, &world.store);
 
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
@@ -107,16 +107,16 @@ fn main() {
                 canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
                 canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
-                for node in world.visual_tree.down_iter() {
+                for node in world.tree.down_iter() {
                     
-                    let posx = world.node_cache.posx(&node);
-                    let posy = world.node_cache.posy(&node);
-                    let width = world.node_cache.width(&node);
-                    let height = world.node_cache.height(&node);
+                    let posx = world.cache.posx(&node);
+                    let posy = world.cache.posy(&node);
+                    let width = world.cache.width(&node);
+                    let height = world.cache.height(&node);
                     
-                    let red = world.components.red.get(&node).unwrap_or(&0u8);
-                    let green = world.components.green.get(&node).unwrap_or(&0u8);
-                    let blue = world.components.blue.get(&node).unwrap_or(&0u8);
+                    let red = world.store.red.get(&node).unwrap_or(&0u8);
+                    let green = world.store.green.get(&node).unwrap_or(&0u8);
+                    let blue = world.store.blue.get(&node).unwrap_or(&0u8);
 
 
                     let mut path = Path::new();

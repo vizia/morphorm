@@ -11,9 +11,9 @@ fn root_node_auto_width_no_child() {
     let root = world.add(None);
     world.set_width(root, Units::Auto);
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
+    let computed_root_width = world.cache.width(&root);
 
     assert_eq!(computed_root_width, 0.0);
 }
@@ -29,10 +29,10 @@ fn root_node_auto_width_one_child_pixel_width() {
     let child = world.add(Some(root));
     world.set_width(root, Units::Pixels(200.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
-    let computed_child_width = world.node_cache.width(&child);
+    let computed_root_width = world.cache.width(&root);
+    let computed_child_width = world.cache.width(&child);
 
     assert_eq!(computed_root_width, 200.0);
     assert_eq!(computed_child_width, 200.0);
@@ -49,10 +49,10 @@ fn root_node_auto_width_one_child_percentage_width() {
     let child = world.add(Some(root));
     world.set_width(root, Units::Percentage(50.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
-    let computed_child_width = world.node_cache.width(&child);
+    let computed_root_width = world.cache.width(&root);
+    let computed_child_width = world.cache.width(&child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -69,10 +69,10 @@ fn root_node_auto_width_one_child_stretch_width() {
     let child = world.add(Some(root));
     world.set_width(root, Units::Stretch(1.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
-    let computed_child_width = world.node_cache.width(&child);
+    let computed_root_width = world.cache.width(&root);
+    let computed_child_width = world.cache.width(&child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -89,10 +89,10 @@ fn root_node_auto_width_one_child_auto_width() {
     let child = world.add(Some(root));
     world.set_width(root, Units::Auto);
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
-    let computed_child_width = world.node_cache.width(&child);
+    let computed_root_width = world.cache.width(&root);
+    let computed_child_width = world.cache.width(&child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -112,11 +112,11 @@ fn root_node_auto_width_one_child_auto_width_one_grandchild_auto_width() {
     let grandchild = world.add(Some(child));
     world.set_width(root, Units::Pixels(200.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_root_width = world.node_cache.width(&root);
-    let computed_child_width = world.node_cache.width(&child);
-    let computed_grandchild_width = world.node_cache.width(&grandchild);
+    let computed_root_width = world.cache.width(&root);
+    let computed_child_width = world.cache.width(&child);
+    let computed_grandchild_width = world.cache.width(&grandchild);
 
     assert_eq!(computed_root_width, 200.0);
     assert_eq!(computed_child_width, 200.0);

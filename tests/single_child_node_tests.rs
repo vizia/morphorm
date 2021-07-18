@@ -17,9 +17,9 @@ fn single_child_node_pixel_width() {
     let child = world.add(Some(root));
     world.set_width(child, Units::Pixels(200.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.node_cache.width(&child);
+    let computed_width = world.cache.width(&child);
 
     assert_eq!(computed_width, 200.0);
 }
@@ -37,9 +37,9 @@ fn single_child_node_pixel_height() {
     let child = world.add(Some(root));
     world.set_height(child, Units::Pixels(300.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_height = world.node_cache.height(&child);
+    let computed_height = world.cache.height(&child);
 
     assert_eq!(computed_height, 300.0);
 }
@@ -57,9 +57,9 @@ fn single_child_node_percentage_width() {
     let child = world.add(Some(root));
     world.set_width(child, Units::Percentage(50.0));
 
-    layout(&mut world.node_cache, &world.visual_tree, &world.components);
+    layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.node_cache.width(&child);
+    let computed_width = world.cache.width(&child);
 
     assert_eq!(computed_width, 500.0);
 }
