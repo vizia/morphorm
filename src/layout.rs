@@ -708,7 +708,13 @@ where
                     cache.set_right(&node, new_right);
                     cache.set_top(&node, new_top);
                     cache.set_bottom(&node, new_bottom);
-
+                
+                    if position_type == PositionType::ParentDirected {
+                        parent_vertical_free_space -= parent_height - vertical_free_space;
+                        parent_horizontal_free_space -= parent_width - horizontal_free_space;
+                        parent_vertical_stretch_sum += vertical_stretch_sum;
+                        parent_horizontal_stretch_sum += horizontal_stretch_sum;
+                    }
 
                     cache
                         .set_horizontal_free_space(&node, horizontal_free_space);
