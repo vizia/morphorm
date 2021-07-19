@@ -155,15 +155,18 @@ impl Node for Entity {
     fn border_bottom(&self, store: &Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
     }
+}
 
-
-    
+impl<'a> Node for &'a Entity {
+    type Data = Store;
 }
 
 impl<'a> Hierarchy<'a> for Tree {
     type Item = Entity;
     type DownIter = std::vec::IntoIter<Entity>;
+    //type DownIter = std::slice::Iter<'a, Entity>;
     type UpIter = Rev<std::vec::IntoIter<Entity>>;
+    //type UpIter = Rev<std::slice::Iter<'a, Entity>>;
     type ChildIter = ChildIterator<'a>;
 
     fn up_iter(&self) -> Self::UpIter {
@@ -175,16 +178,16 @@ impl<'a> Hierarchy<'a> for Tree {
     }
 
     fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter {
-        let first_child = self.get_first_child(*node);
+        let first_child = self.get_first_child(node);
         ChildIterator {
             tree: self,
             current_node: first_child,
         }
     }
 
-    fn parent(&self, node: &Self::Item) -> Option<Self::Item> {
+    fn parent(&self, node: &Self::Item) -> Option<&Self::Item> {
         if node.index() < self.parent.len() {
-            return self.parent[node.index()];
+            return self.parent[node.index()].as_ref()
         }
 
         None
@@ -193,7 +196,7 @@ impl<'a> Hierarchy<'a> for Tree {
     fn is_first_child(&self, node: &Self::Item) -> bool {
         if let Some(parent) = self.parent(node) {
             if let Some(first_child) = self.get_first_child(parent) {
-                if first_child == *node {
+                if first_child == node {
                     return true;
                 } else {
                     return false;
@@ -211,7 +214,7 @@ impl<'a> Hierarchy<'a> for Tree {
                     temp = next_sibling;
                 }
 
-                if temp == *node {
+                if temp == node {
                     return true;
                 }
             }
@@ -258,6 +261,9 @@ pub struct NodeCache {
 
     vertical_free_space: HashMap<Entity, f32>,
     vertical_stretch_sum: HashMap<Entity, f32>,
+
+    stack_first_child: HashMap<Entity, bool>,
+    stack_last_child: HashMap<Entity, bool>,
 }
 
 impl NodeCache {
@@ -281,6 +287,9 @@ impl NodeCache {
 
         self.vertical_free_space.insert(entity, Default::default());
         self.vertical_stretch_sum.insert(entity, Default::default());
+
+        self.stack_first_child.insert(entity, Default::default());
+        self.stack_last_child.insert(entity, Default::default());
     }
 }
 
@@ -481,5 +490,21 @@ impl Cache for NodeCache {
         if let Some(space) = self.space.get_mut(node) {
             space.bottom = value;
         }
+    }
+
+    fn stack_first_child(&self, node: &Self::Item) -> bool {
+        *self.stack_first_child.get(node).unwrap()
+    }
+
+    fn set_stack_first_child(&mut self, node: &Self::Item, value: bool) {
+        *self.stack_first_child.get_mut(node).unwrap() = value;
+    }
+
+    fn stack_last_child(&self, node: &Self::Item) -> bool {
+        *self.stack_last_child.get(node).unwrap()
+    }
+
+    fn set_stack_last_child(&mut self, node: &Self::Item, value: bool) {
+        *self.stack_last_child.get_mut(node).unwrap() = value;
     }
 }

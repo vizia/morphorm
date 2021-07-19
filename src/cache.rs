@@ -67,4 +67,9 @@ pub trait Cache {
     fn set_right(&mut self, node: &Self::Item, value: f32);
     fn set_top(&mut self, node: &Self::Item, value: f32);
     fn set_bottom(&mut self, node: &Self::Item, value: f32);
+
+    fn stack_first_child(&self, node: &Self::Item) -> bool;
+    fn set_stack_first_child(&mut self, node: &Self::Item, value: bool);
+    fn stack_last_child(&self, node: &Self::Item) -> bool;
+    fn set_stack_last_child(&mut self, node: &Self::Item, value: bool);
 }
