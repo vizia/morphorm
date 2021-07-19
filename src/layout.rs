@@ -844,7 +844,7 @@ where
 
                                 LayoutType::Row => {
                                     vertical_free_space = cache.vertical_free_space(&node);
-                                    vertical_stretch_sum = cache.horizontal_stretch_sum(&node);
+                                    vertical_stretch_sum = cache.vertical_stretch_sum(&node);
                                 }     
                                 
                                 _=> {}
