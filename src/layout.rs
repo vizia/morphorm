@@ -30,7 +30,42 @@ where
     H: Hierarchy<'a>,
 {
     // Step 1 - Reset the cache
-    cache.reset();
+    //cache.reset();
+
+    for parent in hierarchy.down_iter() {
+        let mut found_first = false;
+        let mut last_child = None;
+
+        cache.set_child_width_sum(&parent, 0.0);
+        cache.set_child_height_sum(&parent, 0.0);
+        cache.set_child_width_max(&parent, 0.0);
+        cache.set_child_height_max(&parent, 0.0);
+
+        for node in hierarchy.child_iter(&parent) {
+            cache.set_stack_first_child(&node, false);
+            
+            let position_type = node.position_type(store).unwrap_or_default();
+
+            match position_type {
+                PositionType::ParentDirected => {
+                    if !found_first {
+                        found_first = true;
+                        cache.set_stack_first_child(&node, true);
+                    }
+                    last_child = Some(node);
+                }
+
+                PositionType::SelfDirected => {
+                    cache.set_stack_first_child(&node, true);
+                    cache.set_stack_last_child(&node, true);
+                }
+            }
+        }
+
+        if let Some(last_child) = last_child {
+            cache.set_stack_last_child(last_child, true);
+        }
+    }
 
     // Step 2 - Iterate up the hierarchy
     for node in hierarchy.up_iter() {
@@ -119,7 +154,7 @@ where
         match parent_layout_type {
             LayoutType::Column => {
                 if top == Units::Auto {
-                    if hierarchy.is_first_child(&node) {
+                    if cache.stack_first_child(&node) {
                         top = child_top;
                     } else {
                         top = row_between;
@@ -127,7 +162,7 @@ where
                 }
 
                 if bottom == Units::Auto {
-                    if hierarchy.is_last_child(&node) {
+                    if cache.stack_last_child(&node) {
                         bottom = child_bottom;
                     }
                 }
@@ -143,7 +178,7 @@ where
 
             LayoutType::Row => {
                 if left == Units::Auto {
-                    if hierarchy.is_first_child(&node) {
+                    if cache.stack_first_child(&node) {
                         left = child_left;
                     } else {
                         left = col_between;
@@ -151,7 +186,7 @@ where
                 }
 
                 if right == Units::Auto {
-                    if hierarchy.is_last_child(&node) {
+                    if cache.stack_last_child(&node) {
                         right = child_right;
                     }
                 }
@@ -413,11 +448,14 @@ where
                     let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
             
+
+                    let position_type = node.position_type(store).unwrap_or_default();
+
                     // Parent overrides
                     match parent_layout_type {
                         LayoutType::Column => {
                             if top == Units::Auto {
-                                if hierarchy.is_first_child(&node) {
+                                if cache.stack_first_child(&node) {
                                     top = child_top;
                                 } else {
                                     top = row_between;
@@ -425,7 +463,7 @@ where
                             }
             
                             if bottom == Units::Auto {
-                                if hierarchy.is_last_child(&node) {
+                                if cache.stack_last_child(&node) {
                                     bottom = child_bottom;
                                 }
                             }
@@ -441,7 +479,7 @@ where
             
                         LayoutType::Row => {
                             if left == Units::Auto {
-                                if hierarchy.is_first_child(&node) {
+                                if cache.stack_first_child(&node) {
                                     left = child_left;
                                 } else {
                                     left = col_between;
@@ -449,7 +487,7 @@ where
                             }
             
                             if right == Units::Auto {
-                                if hierarchy.is_last_child(&node) {
+                                if cache.stack_last_child(&node) {
                                     right = child_right;
                                 }
                             }
@@ -480,35 +518,32 @@ where
 
                     let mut horizontal_free_space = parent_width;
                     let mut vertical_free_space = parent_height;
+
+                    
                     
 
                     // TODO - replace all these match' with a function
                     match left {
                         Units::Pixels(val) => {
                             new_left = val.clamp(min_left, max_left);
-                            parent_horizontal_free_space -= new_left;
                             horizontal_free_space -= new_left;
                         }
 
                         Units::Percentage(val) => {
                             new_left = (val * parent_width).round();
                             new_left = new_left.clamp(min_left, max_left);
-                            parent_horizontal_free_space -= new_left;
                             horizontal_free_space -= new_left;
                         }
 
                         Units::Stretch(val) => {
                             horizontal_stretch_sum += val;
-                    
                             horizontal_axis.push(ComputedData {
                                 node: node.clone(),
                                 value: val,
                                 min: min_left,
                                 max: max_left,
                                 axis: Axis::Before,
-                            });
-
-                            parent_horizontal_stretch_sum += val;
+                            });                        
                         }
 
                         _ => {}
@@ -517,20 +552,17 @@ where
                     match width {
                         Units::Pixels(val) => {
                             new_width = val.clamp(min_width, max_width);
-                            parent_horizontal_free_space -= new_width;
                             horizontal_free_space -= new_width;
                         }
 
                         Units::Percentage(val) => {
                             new_width = (val/100.0) * parent_width;
                             new_width = new_width.clamp(min_width, max_width);
-                            parent_horizontal_free_space -= new_width;
                             horizontal_free_space -= new_width;
                         }
 
                         Units::Stretch(val) => {
                             horizontal_stretch_sum += val;
-                            parent_horizontal_stretch_sum += val;
                             horizontal_axis.push(
                                 ComputedData {
                                     node: node.clone(),
@@ -556,7 +588,6 @@ where
                             }
 
                             new_width += border_left + border_right;
-                            parent_horizontal_free_space -= new_width;
                             horizontal_free_space -= new_width;
                         }
                     }
@@ -564,21 +595,17 @@ where
                     match right {
                         Units::Pixels(val) => {
                             new_right = val.clamp(min_right, max_right);
-                            parent_horizontal_free_space -= new_right;
                             horizontal_free_space -= new_right;
                         }
 
                         Units::Percentage(val) => {
                             new_right = (val * parent_width).round();
                             new_right = new_right.clamp(min_right, max_right);
-                            parent_horizontal_free_space -= new_right;
                             horizontal_free_space -= new_right;
                         }
 
                         Units::Stretch(val) => {
                             horizontal_stretch_sum += val;
-                            parent_horizontal_stretch_sum += val;
-
                             horizontal_axis.push(
                                 ComputedData {
                                     node: node.clone(),
@@ -596,20 +623,17 @@ where
                     match top {
                         Units::Pixels(val) => {
                             new_top = val.clamp(min_top, max_top);
-                            parent_vertical_free_space -= new_top;
                             vertical_free_space -= new_top;
                         }
 
                         Units::Percentage(val) => {
                             new_top = (val * parent_height).round();
                             new_top = new_top.clamp(min_top, max_top);
-                            parent_vertical_free_space -= new_top;
                             vertical_free_space -= new_top;
                         }
 
                         Units::Stretch(val) => {
                             vertical_stretch_sum += val;
-                            parent_vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
                                     node: node.clone(),
@@ -627,20 +651,17 @@ where
                     match height {
                         Units::Pixels(val) => {
                             new_height = val.clamp(min_height, max_height);
-                            parent_vertical_free_space -= new_height;
                             vertical_free_space -= new_height;
                         }
 
                         Units::Percentage(val) => {
                             new_height = (val * parent_height).round();
                             new_height = new_height.clamp(min_height, max_height);
-                            parent_vertical_free_space -= new_height;
                             vertical_free_space -= new_height;
                         }
 
                         Units::Stretch(val) => {
                             vertical_stretch_sum += val;
-                            parent_vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
                                     node: node.clone(),
@@ -666,7 +687,6 @@ where
                             }
 
                             new_height += border_top + border_bottom;
-                            parent_vertical_free_space -=  new_height;
                             vertical_free_space -= new_height;
                         }
                     }
@@ -674,20 +694,17 @@ where
                     match bottom {
                         Units::Pixels(val) => {
                             new_bottom = val.clamp(min_bottom, max_bottom);
-                            parent_vertical_free_space -= new_bottom;
                             vertical_free_space -= val;
                         }
 
                         Units::Percentage(val) => {
                             new_bottom = (val * parent_height).round();
                             new_bottom = new_bottom.clamp(min_bottom, max_bottom);
-                            parent_vertical_free_space -= new_bottom;
                             vertical_free_space -= new_bottom;
                         }
 
                         Units::Stretch(val) => {
                             vertical_stretch_sum += val;
-                            parent_vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
                                     node: node.clone(),
@@ -708,7 +725,13 @@ where
                     cache.set_right(&node, new_right);
                     cache.set_top(&node, new_top);
                     cache.set_bottom(&node, new_bottom);
-
+                
+                    if position_type == PositionType::ParentDirected {
+                        parent_vertical_free_space -= parent_height - vertical_free_space;
+                        parent_horizontal_free_space -= parent_height - vertical_free_space;
+                        parent_vertical_stretch_sum += vertical_stretch_sum;
+                        parent_horizontal_stretch_sum += horizontal_stretch_sum;
+                    }
 
                     cache
                         .set_horizontal_free_space(&node, horizontal_free_space);
@@ -718,7 +741,13 @@ where
                         .set_vertical_free_space(&node, vertical_free_space);
                     cache
                         .set_vertical_stretch_sum(&node, vertical_stretch_sum);
+                
+
+                    
+                
                 }
+
+
 
                 if parent_horizontal_stretch_sum == 0.0 {
                     parent_horizontal_stretch_sum = 1.0;
@@ -857,6 +886,7 @@ where
                         vertical_stretch_sum = 1.0;
                     }
 
+                    
                     let mut new_value = vertical_free_space * computed_data.value / vertical_stretch_sum;
                     new_value = new_value.clamp(computed_data.min, computed_data.max);
 

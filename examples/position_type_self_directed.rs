@@ -24,8 +24,9 @@ fn main() {
     world.set_position_type(child1, PositionType::SelfDirected);
 
     let child2 = world.add(Some(root));
-    world.set_width(child2, Units::Pixels(100.0));
-    world.set_height(child2, Units::Pixels(100.0));
+    world.set_width(child2, Units::Pixels(150.0));
+    world.set_height(child2, Units::Pixels(150.0));
+
 
     let child3 = world.add(Some(root));
     world.set_width(child3, Units::Pixels(100.0));

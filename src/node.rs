@@ -192,6 +192,6 @@ pub trait Node: Clone + std::fmt::Debug {
     }
 }
 
-impl<T: Node> Node for Option<T> {
+impl<'a, T: Node> Node for Option<&'a T> {
     type Data = <T as Node>::Data;
 }
