@@ -41,7 +41,7 @@ where
         cache.set_child_width_max(&parent, 0.0);
         cache.set_child_height_max(&parent, 0.0);
 
-        for node in hierarchy.child_iter(&parent) {
+        for node in hierarchy.child_iter(&parent, store) {
             cache.set_stack_first_child(&node, false);
             
             let position_type = node.position_type(store).unwrap_or_default();
@@ -76,7 +76,7 @@ where
         // }
         
         
-        let parent = hierarchy.parent(&node);
+        let parent = hierarchy.parent(&node, store);
 
         // if parent.is_none() {
         //     break;
@@ -396,7 +396,7 @@ where
                 // ////////////////////////////////
                 // Calculate inflexible children //
                 ///////////////////////////////////
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(&parent, store) {
 
                     // if !parent.is_visible(store) {
                     //     continue;
@@ -951,7 +951,7 @@ where
                 ///////////////////////
                 // Position Children //
                 ///////////////////////
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(&parent, store) {
 
                     // if !node.is_visible(store) {
                     //     continue;
@@ -1087,7 +1087,7 @@ where
                 let col_widths_len = col_widths.len() - 1;
                 col_widths[col_widths_len].0 = current_col_pos;
 
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(&parent, store) {
 
                     // if !node.is_visible(store) {
                     //     continue;

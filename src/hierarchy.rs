@@ -19,14 +19,14 @@ pub trait Hierarchy<'a> {
     fn down_iter(&self, store: &<Self::Item as Node>::Data) -> Self::DownIter;
 
     /// Returns an iterator over the child nodes of a specified node
-    fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter;
+    fn child_iter(&'a self, node: &Self::Item, store: &<Self::Item as Node>::Data) -> Self::ChildIter;
 
     /// Get the parent node of the specified node
-    fn parent(&self, node: &Self::Item) -> Option<&Self::Item>;
+    fn parent(&self, node: &Self::Item, store: &<Self::Item as Node>::Data) -> Option<&Self::Item>;
 
     /// Returns true if the specified node is the first child of its parent
-    fn is_first_child(&self, node: &Self::Item) -> bool;
+    fn is_first_child(&self, node: &Self::Item, store: &<Self::Item as Node>::Data) -> bool;
 
     /// Returns true if the specified node is the last child of its parent
-    fn is_last_child(&self, node: &Self::Item) -> bool;
+    fn is_last_child(&self, node: &Self::Item, store: &<Self::Item as Node>::Data) -> bool;
 }

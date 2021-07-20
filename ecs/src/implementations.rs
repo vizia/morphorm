@@ -175,7 +175,7 @@ impl<'a> Hierarchy<'a> for Tree {
         self.flatten().into_iter()
     }
 
-    fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter {
+    fn child_iter(&'a self, node: &Self::Item, _store: &Store) -> Self::ChildIter {
         let first_child = self.get_first_child(node);
         ChildIterator {
             tree: self,
@@ -183,7 +183,7 @@ impl<'a> Hierarchy<'a> for Tree {
         }
     }
 
-    fn parent(&self, node: &Self::Item) -> Option<&Self::Item> {
+    fn parent(&self, node: &Self::Item, _store: &Store) -> Option<&Self::Item> {
         if node.index() < self.parent.len() {
             return self.parent[node.index()].as_ref()
         }
@@ -191,8 +191,8 @@ impl<'a> Hierarchy<'a> for Tree {
         None
     }
 
-    fn is_first_child(&self, node: &Self::Item) -> bool {
-        if let Some(parent) = self.parent(node) {
+    fn is_first_child(&self, node: &Self::Item, store: &Store) -> bool {
+        if let Some(parent) = self.parent(node, store) {
             if let Some(first_child) = self.get_first_child(parent) {
                 if first_child == node {
                     return true;
@@ -205,8 +205,8 @@ impl<'a> Hierarchy<'a> for Tree {
         false
     }
 
-    fn is_last_child(&self, node: &Self::Item) -> bool {
-        if let Some(parent) = self.parent(node) {
+    fn is_last_child(&self, node: &Self::Item, store: &Store) -> bool {
+        if let Some(parent) = self.parent(node, store) {
             if let Some(mut temp) = self.get_first_child(parent) {
                 while let Some(next_sibling) = self.get_next_sibling(temp) {
                     temp = next_sibling;
