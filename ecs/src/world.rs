@@ -105,5 +105,26 @@ impl World {
         self.store.col_between.insert(entity, value);
     }
 
+    /// Set the desired grid rows
+    pub fn set_grid_rows(&mut self, entity: Entity, value: Vec<Units>) {
+        self.store.grid_rows.insert(entity, value);
+    }
+
+    /// Set the desired grid columns
+    pub fn set_grid_cols(&mut self, entity: Entity, value: Vec<Units>) {
+        self.store.grid_cols.insert(entity, value);
+    }
+
+    /// Set the desired grid row index
+    pub fn set_row(&mut self, entity: Entity, index: usize, span: usize) {
+        self.store.row_index.insert(entity, index);
+        self.store.row_span.insert(entity, span);
+    }
+
+    /// Set the desired grid row span
+    pub fn set_col(&mut self, entity: Entity, index: usize, span: usize) {
+        self.store.col_index.insert(entity, index);
+        self.store.col_span.insert(entity, span);
+    }
     
 }

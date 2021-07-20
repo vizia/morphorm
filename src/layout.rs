@@ -32,7 +32,7 @@ where
     // Step 1 - Reset the cache
     //cache.reset();
 
-    for parent in hierarchy.down_iter() {
+    for parent in hierarchy.down_iter(store) {
         let mut found_first = false;
         let mut last_child = None;
 
@@ -68,7 +68,7 @@ where
     }
 
     // Step 2 - Iterate up the hierarchy
-    for node in hierarchy.up_iter() {
+    for node in hierarchy.up_iter(store) {
 
         // Skip non-visible nodes
         // if !node.is_visible(&store) {
@@ -354,7 +354,7 @@ where
     }
     
     // Step 3 - Iterate down the hierarchy
-    for parent in hierarchy.down_iter() {
+    for parent in hierarchy.down_iter(store) {
 
         // if !parent.is_visible(store) {
         //     continue;
@@ -1089,9 +1089,9 @@ where
 
                 for node in hierarchy.child_iter(&parent) {
 
-                    if !node.is_visible(store) {
-                        continue;
-                    }
+                    // if !node.is_visible(store) {
+                    //     continue;
+                    // }
 
                     let row_start = node.row_index(store).unwrap_or_default();
                     let row_end = row_start + node.row_span(store).unwrap_or_default();

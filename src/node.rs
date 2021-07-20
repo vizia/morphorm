@@ -173,10 +173,10 @@ pub trait Node: Clone + std::fmt::Debug {
         Some(0)
     }
     fn row_span(&self, store: &Self::Data) -> Option<usize> {
-        Some(0)
+        Some(1)
     }
     fn col_span(&self, store: &Self::Data) -> Option<usize> {
-        Some(0)
+        Some(1)
     }
     fn border_left(&self, store: &Self::Data) -> Option<Units> {
         Some(Units::Auto)

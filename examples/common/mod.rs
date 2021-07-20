@@ -15,6 +15,8 @@ use winit::window::WindowBuilder;
 use femtovg::{
     //CompositeOperation,
     renderer::OpenGl,
+    Align,
+    Baseline,
     Canvas,
     Color,
     Paint,
@@ -41,6 +43,8 @@ pub fn render(mut world: World, root: Entity) {
     };
 
     let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
+
+    let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
     el.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
@@ -70,7 +74,7 @@ pub fn render(mut world: World, root: Entity) {
                 canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
                 canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
-                for node in world.tree.down_iter() {
+                for node in world.tree.down_iter(&world.store) {
                     
                     let posx = world.cache.posx(&node);
                     let posy = world.cache.posy(&node);
@@ -86,6 +90,15 @@ pub fn render(mut world: World, root: Entity) {
                     path.rect(posx, posy, width, height);
                     let paint = Paint::color(Color::rgb(*red,*green,*blue));
                     canvas.fill_path(&mut path, paint);
+
+
+                    let mut paint = Paint::color(Color::black());
+                    paint.set_font_size(24.0);
+                    paint.set_text_align(Align::Center);
+                    paint.set_text_baseline(Baseline::Middle);
+                    paint.set_font(&vec![font]);
+                    canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
+
                 }
 
 

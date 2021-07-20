@@ -13,10 +13,10 @@ pub trait Hierarchy<'a> {
     type ChildIter: Iterator<Item = &'a Self::Item>;
 
     /// Returns an iterator which walks up the hierarchy
-    fn up_iter(&self) -> Self::UpIter;
+    fn up_iter(&self, store: &<Self::Item as Node>::Data) -> Self::UpIter;
 
     /// Returns an iterator which walks down the hierarchy
-    fn down_iter(&self) -> Self::DownIter;
+    fn down_iter(&self, store: &<Self::Item as Node>::Data) -> Self::DownIter;
 
     /// Returns an iterator over the child nodes of a specified node
     fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter;

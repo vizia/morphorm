@@ -164,16 +164,14 @@ impl<'a> Node for &'a Entity {
 impl<'a> Hierarchy<'a> for Tree {
     type Item = Entity;
     type DownIter = std::vec::IntoIter<Entity>;
-    //type DownIter = std::slice::Iter<'a, Entity>;
     type UpIter = Rev<std::vec::IntoIter<Entity>>;
-    //type UpIter = Rev<std::slice::Iter<'a, Entity>>;
     type ChildIter = ChildIterator<'a>;
 
-    fn up_iter(&self) -> Self::UpIter {
+    fn up_iter(&self, _store: &Store) -> Self::UpIter {
         self.flatten().into_iter().rev()
     }
 
-    fn down_iter(&self) -> Self::DownIter {
+    fn down_iter(&self, _store: &Store) -> Self::DownIter {
         self.flatten().into_iter()
     }
 
