@@ -1,8 +1,8 @@
 use crate::Node;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
-pub trait Cache {
-    type Item: Node;
+pub trait Cache<'a> {
+    type Item: Node<'a>;
 
     /// Reset all cache values to default
     fn reset(&mut self);

@@ -7,157 +7,157 @@ use crate::entity::Entity;
 use crate::store::Store;
 use crate::tree::{ChildIterator, Tree};
 
-impl Node for Entity {
+impl<'a> Node<'a> for Entity {
     type Data = Store;
 
-    fn is_visible(&self, store: &Self::Data) -> bool {
+    fn is_visible(&self, store: &'a Self::Data) -> bool {
         store.visible.get(self).cloned().unwrap_or_default()
     }
 
-    fn layout_type(&self, store: &Self::Data) -> Option<LayoutType> {
+    fn layout_type(&self, store: &'a Self::Data) -> Option<LayoutType> {
         store.layout_type.get(self).cloned()
     }
 
     /// Get the  position type of the node
-    fn position_type(&self, store: &Self::Data) -> Option<PositionType> {
+    fn position_type(&self, store: &'a Self::Data) -> Option<PositionType> {
         store.position_type.get(self).cloned()
     }
 
-    fn width(&self, store: &Self::Data) -> Option<Units> {
+    fn width(&self, store: &'a Self::Data) -> Option<Units> {
         store.width.get(self).cloned()
     }
 
-    fn height(&self, store: &Self::Data) -> Option<Units> {
+    fn height(&self, store: &'a Self::Data) -> Option<Units> {
         store.height.get(self).cloned()
     }
 
-    fn left(&self, store: &Self::Data) -> Option<Units> {
+    fn left(&self, store: &'a Self::Data) -> Option<Units> {
         store.left.get(self).cloned()
     }
-    fn right(&self, store: &Self::Data) -> Option<Units> {
+    fn right(&self, store: &'a Self::Data) -> Option<Units> {
         store.right.get(self).cloned()
     }
-    fn top(&self, store: &Self::Data) -> Option<Units> {
+    fn top(&self, store: &'a Self::Data) -> Option<Units> {
         store.top.get(self).cloned()
     }
-    fn bottom(&self, store: &Self::Data) -> Option<Units> {
+    fn bottom(&self, store: &'a Self::Data) -> Option<Units> {
         store.bottom.get(self).cloned()
     }
 
-    fn child_left(&self, store: &Self::Data) -> Option<Units> {
+    fn child_left(&self, store: &'a Self::Data) -> Option<Units> {
         store.child_left.get(self).cloned()
     }
 
-    fn child_right(&self, store: &Self::Data) -> Option<Units> {
+    fn child_right(&self, store: &'a Self::Data) -> Option<Units> {
         store.child_right.get(self).cloned()
     }
 
-    fn child_top(&self, store: &Self::Data) -> Option<Units> {
+    fn child_top(&self, store: &'a Self::Data) -> Option<Units> {
         store.child_top.get(self).cloned()
     }
 
-    fn child_bottom(&self, store: &Self::Data) -> Option<Units> {
+    fn child_bottom(&self, store: &'a Self::Data) -> Option<Units> {
         store.child_bottom.get(self).cloned()
     }
 
-    fn min_left(&self, store: &Self::Data) -> Option<Units> {
+    fn min_left(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_left.get(self).cloned()
     }
 
-    fn min_right(&self, store: &Self::Data) -> Option<Units> {
+    fn min_right(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_right.get(self).cloned()
     }
 
-    fn min_top(&self, store: &Self::Data) -> Option<Units> {
+    fn min_top(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_top.get(self).cloned()
     }
 
-    fn min_bottom(&self, store: &Self::Data) -> Option<Units> {
+    fn min_bottom(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_bottom.get(self).cloned()
     }
 
-    fn max_left(&self, store: &Self::Data) -> Option<Units> {
+    fn max_left(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_left.get(self).cloned()
     }
 
-    fn max_right(&self, store: &Self::Data) -> Option<Units> {
+    fn max_right(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_right.get(self).cloned()
     }
 
-    fn max_top(&self, store: &Self::Data) -> Option<Units> {
+    fn max_top(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_top.get(self).cloned()
     }
 
-    fn max_bottom(&self, store: &Self::Data) -> Option<Units> {
+    fn max_bottom(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_bottom.get(self).cloned()
     }
 
-    fn min_width(&self, store: &Self::Data) -> Option<Units> {
+    fn min_width(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_width.get(self).cloned()
     }
 
-    fn max_width(&self, store: &Self::Data) -> Option<Units> {
+    fn max_width(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_width.get(self).cloned()
     }
 
-    fn min_height(&self, store: &Self::Data) -> Option<Units> {
+    fn min_height(&self, store: &'a Self::Data) -> Option<Units> {
         store.min_height.get(self).cloned()
     }
 
-    fn max_height(&self, store: &Self::Data) -> Option<Units> {
+    fn max_height(&self, store: &'a Self::Data) -> Option<Units> {
         store.max_height.get(self).cloned()
     }
 
-    fn row_between(&self, store: &Self::Data) -> Option<Units> {
+    fn row_between(&self, store: &'a Self::Data) -> Option<Units> {
         store.row_between.get(self).cloned()
     }
 
-    fn col_between(&self, store: &Self::Data) -> Option<Units> {
+    fn col_between(&self, store: &'a Self::Data) -> Option<Units> {
         store.col_between.get(self).cloned()
     }
 
-    fn grid_rows(&self, store: &Self::Data) -> Option<Vec<Units>> {
+    fn grid_rows(&self, store: &'a Self::Data) -> Option<Vec<Units>> {
         store.grid_rows.get(self).cloned()
     }
 
-    fn grid_cols(&self, store: &Self::Data) -> Option<Vec<Units>> {
+    fn grid_cols(&self, store: &'a Self::Data) -> Option<Vec<Units>> {
         store.grid_cols.get(self).cloned()
     }
 
-    fn row_index(&self, store: &Self::Data) -> Option<usize> {
+    fn row_index(&self, store: &'a Self::Data) -> Option<usize> {
         store.row_index.get(self).cloned()
     }
 
-    fn col_index(&self, store: &Self::Data) -> Option<usize> {
+    fn col_index(&self, store: &'a Self::Data) -> Option<usize> {
         store.col_index.get(self).cloned()
     }
 
-    fn row_span(&self, store: &Self::Data) -> Option<usize> {
+    fn row_span(&self, store: &'a Self::Data) -> Option<usize> {
         store.row_span.get(self).cloned()
     }
 
-    fn col_span(&self, store: &Self::Data) -> Option<usize> {
+    fn col_span(&self, store: &'a Self::Data) -> Option<usize> {
         store.col_span.get(self).cloned()
     }
 
-    fn border_left(&self, store: &Self::Data) -> Option<Units> {
+    fn border_left(&self, store: &'a Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
     }
 
-    fn border_right(&self, store: &Self::Data) -> Option<Units> {
+    fn border_right(&self, store: &'a Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
     }
 
-    fn border_top(&self, store: &Self::Data) -> Option<Units> {
+    fn border_top(&self, store: &'a Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
     }
 
-    fn border_bottom(&self, store: &Self::Data) -> Option<Units> {
+    fn border_bottom(&self, store: &'a Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
     }
 }
 
-impl<'a> Node for &'a Entity {
+impl<'a, 'b> Node<'a> for &'b Entity {
     type Data = Store;
 }
 
@@ -167,15 +167,15 @@ impl<'a> Hierarchy<'a> for Tree {
     type UpIter = Rev<std::vec::IntoIter<Entity>>;
     type ChildIter = ChildIterator<'a>;
 
-    fn up_iter(&self, _store: &Store) -> Self::UpIter {
+    fn up_iter(&self) -> Self::UpIter {
         self.flatten().into_iter().rev()
     }
 
-    fn down_iter(&self, _store: &Store) -> Self::DownIter {
+    fn down_iter(&self) -> Self::DownIter {
         self.flatten().into_iter()
     }
 
-    fn child_iter(&'a self, node: &Self::Item, _store: &Store) -> Self::ChildIter {
+    fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter {
         let first_child = self.get_first_child(node);
         ChildIterator {
             tree: self,
@@ -183,7 +183,7 @@ impl<'a> Hierarchy<'a> for Tree {
         }
     }
 
-    fn parent(&self, node: &Self::Item, _store: &Store) -> Option<&Self::Item> {
+    fn parent(&self, node: &Self::Item) -> Option<&Self::Item> {
         if node.index() < self.parent.len() {
             return self.parent[node.index()].as_ref()
         }
@@ -191,8 +191,8 @@ impl<'a> Hierarchy<'a> for Tree {
         None
     }
 
-    fn is_first_child(&self, node: &Self::Item, store: &Store) -> bool {
-        if let Some(parent) = self.parent(node, store) {
+    fn is_first_child(&self, node: &Self::Item) -> bool {
+        if let Some(parent) = self.parent(node) {
             if let Some(first_child) = self.get_first_child(parent) {
                 if first_child == node {
                     return true;
@@ -205,8 +205,8 @@ impl<'a> Hierarchy<'a> for Tree {
         false
     }
 
-    fn is_last_child(&self, node: &Self::Item, store: &Store) -> bool {
-        if let Some(parent) = self.parent(node, store) {
+    fn is_last_child(&self, node: &Self::Item) -> bool {
+        if let Some(parent) = self.parent(node) {
             if let Some(mut temp) = self.get_first_child(parent) {
                 while let Some(next_sibling) = self.get_next_sibling(temp) {
                     temp = next_sibling;
@@ -291,7 +291,7 @@ impl NodeCache {
     }
 }
 
-impl Cache for NodeCache {
+impl<'a> Cache<'a> for NodeCache {
     type Item = Entity;
 
     fn reset(&mut self) {

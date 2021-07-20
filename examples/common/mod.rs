@@ -74,7 +74,7 @@ pub fn render(mut world: World, root: Entity) {
                 canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
                 canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
-                for node in world.tree.down_iter(&world.store) {
+                for node in world.tree.down_iter() {
                     
                     let posx = world.cache.posx(&node);
                     let posy = world.cache.posy(&node);

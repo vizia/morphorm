@@ -1,4 +1,6 @@
 
+use std::marker::PhantomData;
+
 use crate::Node;
 use crate::Cache;
 use crate::Hierarchy;
@@ -13,9 +15,9 @@ enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct ComputedData<N: Node> {
+pub struct ComputedData<'a, N: Node<'a>> {
 
-    node: N,
+    node: &'a N,
 
     value: f32,
     min: f32,
@@ -24,15 +26,15 @@ pub struct ComputedData<N: Node> {
 }
 
 /// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
-pub fn layout<'a, C, H: 'a>(cache: &mut C, hierarchy: &'a H, store: &<<H as Hierarchy<'a>>::Item as Node>::Data)
+pub fn layout<'a, C, H: 'a>(cache: &mut C, hierarchy: &'a H, store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data)
 where
-    C: Cache<Item = <H as Hierarchy<'a>>::Item>,
+    C: Cache<'a, Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
 {
     // Step 1 - Reset the cache
     //cache.reset();
 
-    for parent in hierarchy.down_iter(store) {
+    for parent in hierarchy.down_iter() {
         let mut found_first = false;
         let mut last_child = None;
 
@@ -41,7 +43,7 @@ where
         cache.set_child_width_max(&parent, 0.0);
         cache.set_child_height_max(&parent, 0.0);
 
-        for node in hierarchy.child_iter(&parent, store) {
+        for node in hierarchy.child_iter(&parent) {
             cache.set_stack_first_child(&node, false);
             
             let position_type = node.position_type(store).unwrap_or_default();
@@ -68,7 +70,7 @@ where
     }
 
     // Step 2 - Iterate up the hierarchy
-    for node in hierarchy.up_iter(store) {
+    for node in hierarchy.up_iter() {
 
         // Skip non-visible nodes
         // if !node.is_visible(&store) {
@@ -76,7 +78,7 @@ where
         // }
         
         
-        let parent = hierarchy.parent(&node, store);
+        let parent = hierarchy.parent(&node);
 
         // if parent.is_none() {
         //     break;
@@ -354,7 +356,7 @@ where
     }
     
     // Step 3 - Iterate down the hierarchy
-    for parent in hierarchy.down_iter(store) {
+    for parent in hierarchy.down_iter() {
 
         // if !parent.is_visible(store) {
         //     continue;
@@ -396,7 +398,7 @@ where
                 // ////////////////////////////////
                 // Calculate inflexible children //
                 ///////////////////////////////////
-                for node in hierarchy.child_iter(&parent, store) {
+                for node in hierarchy.child_iter(&parent) {
 
                     // if !parent.is_visible(store) {
                     //     continue;
@@ -538,7 +540,7 @@ where
                         Units::Stretch(val) => {
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(ComputedData {
-                                node: node.clone(),
+                                node,
                                 value: val,
                                 min: min_left,
                                 max: max_left,
@@ -565,7 +567,7 @@ where
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(
                                 ComputedData {
-                                    node: node.clone(),
+                                    node,
                                     value: val,
                                     min: min_width,
                                     max: max_width,
@@ -608,7 +610,7 @@ where
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(
                                 ComputedData {
-                                    node: node.clone(),
+                                    node,
                                     value: val,
                                     min: min_right,
                                     max: max_right,
@@ -636,7 +638,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node: node.clone(),
+                                    node,
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -664,7 +666,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node: node.clone(),
+                                    node,
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -707,7 +709,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node: node.clone(),
+                                    node,
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -951,7 +953,7 @@ where
                 ///////////////////////
                 // Position Children //
                 ///////////////////////
-                for node in hierarchy.child_iter(&parent, store) {
+                for node in hierarchy.child_iter(&parent) {
 
                     // if !node.is_visible(store) {
                     //     continue;
@@ -1087,7 +1089,7 @@ where
                 let col_widths_len = col_widths.len() - 1;
                 col_widths[col_widths_len].0 = current_col_pos;
 
-                for node in hierarchy.child_iter(&parent, store) {
+                for node in hierarchy.child_iter(&parent) {
 
                     // if !node.is_visible(store) {
                     //     continue;
