@@ -10,7 +10,7 @@ keywords = ["ui", "gui", "layout"]
 
 
 [dependencies]
-
+smallvec = "1.6.1"
 
 
 [dev-dependencies]

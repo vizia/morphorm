@@ -1,10 +1,10 @@
 
-use std::marker::PhantomData;
-
 use crate::Node;
 use crate::Cache;
 use crate::Hierarchy;
 use crate::{Units, LayoutType, PositionType};
+
+use smallvec::SmallVec;
 
 
 #[derive(Debug, Clone, Copy)]
@@ -38,11 +38,6 @@ where
         let mut found_first = false;
         let mut last_child = None;
 
-        // cache.set_child_width_sum(&parent, 0.0);
-        // cache.set_child_height_sum(&parent, 0.0);
-        // cache.set_child_width_max(&parent, 0.0);
-        // cache.set_child_height_max(&parent, 0.0);
-
         for node in hierarchy.child_iter(&parent) {
 
             cache.set_stack_first_child(&node, false);
@@ -71,6 +66,8 @@ where
     }
 
     // Step 2 - Iterate up the hierarchy
+    // This step is required to determine the sum and max width/height of child nodes 
+    // to determine the width/height of parent nodes when set to Auto
     for node in hierarchy.up_iter() {
 
         // Skip non-visible nodes
@@ -394,8 +391,8 @@ where
 
         match parent_layout_type {
             LayoutType::Row | LayoutType::Column => {
-                let mut horizontal_axis = Vec::new();
-                let mut vertical_axis = Vec::new();
+                let mut horizontal_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
+                let mut vertical_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
 
                 
                 // ////////////////////////////////
@@ -427,6 +424,7 @@ where
                     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
                     let height = node.height(store).unwrap_or(Units::Stretch(1.0));
             
+                    // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
                         match layout_type {
                             LayoutType::Column => cache.child_width_max(&node),
@@ -437,7 +435,7 @@ where
             
                     let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
             
-                    
+                    // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                             match layout_type {
                                 LayoutType::Column => cache.child_height_sum(&node),
@@ -453,7 +451,6 @@ where
                     let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
             
-
                     let position_type = node.position_type(store).unwrap_or_default();
 
                     // Parent overrides
@@ -506,7 +503,6 @@ where
                             }
                         }
             
-                        // Should grids have parent overrides?
                         _=> {}
                     }
 
@@ -762,6 +758,7 @@ where
                     parent_vertical_stretch_sum = 1.0;
                 }
 
+                // Sort the stretch elements in each axis by the maximum size
                 horizontal_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
                 vertical_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
 
@@ -770,7 +767,9 @@ where
                 let mut vertical_stretch_sum = 0.0;
                 let mut vertical_free_space = 0.0;
 
-                // Calculate flexible Row space & size
+                /////////////////////////////////////////
+                // Calculate flexible Row space & size //
+                /////////////////////////////////////////
                 for computed_data in horizontal_axis.iter() {
                     
                     let node = computed_data.node.clone();
@@ -801,14 +800,18 @@ where
                         }
                     }
 
+                    // Prevent a divide by zero when the stretch sum is 0
                     if horizontal_stretch_sum == 0.0 {
                         horizontal_stretch_sum = 1.0;
                     }
 
+                    // Compute the new left/width/height based on free space, stretch factor, and stretch_sum
                     let mut new_value = horizontal_free_space * computed_data.value / horizontal_stretch_sum;
 
+                    // Clamp the new left/width/right to be between min_ left/width/right and max_ left/width/right
                     new_value = new_value.clamp(computed_data.min, computed_data.max);
 
+                    // Could perhaps replace this with a closure
                     match computed_data.axis {
                         Axis::Before => {
                             cache.set_left(&node, new_value);
@@ -856,7 +859,9 @@ where
                     }
                 }
 
-                // Calculate flexible Column space & size
+                ////////////////////////////////////////////
+                // Calculate flexible Column space & size //
+                ////////////////////////////////////////////
                 for computed_data in vertical_axis.iter() {
 
                     let node = computed_data.node.clone();
@@ -945,11 +950,6 @@ where
                 let mut current_posx = 0.0;
                 let mut current_posy = 0.0;
 
-                // TODO - support percentage border
-
-                let parent_border_left = parent.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
-                let parent_border_top = parent.border_top(store).unwrap_or_default().value_or(parent_height, 0.0);
-
                 let parent_posx = cache.posx(&parent) + parent_border_left;
                 let parent_posy = cache.posy(&parent) + parent_border_top;
 
@@ -1003,11 +1003,14 @@ where
             }
 
             LayoutType::Grid => {
+                /////////////////////////////////////////////////////
+                // Determine Size of non-flexible rows and columns //
+                /////////////////////////////////////////////////////
                 let grid_rows = parent.grid_rows(store).unwrap_or_default();
                 let grid_cols = parent.grid_cols(store).unwrap_or_default();
 
-                let mut row_heights = vec![(0.0, 0.0, 0.0, 0.0); grid_rows.len() + 1];
-                let mut col_widths = vec![(0.0, 0.0, 0.0, 0.0); grid_cols.len() + 1];
+                let mut row_heights = vec![(0.0, 0.0); grid_rows.len() + 1];
+                let mut col_widths = vec![(0.0, 0.0,); grid_cols.len() + 1];
 
                 let mut col_free_space = parent_width;
                 let mut row_free_space = parent_height;
@@ -1056,7 +1059,9 @@ where
                     col_stretch_sum = 1.0;
                 }
 
-
+                /////////////////////////////////////////////////
+                // Determine Size of flexible rows and columns //
+                /////////////////////////////////////////////////
                 let mut current_row_pos = cache.posy(&parent);
                 let mut current_col_pos = cache.posx(&parent);
 
@@ -1092,6 +1097,10 @@ where
                 let col_widths_len = col_widths.len() - 1;
                 col_widths[col_widths_len].0 = current_col_pos;
 
+
+                ///////////////////////////////////////////////////
+                // Position and Size child nodes within the grid //
+                ///////////////////////////////////////////////////
                 for node in hierarchy.child_iter(&parent) {
 
                     // if !node.is_visible(store) {
@@ -1104,6 +1113,7 @@ where
                     let col_start = node.col_index(store).unwrap_or_default();
                     let col_end = col_start + node.col_span(store).unwrap_or_default();
 
+                    // Set posx and width based on col_index and col_start
                     if col_start == 0 {
                         cache.set_posx(&node, col_widths[col_start].0);
                         cache.set_width(
@@ -1128,6 +1138,7 @@ where
                         );
                     }
 
+                    // Set posy and height based on row_index and row_span
                     if row_start == 0 {
                         cache.set_posy(&node, row_heights[row_start].0);
                         cache.set_height(
@@ -1155,6 +1166,4 @@ where
             }
         }
     }
-
-    
 }
