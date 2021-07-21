@@ -15,7 +15,7 @@ enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct ComputedData<'a, N: Node<'a>> {
+pub struct ComputedData<'a, N: for<'b> Node<'b>> {
 
     node: &'a N,
 
@@ -26,24 +26,25 @@ pub struct ComputedData<'a, N: Node<'a>> {
 }
 
 /// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
-pub fn layout<'a, C, H: 'a>(cache: &mut C, hierarchy: &'a H, store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data)
+pub fn layout<'a, C, H>(cache: &mut C, hierarchy: &'a H, store: &'a <<H as Hierarchy<'a>>::Item as Node>::Data)
 where
-    C: Cache<'a, Item = <H as Hierarchy<'a>>::Item>,
+    C: Cache<Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
 {
-    // Step 1 - Reset the cache
-    //cache.reset();
-
+    // Step 1 - Determine fist and last parent-directed child of each node and cache it
+    // This needs to be done at least once before the rest of layout and when the position_type of a node changes
     for parent in hierarchy.down_iter() {
+
         let mut found_first = false;
         let mut last_child = None;
 
-        cache.set_child_width_sum(&parent, 0.0);
-        cache.set_child_height_sum(&parent, 0.0);
-        cache.set_child_width_max(&parent, 0.0);
-        cache.set_child_height_max(&parent, 0.0);
+        // cache.set_child_width_sum(&parent, 0.0);
+        // cache.set_child_height_sum(&parent, 0.0);
+        // cache.set_child_width_max(&parent, 0.0);
+        // cache.set_child_height_max(&parent, 0.0);
 
         for node in hierarchy.child_iter(&parent) {
+
             cache.set_stack_first_child(&node, false);
             
             let position_type = node.position_type(store).unwrap_or_default();
@@ -80,20 +81,19 @@ where
         
         let parent = hierarchy.parent(&node);
 
-        // if parent.is_none() {
-        //     break;
-        // }
-
-        //let parent = parent.unwrap();
-
-        // let parent_width = cache.width(&parent);
-        // let parent_height = cache.height(&parent);
-
-        let (parent_width, parent_height) = if let Some(parent) = &parent {
+        let (parent_width, parent_height) = if let Some(parent) = parent {
             (cache.width(parent), cache.height(parent))
         } else {
             (0.0, 0.0)
         };
+
+        // Reset the sum and max for the parent
+        if let Some(parent) = parent {
+            cache.set_child_width_sum(parent, 0.0);
+            cache.set_child_height_sum(parent, 0.0);
+            cache.set_child_width_max(parent, 0.0);
+            cache.set_child_height_max(parent, 0.0);
+        }
 
         let parent_layout_type = parent.layout_type(store).unwrap_or_default();
 
@@ -126,6 +126,7 @@ where
         let width = node.width(store).unwrap_or(Units::Stretch(1.0));
         let height = node.height(store).unwrap_or(Units::Stretch(1.0));
 
+        // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
         let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
             match layout_type {
                 LayoutType::Column => cache.child_width_max(&node),
@@ -136,7 +137,7 @@ where
 
         let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
 
-        
+        // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
         let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                 match layout_type {
                     LayoutType::Column => cache.child_height_sum(&node),
@@ -152,7 +153,8 @@ where
         let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
         let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
 
-        // Parent Overrides
+        // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
+        // The override is also dependent on position in stack (first, last, other) and layout type
         match parent_layout_type {
             LayoutType::Column => {
                 if top == Units::Auto {
@@ -202,7 +204,7 @@ where
                 }
             }
 
-            // Should grids have parent overrides?
+            // Should grids have parent overrides? (probably not)
             _=> {}
         }
 
@@ -362,6 +364,8 @@ where
         //     continue;
         // }
 
+        
+
         let parent_layout_type = parent.layout_type(store).unwrap_or_default();
         let child_left = parent.child_left(store).unwrap_or_default();
         let child_right = parent.child_right(store).unwrap_or_default();
@@ -370,8 +374,6 @@ where
 
         let row_between = parent.row_between(store).unwrap_or_default();
         let col_between = parent.col_between(store).unwrap_or_default();
-
-        // TODO - support percentage border
 
         let mut parent_width = cache.width(&parent);
         let mut parent_height = cache.height(&parent);
@@ -395,6 +397,7 @@ where
                 let mut horizontal_axis = Vec::new();
                 let mut vertical_axis = Vec::new();
 
+                
                 // ////////////////////////////////
                 // Calculate inflexible children //
                 ///////////////////////////////////
@@ -1152,4 +1155,6 @@ where
             }
         }
     }
+
+    
 }
