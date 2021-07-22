@@ -55,3 +55,129 @@ impl Units {
         }
     }
 }
+
+
+#[derive(Debug, Clone, Copy)]
+pub struct Value {
+    min: f32,
+    val: f32,
+    max: f32,
+}
+
+const MIN: f32 = -std::f32::MAX;
+const MAX: f32 = std::f32::MAX;
+
+
+#[derive(Debug, Clone, Copy)]
+pub enum Units2 {
+    Pixels(Value),
+    Percentage(Value),
+    Stretch(Value),
+    Auto,
+}
+
+impl Units2 {
+    pub fn pixels(val: f32) -> Self {
+        Self::Pixels(Value {min: MIN, val, max: MAX})
+    }
+
+    pub fn percentage(val: f32) -> Self {
+        Self::Pixels(Value {min: MIN, val, max: MAX})
+    }
+
+    pub fn stretch(val: f32) -> Self {
+        Self::Pixels(Value {min: MIN, val, max: MAX})
+    }
+
+    pub fn auto() -> Self {
+        Self::Auto
+    }
+
+    pub fn min(self, min: f32) -> Self {
+        match self {
+            Units2::Pixels(px) => {
+                assert!(min < px.max, "min must be less than max");
+                Units2::Pixels(Value {
+                    min,
+                    val: px.val,
+                    max: px.max,
+                })
+            }
+
+            Units2::Percentage(pc) => {
+                assert!(min < pc.max, "min must be less than max");
+                Units2::Percentage(Value {
+                    min,
+                    val: pc.val,
+                    max: pc.max,
+                })
+            }
+
+            Units2::Stretch(s) => {
+                assert!(min < s.max, "min must be less than max");
+                Units2::Stretch(Value {
+                    min,
+                    val: s.val,
+                    max: s.max,
+                })
+            }
+
+            Units2::Auto => {
+                Units2::Auto
+            }
+        }
+    }
+
+    pub fn max(self, max: f32) -> Self {
+        match self {
+            Units2::Pixels(px) => {
+                assert!(max > px.min, "max must be greater than min");
+                Units2::Pixels(Value {
+                    min: px.min,
+                    val: px.val,
+                    max,
+                })
+            }
+
+            Units2::Percentage(pc) => {
+                assert!(max > pc.min, "max must be greater than min");
+                Units2::Percentage(Value {
+                    min: pc.min,
+                    val: pc.val,
+                    max,
+                })
+            }
+
+            Units2::Stretch(s) => {
+                assert!(max > s.min, "max must be greater than min");
+                Units2::Stretch(Value {
+                    min: s.min,
+                    val: s.val,
+                    max,
+                })
+            }
+
+            Units2::Auto => {
+                Units2::Auto
+            }
+        }
+    }
+
+    pub fn clamp(&mut self) {
+        match self {
+            Units2::Pixels(px) => {
+                px.val = px.val.clamp(px.min, px.max);
+            }
+
+            Units2::Percentage(pc) => {
+                pc.val = pc.val.clamp(pc.min, pc.max);
+            }
+
+            Units2::Stretch(s) => {
+                s.val = s.val.clamp(s.min, s.max);
+            }
+
+            _=> {}
+        }
+    }
+}
