@@ -6,6 +6,8 @@ pub struct Tree {
     pub parent: Vec<Option<Entity>>,
     pub first_child: Vec<Option<Entity>>,
     pub next_sibling: Vec<Option<Entity>>,
+
+    pub flattened: Vec<Entity>,
 }
 
 impl Tree {
@@ -45,15 +47,17 @@ impl Tree {
             self.first_child.push(None);
             self.next_sibling.push(None);
         }
+
+        self.flatten();
     }
 
-    pub fn flatten(&self) -> Vec<Entity> {
+    pub fn flatten(&mut self) {
         let iterator = DownwardIterator {
             tree: &self,
             current_node: Some(Entity(0)),
         };
 
-        iterator.collect::<Vec<_>>()
+        self.flattened = iterator.collect::<Vec<_>>();
     }
 
     pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {

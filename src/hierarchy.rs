@@ -6,17 +6,17 @@ pub trait Hierarchy<'a> {
     /// A type respresenting a node in the visual tree
     type Item: 'a + for<'b> Node<'b>;
     /// A type respresenting an iterator that walks up the visual tree 
-    type UpIter: Iterator<Item = Self::Item>;
+    type UpIter: Iterator<Item = &'a Self::Item>;
     /// A type representing an iterator that walks down the visual tree
-    type DownIter: Iterator<Item = Self::Item>;
+    type DownIter: Iterator<Item = &'a Self::Item>;
     /// A type representing an iterator which iterates through the children of a specified node
     type ChildIter: Iterator<Item = &'a Self::Item>;
 
     /// Returns an iterator which walks up the hierarchy
-    fn up_iter(&self) -> Self::UpIter;
+    fn up_iter(&'a self) -> Self::UpIter;
 
     /// Returns an iterator which walks down the hierarchy
-    fn down_iter(&self) -> Self::DownIter;
+    fn down_iter(&'a self) -> Self::DownIter;
 
     /// Returns an iterator over the child nodes of a specified node
     fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter;

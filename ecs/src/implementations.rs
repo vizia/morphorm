@@ -165,16 +165,16 @@ where 'a: 'b
 
 impl<'a> Hierarchy<'a> for Tree {
     type Item = Entity;
-    type DownIter = std::vec::IntoIter<Entity>;
-    type UpIter = Rev<std::vec::IntoIter<Entity>>;
+    type DownIter = std::slice::Iter<'a, Entity>;
+    type UpIter = Rev<std::slice::Iter<'a, Entity>>;
     type ChildIter = ChildIterator<'a>;
 
-    fn up_iter(&self) -> Self::UpIter {
-        self.flatten().into_iter().rev()
+    fn up_iter(&'a self) -> Self::UpIter {
+        self.flattened.iter().rev()
     }
 
-    fn down_iter(&self) -> Self::DownIter {
-        self.flatten().into_iter()
+    fn down_iter(&'a self) -> Self::DownIter {
+        self.flattened.iter()
     }
 
     fn child_iter(&'a self, node: &Self::Item) -> Self::ChildIter {
