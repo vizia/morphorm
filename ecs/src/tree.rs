@@ -6,8 +6,6 @@ pub struct Tree {
     pub parent: Vec<Option<Entity>>,
     pub first_child: Vec<Option<Entity>>,
     pub next_sibling: Vec<Option<Entity>>,
-
-    pub flattened: Vec<Entity>,
 }
 
 impl Tree {
@@ -47,32 +45,30 @@ impl Tree {
             self.first_child.push(None);
             self.next_sibling.push(None);
         }
-
-        self.flatten();
     }
 
-    pub fn flatten(&mut self) {
+    pub fn flatten(&self) -> Vec<Entity> {
         let iterator = DownwardIterator {
             tree: &self,
             current_node: Some(Entity(0)),
         };
 
-        self.flattened = iterator.collect::<Vec<_>>();
+        iterator.collect::<Vec<_>>()
     }
 
-    pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
+    pub fn get_first_child(&self, entity: Entity) -> Option<Entity> {
 
         if let Some(first_child) = self.first_child.get(entity.index()) {
-            return first_child.as_ref();
+            return *first_child;
         }
 
         None
     }
 
-    pub fn get_next_sibling(&self, entity: &Entity) -> Option<&Entity> {
+    pub fn get_next_sibling(&self, entity: Entity) -> Option<Entity> {
 
         if let Some(next_sibling) = self.next_sibling.get(entity.index()) {
-            return next_sibling.as_ref();
+            return *next_sibling;
         }
 
         None
@@ -114,11 +110,11 @@ impl<'a> Iterator for DownwardIterator<'a> {
 
 pub struct ChildIterator<'a> {
     pub tree: &'a Tree,
-    pub current_node: Option<&'a Entity>,
+    pub current_node: Option<Entity>,
 }
 
 impl<'a> Iterator for ChildIterator<'a> {
-    type Item = &'a Entity;
+    type Item = Entity;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(entity) = self.current_node {
             //self.current_node = self.tree.next_sibling[entity.index()].as_ref();

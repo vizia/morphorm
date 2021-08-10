@@ -3,7 +3,7 @@ use std::alloc::Layout;
 use crate::units::*;
 
 /// A Node describes a visual element that can be positioned and sized
-pub trait Node<'w>: Clone + std::fmt::Debug {
+pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     /// A type representing an external store in case the position and size data is not be owned by the node itself (e.g. ECS)
     type Data;
 
@@ -192,7 +192,7 @@ pub trait Node<'w>: Clone + std::fmt::Debug {
     }
 }
 
-impl<'a, T: Node<'a>> Node<'a> for Option<&'_ T>
+impl<'a, T: Node<'a>> Node<'a> for Option<T>
 {
     type Data = <T as Node<'a>>::Data;
 }

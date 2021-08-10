@@ -15,9 +15,9 @@ enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct ComputedData<'a, N: for<'b> Node<'b>> {
+pub struct ComputedData<N: for<'b> Node<'b>> {
 
-    node: &'a N,
+    node: N,
 
     value: f32,
     min: f32,
@@ -38,9 +38,9 @@ where
         let mut found_first = false;
         let mut last_child = None;
 
-        for node in hierarchy.child_iter(&parent) {
+        for node in hierarchy.child_iter(parent) {
 
-            cache.set_stack_first_child(&node, false);
+            cache.set_stack_first_child(node, false);
             
             let position_type = node.position_type(store).unwrap_or_default();
 
@@ -48,14 +48,14 @@ where
                 PositionType::ParentDirected => {
                     if !found_first {
                         found_first = true;
-                        cache.set_stack_first_child(&node, true);
+                        cache.set_stack_first_child(node, true);
                     }
                     last_child = Some(node);
                 }
 
                 PositionType::SelfDirected => {
-                    cache.set_stack_first_child(&node, true);
-                    cache.set_stack_last_child(&node, true);
+                    cache.set_stack_first_child(node, true);
+                    cache.set_stack_last_child(node, true);
                 }
             }
         }
@@ -76,7 +76,7 @@ where
         // }
         
         
-        let parent = hierarchy.parent(&node);
+        let parent = hierarchy.parent(node);
 
         let (parent_width, parent_height) = if let Some(parent) = parent {
             (cache.width(parent), cache.height(parent))
@@ -126,9 +126,9 @@ where
         // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
         let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
             match layout_type {
-                LayoutType::Column => cache.child_width_max(&node),
-                LayoutType::Row => cache.child_width_sum(&node),
-                LayoutType::Grid => cache.grid_row_max(&node),
+                LayoutType::Column => cache.child_width_max(node),
+                LayoutType::Row => cache.child_width_sum(node),
+                LayoutType::Grid => cache.grid_row_max(node),
             }
         );
 
@@ -137,9 +137,9 @@ where
         // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
         let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                 match layout_type {
-                    LayoutType::Column => cache.child_height_sum(&node),
-                    LayoutType::Row => cache.child_height_max(&node),
-                    LayoutType::Grid => cache.grid_col_max(&node),
+                    LayoutType::Column => cache.child_height_sum(node),
+                    LayoutType::Row => cache.child_height_max(node),
+                    LayoutType::Grid => cache.grid_col_max(node),
                 }
         );
 
@@ -155,7 +155,7 @@ where
         match parent_layout_type {
             LayoutType::Column => {
                 if top == Units::Auto {
-                    if cache.stack_first_child(&node) {
+                    if cache.stack_first_child(node) {
                         top = child_top;
                     } else {
                         top = row_between;
@@ -163,7 +163,7 @@ where
                 }
 
                 if bottom == Units::Auto {
-                    if cache.stack_last_child(&node) {
+                    if cache.stack_last_child(node) {
                         bottom = child_bottom;
                     }
                 }
@@ -179,7 +179,7 @@ where
 
             LayoutType::Row => {
                 if left == Units::Auto {
-                    if cache.stack_first_child(&node) {
+                    if cache.stack_first_child(node) {
                         left = child_left;
                     } else {
                         left = col_between;
@@ -187,7 +187,7 @@ where
                 }
 
                 if right == Units::Auto {
-                    if cache.stack_last_child(&node) {
+                    if cache.stack_last_child(node) {
                         right = child_right;
                     }
                 }
@@ -236,15 +236,15 @@ where
                     Units::Auto => {
                         match layout_type {
                             LayoutType::Column => {
-                                new_width = cache.child_width_max(&node);
+                                new_width = cache.child_width_max(node);
                             }
         
                             LayoutType::Row => {
-                                new_width = cache.child_width_sum(&node);
+                                new_width = cache.child_width_sum(node);
                             }
         
                             LayoutType::Grid => {
-                                new_width = cache.grid_row_max(&node);
+                                new_width = cache.grid_row_max(node);
                             }
                         }
 
@@ -283,15 +283,15 @@ where
                     Units::Auto => {
                         match layout_type {
                             LayoutType::Column => {
-                                new_height = cache.child_height_sum(&node);
+                                new_height = cache.child_height_sum(node);
                             }
         
                             LayoutType::Row => {
-                                new_height = cache.child_height_max(&node);
+                                new_height = cache.child_height_max(node);
                             }
         
                             LayoutType::Grid => {
-                                new_height = cache.grid_col_max(&node);
+                                new_height = cache.grid_col_max(node);
                             }
                         }
 
@@ -314,33 +314,33 @@ where
 
                 let position_type = node.position_type(store).unwrap_or_default();
 
-                cache.set_width(&node, new_width);
-                cache.set_height(&node, new_height);
-                cache.set_left(&node, new_left);
-                cache.set_right(&node, new_right);
-                cache.set_top(&node, new_top);
-                cache.set_bottom(&node, new_bottom);
+                cache.set_width(node, new_width);
+                cache.set_height(node, new_height);
+                cache.set_left(node, new_left);
+                cache.set_right(node, new_right);
+                cache.set_top(node, new_top);
+                cache.set_bottom(node, new_bottom);
                 
-                if let Some(parent) = &parent {
+                if let Some(parent) = parent {
                     if position_type == PositionType::ParentDirected {
                         cache.set_child_height_sum(
-                            &parent,
-                            cache.child_height_sum(&parent) + vertical_used_space,
+                            parent,
+                            cache.child_height_sum(parent) + vertical_used_space,
                         );
             
                         cache.set_child_height_max(
-                            &parent,
-                            vertical_used_space.max(cache.child_height_max(&parent)),
+                            parent,
+                            vertical_used_space.max(cache.child_height_max(parent)),
                         );
             
                         cache.set_child_width_sum(
-                            &parent,
-                            cache.child_width_sum(&parent) + horizontal_used_space,
+                            parent,
+                            cache.child_width_sum(parent) + horizontal_used_space,
                         );
             
                         cache.set_child_width_max(
-                            &parent,
-                            horizontal_used_space.max(cache.child_width_max(&parent)),
+                            parent,
+                            horizontal_used_space.max(cache.child_width_max(parent)),
                         );
                     }                    
                 } else {
@@ -372,8 +372,8 @@ where
         let row_between = parent.row_between(store).unwrap_or_default();
         let col_between = parent.col_between(store).unwrap_or_default();
 
-        let mut parent_width = cache.width(&parent);
-        let mut parent_height = cache.height(&parent);
+        let mut parent_width = cache.width(parent);
+        let mut parent_height = cache.height(parent);
 
 
         let parent_border_left = parent.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
@@ -398,7 +398,7 @@ where
                 // ////////////////////////////////
                 // Calculate inflexible children //
                 ///////////////////////////////////
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(parent) {
 
                     // if !parent.is_visible(store) {
                     //     continue;
@@ -427,9 +427,9 @@ where
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
                         match layout_type {
-                            LayoutType::Column => cache.child_width_max(&node),
-                            LayoutType::Row => cache.child_width_sum(&node),
-                            LayoutType::Grid => cache.grid_row_max(&node),
+                            LayoutType::Column => cache.child_width_max(node),
+                            LayoutType::Row => cache.child_width_sum(node),
+                            LayoutType::Grid => cache.grid_row_max(node),
                         }
                     );
             
@@ -438,9 +438,9 @@ where
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                             match layout_type {
-                                LayoutType::Column => cache.child_height_sum(&node),
-                                LayoutType::Row => cache.child_height_max(&node),
-                                LayoutType::Grid => cache.grid_col_max(&node),
+                                LayoutType::Column => cache.child_height_sum(node),
+                                LayoutType::Row => cache.child_height_max(node),
+                                LayoutType::Grid => cache.grid_col_max(node),
                             }
                     );
             
@@ -457,7 +457,7 @@ where
                     match parent_layout_type {
                         LayoutType::Column => {
                             if top == Units::Auto {
-                                if cache.stack_first_child(&node) {
+                                if cache.stack_first_child(node) {
                                     top = child_top;
                                 } else {
                                     top = row_between;
@@ -465,7 +465,7 @@ where
                             }
             
                             if bottom == Units::Auto {
-                                if cache.stack_last_child(&node) {
+                                if cache.stack_last_child(node) {
                                     bottom = child_bottom;
                                 }
                             }
@@ -481,7 +481,7 @@ where
             
                         LayoutType::Row => {
                             if left == Units::Auto {
-                                if cache.stack_first_child(&node) {
+                                if cache.stack_first_child(node) {
                                     left = child_left;
                                 } else {
                                     left = col_between;
@@ -489,7 +489,7 @@ where
                             }
             
                             if right == Units::Auto {
-                                if cache.stack_last_child(&node) {
+                                if cache.stack_last_child(node) {
                                     right = child_right;
                                 }
                             }
@@ -539,7 +539,7 @@ where
                         Units::Stretch(val) => {
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(ComputedData {
-                                node,
+                                node: node.clone(),
                                 value: val,
                                 min: min_left,
                                 max: max_left,
@@ -566,7 +566,7 @@ where
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(
                                 ComputedData {
-                                    node,
+                                    node: node.clone(),
                                     value: val,
                                     min: min_width,
                                     max: max_width,
@@ -579,12 +579,12 @@ where
                             match layout_type {
                                 LayoutType::Column => {
                                     new_width =
-                                        cache.child_width_max(&node);
+                                        cache.child_width_max(node);
                                 }
 
                                 LayoutType::Row | LayoutType::Grid=> {
                                     new_width =
-                                        cache.child_width_sum(&node);
+                                        cache.child_width_sum(node);
                                 }
                             }
 
@@ -609,7 +609,7 @@ where
                             horizontal_stretch_sum += val;
                             horizontal_axis.push(
                                 ComputedData {
-                                    node,
+                                    node: node.clone(),
                                     value: val,
                                     min: min_right,
                                     max: max_right,
@@ -637,7 +637,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node,
+                                    node: node.clone(),
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -665,7 +665,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node,
+                                    node: node.clone(),
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -678,12 +678,12 @@ where
                             match layout_type {
                                 LayoutType::Column | LayoutType::Grid => {
                                     new_height =
-                                        cache.child_height_sum(&node);
+                                        cache.child_height_sum(node);
                                 }
 
                                 LayoutType::Row => {
                                     new_height =
-                                        cache.child_height_max(&node);
+                                        cache.child_height_max(node);
                                 }
                             }
 
@@ -708,7 +708,7 @@ where
                             vertical_stretch_sum += val;
                             vertical_axis.push(
                                 ComputedData {
-                                    node,
+                                    node: node.clone(),
                                     value: val,
                                     min: min_bottom,
                                     max: max_bottom,
@@ -720,12 +720,12 @@ where
                         _ => {}
                     }
 
-                    cache.set_width(&node, new_width);
-                    cache.set_height(&node, new_height);
-                    cache.set_left(&node, new_left);
-                    cache.set_right(&node, new_right);
-                    cache.set_top(&node, new_top);
-                    cache.set_bottom(&node, new_bottom);
+                    cache.set_width(node, new_width);
+                    cache.set_height(node, new_height);
+                    cache.set_left(node, new_left);
+                    cache.set_right(node, new_right);
+                    cache.set_top(node, new_top);
+                    cache.set_bottom(node, new_bottom);
                 
                     if position_type == PositionType::ParentDirected {
                         parent_vertical_free_space -= parent_height - vertical_free_space;
@@ -735,13 +735,13 @@ where
                     }
 
                     cache
-                        .set_horizontal_free_space(&node, horizontal_free_space);
+                        .set_horizontal_free_space(node, horizontal_free_space);
                     cache
-                        .set_horizontal_stretch_sum(&node, horizontal_stretch_sum);
+                        .set_horizontal_stretch_sum(node, horizontal_stretch_sum);
                     cache
-                        .set_vertical_free_space(&node, vertical_free_space);
+                        .set_vertical_free_space(node, vertical_free_space);
                     cache
-                        .set_vertical_stretch_sum(&node, vertical_stretch_sum);
+                        .set_vertical_stretch_sum(node, vertical_stretch_sum);
                 
 
                     
@@ -778,8 +778,8 @@ where
 
                     match position_type {
                         PositionType::SelfDirected => {
-                            horizontal_free_space = cache.horizontal_free_space(&node);
-                            horizontal_stretch_sum = cache.horizontal_stretch_sum(&node);
+                            horizontal_free_space = cache.horizontal_free_space(node);
+                            horizontal_stretch_sum = cache.horizontal_stretch_sum(node);
                         }
 
                         PositionType::ParentDirected => {
@@ -790,8 +790,8 @@ where
                                 }
 
                                 LayoutType::Column => {
-                                    horizontal_free_space = cache.horizontal_free_space(&node);
-                                    horizontal_stretch_sum = cache.horizontal_stretch_sum(&node);
+                                    horizontal_free_space = cache.horizontal_free_space(node);
+                                    horizontal_stretch_sum = cache.horizontal_stretch_sum(node);
                                 }
 
                                 _=> {}
@@ -814,23 +814,23 @@ where
                     // Could perhaps replace this with a closure
                     match computed_data.axis {
                         Axis::Before => {
-                            cache.set_left(&node, new_value);
+                            cache.set_left(node, new_value);
                         }
 
                         Axis::Size => {
-                            cache.set_width(&node, new_value);
+                            cache.set_width(node, new_value);
                         }
 
                         Axis::After => {
-                            cache.set_right(&node, new_value);
+                            cache.set_right(node, new_value);
                         }
                     }
 
                     match position_type {
                         PositionType::SelfDirected => {
-                            cache.set_horizontal_stretch_sum(&node, horizontal_stretch_sum - computed_data.value);
+                            cache.set_horizontal_stretch_sum(node, horizontal_stretch_sum - computed_data.value);
                             cache.set_horizontal_free_space(
-                                &node,
+                                node,
                                 horizontal_free_space - new_value,
                             );
                         }
@@ -839,11 +839,11 @@ where
                             match parent_layout_type {
                                 LayoutType::Column => {
                                     cache.set_horizontal_stretch_sum(
-                                        &node,
+                                        node,
                                         horizontal_stretch_sum - computed_data.value,
                                     );
                                     cache.set_horizontal_free_space(
-                                        &node,
+                                        node,
                                         horizontal_free_space - new_value,
                                     );
                                 }
@@ -870,8 +870,8 @@ where
 
                     match position_type {
                         PositionType::SelfDirected => {
-                            vertical_free_space = cache.vertical_free_space(&node);
-                            vertical_stretch_sum = cache.vertical_stretch_sum(&node);
+                            vertical_free_space = cache.vertical_free_space(node);
+                            vertical_stretch_sum = cache.vertical_stretch_sum(node);
                         }
 
                         PositionType::ParentDirected => {
@@ -882,8 +882,8 @@ where
                                 }
 
                                 LayoutType::Row => {
-                                    vertical_free_space = cache.vertical_free_space(&node);
-                                    vertical_stretch_sum = cache.vertical_stretch_sum(&node);
+                                    vertical_free_space = cache.vertical_free_space(node);
+                                    vertical_stretch_sum = cache.vertical_stretch_sum(node);
                                 }     
                                 
                                 _=> {}
@@ -902,23 +902,23 @@ where
 
                     match computed_data.axis {
                         Axis::Before => {
-                            cache.set_top(&node, new_value);
+                            cache.set_top(node, new_value);
                         }
 
                         Axis::Size => {
-                            cache.set_height(&node, new_value);
+                            cache.set_height(node, new_value);
                         }
 
                         Axis::After => {
-                            cache.set_bottom(&node, new_value);
+                            cache.set_bottom(node, new_value);
                         }
                     }
 
                     match position_type {
                         PositionType::SelfDirected => {
-                            cache.set_vertical_stretch_sum(&node, vertical_stretch_sum - computed_data.value);
+                            cache.set_vertical_stretch_sum(node, vertical_stretch_sum - computed_data.value);
                             cache.set_vertical_free_space(
-                                &node,
+                                node,
                                 vertical_free_space - new_value,
                             );
                         }
@@ -927,11 +927,11 @@ where
                             match parent_layout_type {
                                 LayoutType::Row => {
                                     cache.set_vertical_stretch_sum(
-                                        &node,
+                                        node,
                                         vertical_stretch_sum - computed_data.value,
                                     );
                                     cache.set_vertical_free_space(
-                                        &node,
+                                        node,
                                         vertical_free_space - new_value,
                                     );
                                 }
@@ -950,25 +950,25 @@ where
                 let mut current_posx = 0.0;
                 let mut current_posy = 0.0;
 
-                let parent_posx = cache.posx(&parent) + parent_border_left;
-                let parent_posy = cache.posy(&parent) + parent_border_top;
+                let parent_posx = cache.posx(parent) + parent_border_left;
+                let parent_posy = cache.posy(parent) + parent_border_top;
 
                 ///////////////////////
                 // Position Children //
                 ///////////////////////
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(parent) {
 
                     // if !node.is_visible(store) {
                     //     continue;
                     // }
 
-                    let left = cache.left(&node);
-                    let right = cache.right(&node);
-                    let top = cache.top(&node);
-                    let bottom = cache.bottom(&node);
+                    let left = cache.left(node);
+                    let right = cache.right(node);
+                    let top = cache.top(node);
+                    let bottom = cache.bottom(node);
 
-                    let width = cache.width(&node);
-                    let height = cache.height(&node);
+                    let width = cache.width(node);
+                    let height = cache.height(node);
 
                     let position_type = node.position_type(store).unwrap_or_default();
 
@@ -997,8 +997,8 @@ where
                         }
                     };
 
-                    cache.set_posx(&node, new_posx);
-                    cache.set_posy(&node, new_posy);
+                    cache.set_posx(node, new_posx);
+                    cache.set_posy(node, new_posy);
                 }
             }
 
@@ -1062,8 +1062,8 @@ where
                 /////////////////////////////////////////////////
                 // Determine Size of flexible rows and columns //
                 /////////////////////////////////////////////////
-                let mut current_row_pos = cache.posy(&parent);
-                let mut current_col_pos = cache.posx(&parent);
+                let mut current_row_pos = cache.posy(parent);
+                let mut current_col_pos = cache.posx(parent);
 
                 for (i, row) in grid_rows.iter().enumerate() {
                     match row {
@@ -1101,7 +1101,7 @@ where
                 ///////////////////////////////////////////////////
                 // Position and Size child nodes within the grid //
                 ///////////////////////////////////////////////////
-                for node in hierarchy.child_iter(&parent) {
+                for node in hierarchy.child_iter(parent) {
 
                     // if !node.is_visible(store) {
                     //     continue;
@@ -1115,50 +1115,50 @@ where
 
                     // Set posx and width based on col_index and col_start
                     if col_start == 0 {
-                        cache.set_posx(&node, col_widths[col_start].0);
+                        cache.set_posx(node, col_widths[col_start].0);
                         cache.set_width(
-                            &node,
+                            node,
                             (col_widths[col_end].0 - col_widths[col_start].0)
                                 - col_between / 2.0,
                         );
                     } else if col_end + 1 == col_widths.len() {
                         cache
-                            .set_posx(&node, col_widths[col_start].0 + (col_between / 2.0));
+                            .set_posx(node, col_widths[col_start].0 + (col_between / 2.0));
                         cache.set_width(
-                            &node,
+                            node,
                             (col_widths[col_end].0 - col_widths[col_start].0)
                                 - col_between / 2.0,
                         );
                     } else {
                         cache
-                            .set_posx(&node, col_widths[col_start].0 + (col_between / 2.0));
+                            .set_posx(node, col_widths[col_start].0 + (col_between / 2.0));
                         cache.set_width(
-                            &node,
+                            node,
                             (col_widths[col_end].0 - col_widths[col_start].0) - col_between,
                         );
                     }
 
                     // Set posy and height based on row_index and row_span
                     if row_start == 0 {
-                        cache.set_posy(&node, row_heights[row_start].0);
+                        cache.set_posy(node, row_heights[row_start].0);
                         cache.set_height(
-                            &node,
+                            node,
                             (row_heights[row_end].0 - row_heights[row_start].0)
                                 - row_between / 2.0,
                         );
                     } else if row_end + 1 == row_heights.len() {
                         cache
-                            .set_posy(&node, row_heights[row_start].0 + (row_between / 2.0));
+                            .set_posy(node, row_heights[row_start].0 + (row_between / 2.0));
                         cache.set_height(
-                            &node,
+                            node,
                             (row_heights[row_end].0 - row_heights[row_start].0)
                                 - row_between / 2.0,
                         );
                     } else {
                         cache
-                            .set_posy(&node, row_heights[row_start].0 + (row_between / 2.0));
+                            .set_posy(node, row_heights[row_start].0 + (row_between / 2.0));
                         cache.set_height(
-                            &node,
+                            node,
                             (row_heights[row_end].0 - row_heights[row_start].0) - row_between,
                         );
                     }

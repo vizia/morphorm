@@ -76,10 +76,10 @@ pub fn render(mut world: World, root: Entity) {
 
                 for node in world.tree.down_iter() {
                     
-                    let posx = world.cache.posx(&node);
-                    let posy = world.cache.posy(&node);
-                    let width = world.cache.width(&node);
-                    let height = world.cache.height(&node);
+                    let posx = world.cache.posx(node);
+                    let posy = world.cache.posy(node);
+                    let width = world.cache.width(node);
+                    let height = world.cache.height(node);
                     
                     let red = world.store.red.get(&node).unwrap_or(&0u8);
                     let green = world.store.green.get(&node).unwrap_or(&0u8);
