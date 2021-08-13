@@ -191,8 +191,3 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
         Some(Units::Auto)
     }
 }
-
-impl<'a, T: Node<'a>> Node<'a> for Option<T>
-{
-    type Data = <T as Node<'a>>::Data;
-}

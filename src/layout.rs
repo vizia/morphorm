@@ -31,6 +31,7 @@ where
     C: Cache<Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
 {
+
     // Step 1 - Determine fist and last parent-directed child of each node and cache it
     // This needs to be done at least once before the rest of layout and when the position_type of a node changes
     for parent in hierarchy.down_iter() {
@@ -92,15 +93,15 @@ where
             cache.set_child_height_max(parent, 0.0);
         }
 
-        let parent_layout_type = parent.layout_type(store).unwrap_or_default();
+        let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
 
-        let child_left = parent.child_left(store).unwrap_or_default();
-        let child_right = parent.child_right(store).unwrap_or_default();
-        let child_top = parent.child_top(store).unwrap_or_default();
-        let child_bottom = parent.child_bottom(store).unwrap_or_default();
+        let child_left = parent.map_or(None, |parent| parent.child_left(store)).unwrap_or_default();
+        let child_right = parent.map_or(None, |parent| parent.child_right(store)).unwrap_or_default();
+        let child_top = parent.map_or(None, |parent| parent.child_top(store)).unwrap_or_default();
+        let child_bottom = parent.map_or(None, |parent| parent.child_bottom(store)).unwrap_or_default();
 
-        let row_between = parent.row_between(store).unwrap_or_default();
-        let col_between = parent.col_between(store).unwrap_or_default();
+        let row_between = parent.map_or(None, |parent| parent.row_between(store)).unwrap_or_default();
+        let col_between = parent.map_or(None, |parent| parent.col_between(store)).unwrap_or_default();
 
 
         let layout_type = node.layout_type(store).unwrap_or_default();
