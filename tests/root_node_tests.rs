@@ -13,7 +13,7 @@ fn root_node_pixel_width() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.cache.width(&root);
+    let computed_width = world.cache.width(root);
 
     assert_eq!(computed_width, 1000.0);
 }
@@ -28,7 +28,7 @@ fn root_node_pixel_height() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_height = world.cache.height(&root);
+    let computed_height = world.cache.height(root);
 
     assert_eq!(computed_height, 600.0);
 }
@@ -43,7 +43,7 @@ fn root_node_percentage_width() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.cache.width(&root);
+    let computed_width = world.cache.width(root);
 
     assert_eq!(computed_width, 0.0);
 }
@@ -58,7 +58,7 @@ fn root_node_percentage_height() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_height = world.cache.height(&root);
+    let computed_height = world.cache.height(root);
 
     assert_eq!(computed_height, 0.0);
 }
@@ -73,7 +73,7 @@ fn root_node_stretch_width() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_width = world.cache.width(&root);
+    let computed_width = world.cache.width(root);
 
     assert_eq!(computed_width, 0.0);
 }
@@ -88,7 +88,7 @@ fn root_node_stretch_height() {
 
     layout(&mut world.cache, &world.tree, &world.store);
 
-    let computed_height = world.cache.height(&root);
+    let computed_height = world.cache.height(root);
 
     assert_eq!(computed_height, 0.0);
 }
