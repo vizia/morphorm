@@ -36,6 +36,13 @@ where
     // This needs to be done at least once before the rest of layout and when the position_type of a node changes
     for parent in hierarchy.down_iter() {
 
+        // Reset the sum and max for the parent
+        cache.set_child_width_sum(parent, 0.0);
+        cache.set_child_height_sum(parent, 0.0);
+        cache.set_child_width_max(parent, 0.0);
+        cache.set_child_height_max(parent, 0.0);
+        
+
         let mut found_first = false;
         let mut last_child = None;
 
@@ -85,13 +92,6 @@ where
             (0.0, 0.0)
         };
 
-        // Reset the sum and max for the parent
-        if let Some(parent) = parent {
-            cache.set_child_width_sum(parent, 0.0);
-            cache.set_child_height_sum(parent, 0.0);
-            cache.set_child_width_max(parent, 0.0);
-            cache.set_child_height_max(parent, 0.0);
-        }
 
         let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
 
@@ -324,11 +324,12 @@ where
                 
                 if let Some(parent) = parent {
                     if position_type == PositionType::ParentDirected {
+
                         cache.set_child_height_sum(
                             parent,
                             cache.child_height_sum(parent) + vertical_used_space,
                         );
-            
+
                         cache.set_child_height_max(
                             parent,
                             vertical_used_space.max(cache.child_height_max(parent)),

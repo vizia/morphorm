@@ -16,10 +16,14 @@ fn main() {
     world.set_child_top(child1, Units::Pixels(50.0));
     world.set_child_bottom(child1, Units::Pixels(50.0));
 
-    
+
     let child2 = world.add(Some(child1));
     world.set_width(child2, Units::Pixels(100.0));
     world.set_height(child2, Units::Pixels(100.0));
+
+    let child3 = world.add(Some(child1));
+    world.set_width(child3, Units::Pixels(100.0));
+    world.set_height(child3, Units::Pixels(100.0));
 
 
     layout(&mut world.cache, &world.tree, &world.store);
