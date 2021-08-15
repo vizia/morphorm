@@ -240,6 +240,12 @@ pub struct Space {
     pub bottom: f32,
 }
 
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Size {
+    pub width: f32,
+    pub height: f32,
+}
+
 #[derive(Default)]
 pub struct NodeCache {
     // Computed Outputs
@@ -247,6 +253,7 @@ pub struct NodeCache {
 
     // Intermediate Values
     space: HashMap<Entity, Space>,
+    size: HashMap<Entity, Size>,
 
     child_width_max: HashMap<Entity, f32>,
     child_height_max: HashMap<Entity, f32>,
@@ -377,6 +384,22 @@ impl Cache for NodeCache {
 
         0.0
     }
+
+    // fn size_width(&self, node: Self::Item) -> f32 {
+    //     if let Some(size) = self.size.get(&node) {
+    //         return size.width;
+    //     }
+
+    //     0.0
+    // }
+
+    // fn size_height(&self, node: Self::Item) -> f32 {
+    //     if let Some(size) = self.size.get(&node) {
+    //         return size.height;
+    //     }
+
+    //     0.0
+    // }
 
     fn child_width_max(&self, node: Self::Item) -> f32 {
         *self.child_width_max.get(&node).unwrap()

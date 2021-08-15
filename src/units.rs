@@ -1,3 +1,5 @@
+use bitflags::bitflags;
+
 /// The layout type determines how nodes will be positioned when directed by the parent
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -56,6 +58,22 @@ impl Units {
     }
 }
 
+bitflags! {
+    pub struct GeometryChanged: u8 {
+        const CHANGE_POSX    = 0b00000001;
+        const CHANGE_POSY    = 0b00000010;
+        const CHANGE_WIDTH   = 0b00000100;
+        const CHANGE_HEIGHT  = 0b00001000;
+        const POSX_CHANGED   = 0b00010000;
+        const POSY_CHANGED   = 0b00100000;
+        const WIDTH_CHANGED  = 0b01000000;
+        const HEIGHT_CHANGED = 0b10000000; 
+    }     
+}
+
+
+
+// 
 
 #[derive(Debug, Clone, Copy)]
 pub struct Value {
