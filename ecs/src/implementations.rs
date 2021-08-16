@@ -271,6 +271,8 @@ pub struct NodeCache {
 
     stack_first_child: HashMap<Entity, bool>,
     stack_last_child: HashMap<Entity, bool>,
+
+    geometry_changed: HashMap<Entity, GeometryChanged>,
 }
 
 impl NodeCache {
@@ -297,27 +299,27 @@ impl NodeCache {
 
         self.stack_first_child.insert(entity, Default::default());
         self.stack_last_child.insert(entity, Default::default());
+
+        self.size.insert(entity, Default::default());
+
+        self.geometry_changed.insert(entity, Default::default());
     }
 }
 
 impl Cache for NodeCache {
     type Item = Entity;
 
-    fn reset(&mut self) {
-        for (_, value) in self.child_width_sum.iter_mut() {
-            *value = Default::default();
+    fn geometry_changed(&self, node: Self::Item) -> GeometryChanged {
+        if let Some(geometry_changed) = self.geometry_changed.get(&node) {
+            return *geometry_changed;
         }
 
-        for (_, value) in self.child_height_sum.iter_mut() {
-            *value = Default::default();
-        }
+        GeometryChanged::default()
+    }
 
-        for (_, value) in self.child_width_max.iter_mut() {
-            *value = Default::default();
-        }
-
-        for (_, value) in self.child_height_max.iter_mut() {
-            *value = Default::default();
+    fn set_geo_changed(&mut self, node: Self::Item, flag: GeometryChanged, value: bool) {
+        if let Some(geometry_changed) = self.geometry_changed.get_mut(&node) {
+            geometry_changed.set(flag, value);
         }
     }
 
@@ -385,21 +387,21 @@ impl Cache for NodeCache {
         0.0
     }
 
-    // fn size_width(&self, node: Self::Item) -> f32 {
-    //     if let Some(size) = self.size.get(&node) {
-    //         return size.width;
-    //     }
+    fn new_width(&self, node: Self::Item) -> f32 {
+        if let Some(size) = self.size.get(&node) {
+            return size.width;
+        }
 
-    //     0.0
-    // }
+        0.0
+    }
 
-    // fn size_height(&self, node: Self::Item) -> f32 {
-    //     if let Some(size) = self.size.get(&node) {
-    //         return size.height;
-    //     }
+    fn new_height(&self, node: Self::Item) -> f32 {
+        if let Some(size) = self.size.get(&node) {
+            return size.height;
+        }
 
-    //     0.0
-    // }
+        0.0
+    }
 
     fn child_width_max(&self, node: Self::Item) -> f32 {
         *self.child_width_max.get(&node).unwrap()
@@ -499,19 +501,34 @@ impl Cache for NodeCache {
             space.left = value;
         }
     }
+
     fn set_right(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.right = value;
         }
     }
+
     fn set_top(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.top = value;
         }
     }
+
     fn set_bottom(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.bottom = value;
+        }
+    }
+
+    fn set_new_width(&mut self, node: Self::Item, value: f32) {
+        if let Some(size) = self.size.get_mut(&node) {
+            size.width = value;
+        }
+    }
+
+    fn set_new_height(&mut self, node: Self::Item, value: f32) {
+        if let Some(size) = self.size.get_mut(&node) {
+            size.height = value;
         }
     }
 

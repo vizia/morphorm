@@ -2,7 +2,7 @@
 use crate::Node;
 use crate::Cache;
 use crate::Hierarchy;
-use crate::{Units, LayoutType, PositionType};
+use crate::{Units, LayoutType, PositionType, GeometryChanged};
 
 use smallvec::SmallVec;
 
@@ -41,6 +41,12 @@ where
         cache.set_child_height_sum(parent, 0.0);
         cache.set_child_width_max(parent, 0.0);
         cache.set_child_height_max(parent, 0.0);
+
+        cache.set_geo_changed(parent, GeometryChanged::POSX_CHANGED, false);
+        cache.set_geo_changed(parent, GeometryChanged::POSY_CHANGED, false);
+        cache.set_geo_changed(parent, GeometryChanged::WIDTH_CHANGED, false);
+        cache.set_geo_changed(parent, GeometryChanged::HEIGHT_CHANGED, false);
+        
         
 
         let mut found_first = false;
@@ -87,7 +93,7 @@ where
         let parent = hierarchy.parent(node);
 
         let (parent_width, parent_height) = if let Some(parent) = parent {
-            (cache.width(parent), cache.height(parent))
+            (cache.new_width(parent), cache.new_height(parent))
         } else {
             (0.0, 0.0)
         };
@@ -315,8 +321,8 @@ where
 
                 let position_type = node.position_type(store).unwrap_or_default();
 
-                cache.set_width(node, new_width);
-                cache.set_height(node, new_height);
+                cache.set_new_width(node, new_width);
+                cache.set_new_height(node, new_height);
                 cache.set_left(node, new_left);
                 cache.set_right(node, new_right);
                 cache.set_top(node, new_top);
@@ -374,8 +380,8 @@ where
         let row_between = parent.row_between(store).unwrap_or_default();
         let col_between = parent.col_between(store).unwrap_or_default();
 
-        let mut parent_width = cache.width(parent);
-        let mut parent_height = cache.height(parent);
+        let mut parent_width = cache.new_width(parent);
+        let mut parent_height = cache.new_height(parent);
 
 
         let parent_border_left = parent.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
@@ -722,8 +728,8 @@ where
                         _ => {}
                     }
 
-                    cache.set_width(node, new_width);
-                    cache.set_height(node, new_height);
+                    cache.set_new_width(node, new_width);
+                    cache.set_new_height(node, new_height);
                     cache.set_left(node, new_left);
                     cache.set_right(node, new_right);
                     cache.set_top(node, new_top);
@@ -820,7 +826,7 @@ where
                         }
 
                         Axis::Size => {
-                            cache.set_width(node, new_value);
+                            cache.set_new_width(node, new_value);
                         }
 
                         Axis::After => {
@@ -908,7 +914,7 @@ where
                         }
 
                         Axis::Size => {
-                            cache.set_height(node, new_value);
+                            cache.set_new_height(node, new_value);
                         }
 
                         Axis::After => {
@@ -969,8 +975,8 @@ where
                     let top = cache.top(node);
                     let bottom = cache.bottom(node);
 
-                    let width = cache.width(node);
-                    let height = cache.height(node);
+                    let new_width = cache.new_width(node);
+                    let new_height = cache.new_height(node);
 
                     let position_type = node.position_type(store).unwrap_or_default();
 
@@ -985,11 +991,11 @@ where
 
                             match parent_layout_type {
                                 LayoutType::Column => {
-                                    current_posy += top + height + bottom;
+                                    current_posy += top + new_height + bottom;
                                 }
 
                                 LayoutType::Row => {
-                                    current_posx += left + width + right;
+                                    current_posx += left + new_width + right;
                                 }
 
                                 _ => {}
@@ -998,9 +1004,28 @@ where
                             (new_posx, new_posy)
                         }
                     };
+                    
+
+                    if new_posx != cache.posx(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
+                    }
+
+                    if new_posy != cache.posy(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                    }
+
+                    if new_width != cache.width(node) {
+                        cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
+                    }
+
+                    if new_height != cache.height(node) {
+                        cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
+                    }
 
                     cache.set_posx(node, new_posx);
                     cache.set_posy(node, new_posy);
+                    cache.set_width(node, new_width);
+                    cache.set_height(node, new_height);
                 }
             }
 
