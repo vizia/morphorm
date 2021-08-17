@@ -48,6 +48,9 @@ pub fn render(mut world: World, root: Entity) {
 
     let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
+    world.cache.set_width(root, 1000.0);
+    world.cache.set_height(root, 600.0);
+
     el.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
         let window = windowed_context.window();
@@ -61,8 +64,28 @@ pub fn render(mut world: World, root: Entity) {
                     windowed_context.resize(*physical_size);
                     world.set_width(root, Units::Pixels(physical_size.width as f32));
                     world.set_height(root, Units::Pixels(physical_size.height as f32));
+                    world.cache.set_width(root, physical_size.width as f32);
+                    world.cache.set_height(root, physical_size.height as f32);
 
                     layout(&mut world.cache, &world.tree, &world.store);
+
+                    for node in world.tree.down_iter() {
+                        let geo_changed = world.cache.geometry_changed(node);
+                        print!("Node: {:?}", node);
+                        if geo_changed.contains(GeometryChanged::POSX_CHANGED) {
+                            print!("posx changed, ");
+                        }
+                        if geo_changed.contains(GeometryChanged::POSY_CHANGED) {
+                            print!("posy changed, ");
+                        }
+                        if geo_changed.contains(GeometryChanged::WIDTH_CHANGED) {
+                            print!("width changed, ");
+                        }
+                        if geo_changed.contains(GeometryChanged::HEIGHT_CHANGED) {
+                            print!("height changed, ");
+                        }
+                        println!("");
+                    }
 
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,

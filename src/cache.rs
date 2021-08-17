@@ -1,11 +1,14 @@
 use crate::Node;
+use crate::units::GeometryChanged;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
 pub trait Cache {
     type Item: for<'a> Node<'a>;
 
-    /// Reset all cache values to default
-    fn reset(&mut self);
+    // Getters
+
+
+    fn geometry_changed(&self, node: Self::Item) -> GeometryChanged;
 
     /// Get the computed width of a node
     fn width(&self, node: Self::Item) -> f32;
@@ -23,6 +26,9 @@ pub trait Cache {
     fn right(&self, node: Self::Item) -> f32;
     fn top(&self, node: Self::Item) -> f32;
     fn bottom(&self, node: Self::Item) -> f32;
+
+    fn new_width(&self, node: Self::Item) -> f32;
+    fn new_height(&self, node: Self::Item) -> f32;
 
     /// Get the computed maximum width of the child nodes
     fn child_width_max(&self, node: Self::Item) -> f32;
@@ -43,6 +49,9 @@ pub trait Cache {
     fn grid_col_max(&self, node: Self::Item) -> f32;
 
     // Setters
+
+    fn set_geo_changed(&mut self, node: Self::Item, flag: GeometryChanged, value: bool);
+
     fn set_child_width_sum(&mut self, node: Self::Item, value: f32);
     fn set_child_height_sum(&mut self, node: Self::Item, value: f32);
     fn set_child_width_max(&mut self, node: Self::Item, value: f32);
@@ -67,6 +76,9 @@ pub trait Cache {
     fn set_right(&mut self, node: Self::Item, value: f32);
     fn set_top(&mut self, node: Self::Item, value: f32);
     fn set_bottom(&mut self, node: Self::Item, value: f32);
+
+    fn set_new_width(&mut self, node: Self::Item, value: f32);
+    fn set_new_height(&mut self, node: Self::Item, value: f32);
 
     fn stack_first_child(&self, node: Self::Item) -> bool;
     fn set_stack_first_child(&mut self, node: Self::Item, value: bool);

@@ -59,6 +59,7 @@ impl Units {
 }
 
 bitflags! {
+    #[derive(Default)]
     pub struct GeometryChanged: u8 {
         const CHANGE_POSX    = 0b00000001;
         const CHANGE_POSY    = 0b00000010;
