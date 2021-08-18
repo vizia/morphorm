@@ -41,6 +41,7 @@ where
         cache.set_child_height_sum(parent, 0.0);
         cache.set_child_width_max(parent, 0.0);
         cache.set_child_height_max(parent, 0.0);
+        
 
         cache.set_geo_changed(parent, GeometryChanged::POSX_CHANGED, false);
         cache.set_geo_changed(parent, GeometryChanged::POSY_CHANGED, false);
@@ -97,7 +98,6 @@ where
         } else {
             (0.0, 0.0)
         };
-
 
         let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
 
@@ -1189,6 +1189,9 @@ where
                             (row_heights[row_end].0 - row_heights[row_start].0) - row_between,
                         );
                     }
+
+                    cache.set_new_width(node, cache.width(node));
+                    cache.set_new_height(node, cache.height(node));
                 }
             }
         }
