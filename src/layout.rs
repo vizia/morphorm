@@ -1135,10 +1135,10 @@ where
                     // }
 
                     let row_start = node.row_index(store).unwrap_or_default();
-                    let row_end = row_start + node.row_span(store).unwrap_or_default();
+                    let row_end = row_start + node.row_span(store).unwrap_or(1);
 
                     let col_start = node.col_index(store).unwrap_or_default();
-                    let col_end = col_start + node.col_span(store).unwrap_or_default();
+                    let col_end = col_start + node.col_span(store).unwrap_or(1);
 
                     // Set posx and width based on col_index and col_start
                     if col_start == 0 {
