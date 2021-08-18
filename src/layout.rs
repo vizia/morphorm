@@ -1140,55 +1140,56 @@ where
                     let col_start = node.col_index(store).unwrap_or_default();
                     let col_end = col_start + node.col_span(store).unwrap_or(1);
 
+
+                    let mut new_posx = 0.0;
+                    let mut new_posy = 0.0;
+                    let mut new_width = 0.0;
+                    let mut new_height = 0.0;
+
                     // Set posx and width based on col_index and col_start
                     if col_start == 0 {
-                        cache.set_posx(node, col_widths[col_start].0);
-                        cache.set_width(
-                            node,
-                            (col_widths[col_end].0 - col_widths[col_start].0)
-                                - col_between / 2.0,
-                        );
+                        new_posx = col_widths[col_start].0;
+                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between / 2.0;
                     } else if col_end + 1 == col_widths.len() {
-                        cache
-                            .set_posx(node, col_widths[col_start].0 + (col_between / 2.0));
-                        cache.set_width(
-                            node,
-                            (col_widths[col_end].0 - col_widths[col_start].0)
-                                - col_between / 2.0,
-                        );
+                        new_posx = col_widths[col_start].0 + (col_between / 2.0);
+                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between / 2.0;
                     } else {
-                        cache
-                            .set_posx(node, col_widths[col_start].0 + (col_between / 2.0));
-                        cache.set_width(
-                            node,
-                            (col_widths[col_end].0 - col_widths[col_start].0) - col_between,
-                        );
+                        new_posx = col_widths[col_start].0 + (col_between / 2.0);
+                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between;
                     }
 
                     // Set posy and height based on row_index and row_span
                     if row_start == 0 {
-                        cache.set_posy(node, row_heights[row_start].0);
-                        cache.set_height(
-                            node,
-                            (row_heights[row_end].0 - row_heights[row_start].0)
-                                - row_between / 2.0,
-                        );
+                        new_posy = row_heights[row_start].0;
+                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between / 2.0;
                     } else if row_end + 1 == row_heights.len() {
-                        cache
-                            .set_posy(node, row_heights[row_start].0 + (row_between / 2.0));
-                        cache.set_height(
-                            node,
-                            (row_heights[row_end].0 - row_heights[row_start].0)
-                                - row_between / 2.0,
-                        );
+                        new_posy = row_heights[row_start].0 + (row_between / 2.0);
+                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between / 2.0;
                     } else {
-                        cache
-                            .set_posy(node, row_heights[row_start].0 + (row_between / 2.0));
-                        cache.set_height(
-                            node,
-                            (row_heights[row_end].0 - row_heights[row_start].0) - row_between,
-                        );
+                        new_posy = row_heights[row_start].0 + (row_between / 2.0);
+                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between;
                     }
+
+                    if new_posx != cache.posx(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
+                    }
+
+                    if new_posy != cache.posy(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                    }
+
+                    if new_width != cache.width(node) {
+                        cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
+                    }
+
+                    if new_height != cache.height(node) {
+                        cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
+                    }
+
+                    cache.set_posx(node, new_posx);
+                    cache.set_posy(node, new_posy);
+                    cache.set_width(node, new_width);
+                    cache.set_height(node, new_height);
 
                     cache.set_new_width(node, cache.width(node));
                     cache.set_new_height(node, cache.height(node));
