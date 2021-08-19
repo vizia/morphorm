@@ -1036,8 +1036,11 @@ where
                 let grid_rows = parent.grid_rows(store).unwrap_or_default();
                 let grid_cols = parent.grid_cols(store).unwrap_or_default();
 
-                let mut row_heights = vec![(0.0, 0.0); grid_rows.len() + 1];
-                let mut col_widths = vec![(0.0, 0.0,); grid_cols.len() + 1];
+                let mut row_heights = vec![(0.0, 0.0); 2*grid_rows.len() + 2];
+                let mut col_widths = vec![(0.0, 0.0,); 2*grid_cols.len() + 2];
+
+                let row_heights_len = row_heights.len();
+                let col_widths_len = col_widths.len();
 
                 let mut col_free_space = parent_width;
                 let mut row_free_space = parent_height;
@@ -1045,13 +1048,73 @@ where
                 let mut row_stretch_sum = 0.0;
                 let mut col_stretch_sum = 0.0;
 
-                let row_between = parent.row_between(store).unwrap_or_default().value_or(parent_height, 0.0);
-                let col_between = parent.col_between(store).unwrap_or_default().value_or(parent_width, 0.0);
+                let row_between = parent.row_between(store).unwrap_or_default();
+                let col_between = parent.col_between(store).unwrap_or_default();
+
+                let child_left = parent.child_left(store).unwrap_or_default();
+                let child_right = parent.child_right(store).unwrap_or_default();
+                let child_top = parent.child_top(store).unwrap_or_default();
+                let child_bottom = parent.child_bottom(store).unwrap_or_default();
+
+                match child_top {
+                    Units::Pixels(val) => {
+                        row_heights[0].1 = val;
+                        row_free_space -= val;
+                    }
+
+                    Units::Stretch(val) => {
+                        row_stretch_sum += val;
+                    }
+
+                    _=> {}
+                }
+
+                match child_bottom {
+                    Units::Pixels(val) => {
+                        row_heights[row_heights_len - 1].1 = val;
+                        row_free_space -= val;
+                    }
+
+                    Units::Stretch(val) => {
+                        row_stretch_sum += val;
+                    }
+
+                    _=> {}
+                }
+
+                match child_left {
+                    Units::Pixels(val) => {
+                        col_widths[0].1 = val;
+                        col_free_space -= val;
+                    }
+
+                    Units::Stretch(val) => {
+                        col_stretch_sum += val;
+                    }
+
+                    _=> {}
+                }
+
+                match child_right {
+                    Units::Pixels(val) => {
+                        col_widths[col_widths_len - 1].1 = val;
+                        col_free_space -= val;
+                    }
+
+                    Units::Stretch(val) => {
+                        col_stretch_sum += val;
+                    }
+
+                    _=> {}
+                }
 
                 for (i, row) in grid_rows.iter().enumerate() {
+
+                    let row_index = 2 * i + 1;
+    
                     match row {
                         &Units::Pixels(val) => {
-                            row_heights[i].1 = val;
+                            row_heights[row_index].1 = val;
                             row_free_space -= val;
                         }
 
@@ -1061,12 +1124,29 @@ where
 
                         _ => {}
                     }
+
+                    if i < grid_rows.len() - 1 {
+                        let gutter_index = 2*i + 2;
+                        match row_between {
+                            Units::Pixels(val) => {
+                                row_heights[gutter_index].1 = val;
+                                row_free_space -= val;
+                            }
+
+                            Units::Stretch(val) => {
+                                row_stretch_sum += val;
+                            }
+
+                            _=> {}
+                        }
+                    }
                 }
 
                 for (i, col) in grid_cols.iter().enumerate() {
+                    let col_index = 2*i + 1;
                     match col {
                         &Units::Pixels(val) => {
-                            col_widths[i].1 = val;
+                            col_widths[col_index].1 = val;
                             col_free_space -= val;
                         }
 
@@ -1075,6 +1155,22 @@ where
                         }
 
                         _ => {}
+                    }
+
+                    if i < grid_cols.len() - 1 {
+                        let gutter_index = 2*i + 2;
+                        match col_between {
+                            Units::Pixels(val) => {
+                                col_widths[gutter_index].1 = val;
+                                col_free_space -= val;
+                            }
+
+                            Units::Stretch(val) => {
+                                col_stretch_sum += val;
+                            }
+
+                            _=> {}
+                        }
                     }
                 }
 
@@ -1089,41 +1185,113 @@ where
                 /////////////////////////////////////////////////
                 // Determine Size of flexible rows and columns //
                 /////////////////////////////////////////////////
-                let mut current_row_pos = cache.posy(parent);
-                let mut current_col_pos = cache.posx(parent);
+
+                match child_top {
+
+                    Units::Stretch(val) => {
+                        row_heights[0].1 = row_free_space * val / row_stretch_sum;
+                    }
+
+                    _=> {}
+                }
+
+                match child_bottom {
+
+                    Units::Stretch(val) => {
+                        row_heights[row_heights_len - 1].1 = row_free_space * val / row_stretch_sum;
+                    }
+
+                    _=> {}
+                }
+
+                match child_left {
+
+                    Units::Stretch(val) => {
+                        col_widths[0].1 = col_free_space * val / col_stretch_sum;
+                    }
+
+                    _=> {}
+                }
+
+                match child_right {
+
+                    Units::Stretch(val) => {
+                        col_widths[col_widths_len - 1].1 = col_free_space * val / col_stretch_sum;
+                    }
+
+                    _=> {}
+                }
+
+
+                let mut current_row_pos = cache.posy(parent) + row_heights[0].1;
+                let mut current_col_pos = cache.posx(parent) + col_widths[0].1;
 
                 for (i, row) in grid_rows.iter().enumerate() {
+                    
+                    let row_index = 2*i + 1;
                     match row {
                         &Units::Stretch(val) => {
-                            row_heights[i].1 = row_free_space * val / row_stretch_sum;
+                            row_heights[row_index].1 = row_free_space * val / row_stretch_sum;
                         }
 
                         _ => {}
                     }
 
-                    row_heights[i].0 = current_row_pos;
-                    current_row_pos += row_heights[i].1;
+                    row_heights[row_index].0 = current_row_pos;
+                    current_row_pos += row_heights[row_index].1;
+
+                    if i < grid_rows.len() - 1 {
+                        let gutter_index = 2*i + 2;
+                        match row_between {
+                            Units::Stretch(val) => {
+                                row_heights[gutter_index].1 = row_free_space * val / row_stretch_sum;
+                            }
+
+                            _=> {}
+                        }
+
+                        row_heights[gutter_index].0 = current_row_pos;
+                        current_row_pos += row_heights[gutter_index].1;
+                    }
+
+                    
                 }
                 let row_heights_len = row_heights.len() - 1;
-                row_heights[row_heights_len].0 = current_row_pos;
+                row_heights[row_heights_len - 1].0 = current_row_pos;
 
                 for (i, col) in grid_cols.iter().enumerate() {
+                    let col_index = 2*i + 1;
+                    
                     match col {
                         &Units::Stretch(val) => {
-                            col_widths[i].1 = col_free_space * val / col_stretch_sum;
+                            col_widths[col_index].1 = col_free_space * val / col_stretch_sum;
                         }
 
                         _ => {}
                     }
 
-                    col_widths[i].0 = current_col_pos;
+                    col_widths[col_index].0 = current_col_pos;
+                    current_col_pos += col_widths[col_index].1;
 
-                    current_col_pos += col_widths[i].1;
+                    if i < grid_cols.len() - 1 {
+                        let gutter_index = 2*i + 2;
+                        match col_between {
+                            Units::Stretch(val) => {
+                                col_widths[gutter_index].1 = col_free_space * val / col_stretch_sum;
+                            }
+
+                            _=> {}
+                        }
+
+                        col_widths[gutter_index].0 = current_col_pos;
+                        current_col_pos += col_widths[gutter_index].1;
+                    }
+
+                    
                 }
 
                 let col_widths_len = col_widths.len() - 1;
-                col_widths[col_widths_len].0 = current_col_pos;
-
+                col_widths[col_widths_len - 1].0 = current_col_pos;
 
                 ///////////////////////////////////////////////////
                 // Position and Size child nodes within the grid //
@@ -1134,41 +1302,20 @@ where
                     //     continue;
                     // }
 
-                    let row_start = node.row_index(store).unwrap_or_default();
-                    let row_end = row_start + node.row_span(store).unwrap_or(1);
-
-                    let col_start = node.col_index(store).unwrap_or_default();
-                    let col_end = col_start + node.col_span(store).unwrap_or(1);
+                    let row_start = 2 * node.row_index(store).unwrap_or_default() + 1;
+                    let row_span = 2 * node.row_span(store).unwrap_or(1) - 1;
+                    let row_end = row_start + row_span;
 
 
-                    let mut new_posx = 0.0;
-                    let mut new_posy = 0.0;
-                    let mut new_width = 0.0;
-                    let mut new_height = 0.0;
+                    let col_start = 2 * node.col_index(store).unwrap_or_default() + 1;
+                    let col_span = 2 * node.col_span(store).unwrap_or(1) - 1;
+                    let col_end = col_start + col_span;
 
-                    // Set posx and width based on col_index and col_start
-                    if col_start == 0 {
-                        new_posx = col_widths[col_start].0;
-                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between / 2.0;
-                    } else if col_end + 1 == col_widths.len() {
-                        new_posx = col_widths[col_start].0 + (col_between / 2.0);
-                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between / 2.0;
-                    } else {
-                        new_posx = col_widths[col_start].0 + (col_between / 2.0);
-                        new_width = (col_widths[col_end].0 - col_widths[col_start].0) - col_between;
-                    }
+                    let new_posx = col_widths[col_start].0;
+                    let new_width = col_widths[col_end].0 - new_posx;
 
-                    // Set posy and height based on row_index and row_span
-                    if row_start == 0 {
-                        new_posy = row_heights[row_start].0;
-                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between / 2.0;
-                    } else if row_end + 1 == row_heights.len() {
-                        new_posy = row_heights[row_start].0 + (row_between / 2.0);
-                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between / 2.0;
-                    } else {
-                        new_posy = row_heights[row_start].0 + (row_between / 2.0);
-                        new_height = (row_heights[row_end].0 - row_heights[row_start].0) - row_between;
-                    }
+                    let new_posy = row_heights[row_start].0;
+                    let new_height = row_heights[row_end].0 - new_posy;
 
                     if new_posx != cache.posx(node) {
                         cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
