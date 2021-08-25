@@ -10,6 +10,8 @@ pub trait Cache {
 
     fn geometry_changed(&self, node: Self::Item) -> GeometryChanged;
 
+    fn visible(&self, node: Self::Item) -> bool;
+
     /// Get the computed width of a node
     fn width(&self, node: Self::Item) -> f32;
 
@@ -49,6 +51,8 @@ pub trait Cache {
     fn grid_col_max(&self, node: Self::Item) -> f32;
 
     // Setters
+
+    fn set_visible(&mut self, node: Self::Item, value: bool);
 
     fn set_geo_changed(&mut self, node: Self::Item, flag: GeometryChanged, value: bool);
 

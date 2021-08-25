@@ -7,15 +7,6 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     /// A type representing an external store in case the position and size data is not be owned by the node itself (e.g. ECS)
     type Data;
 
-    /// Return true if the node is visibile
-    ///
-    /// Visibility in this case refers to the visibility of the node to the layout system,
-    /// not necessarily to the render system. For example, a node could be visually invisible
-    /// but still has its position and size determined by the layout system.
-    fn is_visible(&self, store: &'_ Self::Data) -> bool {
-        true
-    }
-
     /// Get the layout type of the node
     ///
     /// Layout type determines how the children of the node will be positioned and sized

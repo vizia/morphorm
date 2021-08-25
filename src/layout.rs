@@ -86,10 +86,10 @@ where
     for node in hierarchy.up_iter() {
 
         // Skip non-visible nodes
-        // if !node.is_visible(&store) {
-        //     continue;
-        // }
-        
+        let visible = cache.visible(node);
+        if !visible {
+            continue;
+        }
         
         let parent = hierarchy.parent(node);
 
@@ -365,9 +365,10 @@ where
     // Step 3 - Iterate down the hierarchy
     for parent in hierarchy.down_iter() {
 
-        // if !parent.is_visible(store) {
-        //     continue;
-        // }
+        let visible = cache.visible(parent);
+        if !visible {
+            continue;
+        }
 
         
 
@@ -408,9 +409,10 @@ where
                 ///////////////////////////////////
                 for node in hierarchy.child_iter(parent) {
 
-                    // if !parent.is_visible(store) {
-                    //     continue;
-                    // }
+                    let visible = cache.visible(parent);
+                    if !visible {
+                        continue;
+                    }
 
                     let layout_type = node.layout_type(store).unwrap_or_default();
 
@@ -966,9 +968,10 @@ where
                 ///////////////////////
                 for node in hierarchy.child_iter(parent) {
 
-                    // if !node.is_visible(store) {
-                    //     continue;
-                    // }
+                    let visible = cache.visible(node);
+                    if !visible {
+                        continue;
+                    }
 
                     let left = cache.left(node);
                     let right = cache.right(node);
@@ -1298,9 +1301,10 @@ where
                 ///////////////////////////////////////////////////
                 for node in hierarchy.child_iter(parent) {
 
-                    // if !node.is_visible(store) {
-                    //     continue;
-                    // }
+                    let visible = cache.visible(node);
+                    if !visible {
+                        continue;
+                    }
 
                     let row_start = 2 * node.row_index(store).unwrap_or_default() + 1;
                     let row_span = 2 * node.row_span(store).unwrap_or(1) - 1;

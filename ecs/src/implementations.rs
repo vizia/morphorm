@@ -10,10 +10,6 @@ use crate::tree::{ChildIterator, Tree};
 impl<'a> Node<'a> for Entity {
     type Data = Store;
 
-    fn is_visible(&self, store: &'_ Self::Data) -> bool {
-        store.visible.get(self).cloned().unwrap_or_default()
-    }
-
     fn layout_type(&self, store: &'_ Self::Data) -> Option<LayoutType> {
         store.layout_type.get(self).cloned()
     }
@@ -273,6 +269,8 @@ pub struct NodeCache {
     stack_last_child: HashMap<Entity, bool>,
 
     geometry_changed: HashMap<Entity, GeometryChanged>,
+
+    visible: HashMap<Entity, bool>,
 }
 
 impl NodeCache {
@@ -303,11 +301,21 @@ impl NodeCache {
         self.size.insert(entity, Default::default());
 
         self.geometry_changed.insert(entity, Default::default());
+
+        self.visible.insert(entity, true);
     }
 }
 
 impl Cache for NodeCache {
     type Item = Entity;
+
+    fn visible(&self, node: Self::Item) -> bool {
+        if let Some(value) = self.visible.get(&node) {
+            return *value;
+        }
+
+        true
+    }
 
     fn geometry_changed(&self, node: Self::Item) -> GeometryChanged {
         if let Some(geometry_changed) = self.geometry_changed.get(&node) {
@@ -433,6 +441,10 @@ impl Cache for NodeCache {
     }
 
     // Setters
+    fn set_visible(&mut self, node: Self::Item, value: bool) {
+        *self.visible.get_mut(&node).unwrap() = value;
+    }
+
     fn set_child_width_sum(&mut self, node: Self::Item, value: f32) {
         *self.child_width_sum.get_mut(&node).unwrap() = value;
     }
