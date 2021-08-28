@@ -241,7 +241,21 @@ where
                     }
         
                     Units::Auto => {
-                        new_width = min_width;
+                        match layout_type {
+                            LayoutType::Column => {
+                                new_width = cache.child_width_max(node);
+                            }
+        
+                            LayoutType::Row => {
+                                new_width = cache.child_width_sum(node);
+                            }
+        
+                            LayoutType::Grid => {
+                                new_width = cache.grid_row_max(node);
+                            }
+                        }
+
+                        new_width = new_width.clamp(min_width, max_width);
 
                         new_width += border_left + border_right;
         
@@ -276,7 +290,21 @@ where
                     }
         
                     Units::Auto => {
-                        new_height = min_height;
+                        match layout_type {
+                            LayoutType::Column => {
+                                new_height = cache.child_height_sum(node);
+                            }
+        
+                            LayoutType::Row => {
+                                new_height = cache.child_height_max(node);
+                            }
+        
+                            LayoutType::Grid => {
+                                new_height = cache.grid_col_max(node);
+                            }
+                        }
+
+                        new_height = new_height.clamp(min_height, max_height);
 
                         new_height += border_top + border_bottom;
         
@@ -424,7 +452,9 @@ where
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                             match layout_type {
-                                LayoutType::Column => cache.child_height_sum(node),
+                                LayoutType::Column => {
+                                    cache.child_height_sum(node)
+                                },
                                 LayoutType::Row => cache.child_height_max(node),
                                 LayoutType::Grid => cache.grid_col_max(node),
                             }
@@ -562,7 +592,19 @@ where
                         }
 
                         Units::Auto => {
-                            new_width = min_width;
+                            match layout_type {
+                                LayoutType::Column => {
+                                    new_width =
+                                        cache.child_width_max(node);
+                                }
+
+                                LayoutType::Row | LayoutType::Grid=> {
+                                    new_width =
+                                        cache.child_width_sum(node);
+                                }
+                            }
+
+                            new_width = new_width.clamp(min_width, max_width);
 
                             new_width += border_left + border_right;
                             horizontal_free_space -= new_width;
@@ -651,7 +693,19 @@ where
                         }
 
                         Units::Auto => {
-                            new_height = min_height;
+                            match layout_type {
+                                LayoutType::Column | LayoutType::Grid => {
+                                    new_height =
+                                        cache.child_height_sum(node);
+                                }
+
+                                LayoutType::Row => {
+                                    new_height =
+                                        cache.child_height_max(node);
+                                }
+                            }
+
+                            new_height = new_height.clamp(min_height, max_height);
 
                             new_height += border_top + border_bottom;
                             vertical_free_space -= new_height;
