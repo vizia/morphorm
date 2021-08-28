@@ -241,19 +241,7 @@ where
                     }
         
                     Units::Auto => {
-                        match layout_type {
-                            LayoutType::Column => {
-                                new_width = cache.child_width_max(node);
-                            }
-        
-                            LayoutType::Row => {
-                                new_width = cache.child_width_sum(node);
-                            }
-        
-                            LayoutType::Grid => {
-                                new_width = cache.grid_row_max(node);
-                            }
-                        }
+                        new_width = min_width;
 
                         new_width += border_left + border_right;
         
@@ -288,19 +276,7 @@ where
                     }
         
                     Units::Auto => {
-                        match layout_type {
-                            LayoutType::Column => {
-                                new_height = cache.child_height_sum(node);
-                            }
-        
-                            LayoutType::Row => {
-                                new_height = cache.child_height_max(node);
-                            }
-        
-                            LayoutType::Grid => {
-                                new_height = cache.grid_col_max(node);
-                            }
-                        }
+                        new_height = min_height;
 
                         new_height += border_top + border_bottom;
         
@@ -586,17 +562,7 @@ where
                         }
 
                         Units::Auto => {
-                            match layout_type {
-                                LayoutType::Column => {
-                                    new_width =
-                                        cache.child_width_max(node);
-                                }
-
-                                LayoutType::Row | LayoutType::Grid=> {
-                                    new_width =
-                                        cache.child_width_sum(node);
-                                }
-                            }
+                            new_width = min_width;
 
                             new_width += border_left + border_right;
                             horizontal_free_space -= new_width;
@@ -685,17 +651,7 @@ where
                         }
 
                         Units::Auto => {
-                            match layout_type {
-                                LayoutType::Column | LayoutType::Grid => {
-                                    new_height =
-                                        cache.child_height_sum(node);
-                                }
-
-                                LayoutType::Row => {
-                                    new_height =
-                                        cache.child_height_max(node);
-                                }
-                            }
+                            new_height = min_height;
 
                             new_height += border_top + border_bottom;
                             vertical_free_space -= new_height;

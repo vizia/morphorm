@@ -126,5 +126,13 @@ impl World {
         self.store.col_index.insert(entity, index);
         self.store.col_span.insert(entity, span);
     }
+
+    pub fn set_min_width(&mut self, entity: Entity, value: Units) {
+        self.store.min_width.insert(entity, value);
+    }
+
+    pub fn set_min_height(&mut self, entity: Entity, value: Units) {
+        self.store.min_height.insert(entity, value);
+    }
     
 }
