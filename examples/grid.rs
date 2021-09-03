@@ -3,53 +3,53 @@ use common::*;
 
 fn main() {
 
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Pixels(1000.0));
-    world.set_height(root, Units::Pixels(600.0));
+    let root = state.add(None);
+    state.set_width(root, Units::Pixels(1000.0));
+    state.set_height(root, Units::Pixels(600.0));
 
     // Set the root to a grid layout type with 4 stretch rows and 3 stretch columns 
-    world.set_layout_type(root, LayoutType::Grid);
-    world.set_grid_rows(root, vec![Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0)]);
-    world.set_grid_cols(root, vec![Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0)]);
-    world.set_row_between(root, Units::Pixels(20.0));
-    world.set_col_between(root, Units::Pixels(50.0));
+    state.set_layout_type(root, LayoutType::Grid);
+    state.set_grid_rows(root, vec![Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0)]);
+    state.set_grid_cols(root, vec![Units::Stretch(1.0), Units::Stretch(1.0), Units::Stretch(1.0)]);
+    state.set_row_between(root, Units::Pixels(20.0));
+    state.set_col_between(root, Units::Pixels(50.0));
 
-    let child1 = world.add(Some(root));
-    world.set_row(child1, 0, 1);
-    world.set_col(child1, 0, 2);
-
-
-    let child2 = world.add(Some(root));
-    world.set_row(child2, 0, 1);
-    world.set_col(child2, 2, 1);
-
-    let child3 = world.add(Some(root));
-    world.set_row(child3, 1, 2);
-    world.set_col(child3, 0, 1);
-
-    let child4 = world.add(Some(root));
-    world.set_row(child4, 1, 1);
-    world.set_col(child4, 1, 2);
-
-    let child5 = world.add(Some(root));
-    world.set_row(child5, 3, 1);
-    world.set_col(child5, 0, 1);
-
-    let child6 = world.add(Some(root));
-    world.set_row(child6, 2, 2);
-    world.set_col(child6, 1, 1);
-
-    let child7 = world.add(Some(root));
-    world.set_row(child7, 2, 2);
-    world.set_col(child7, 2, 1);
+    let child1 = state.add(Some(root));
+    state.set_row(child1, 0, 1);
+    state.set_col(child1, 0, 2);
 
 
+    let child2 = state.add(Some(root));
+    state.set_row(child2, 0, 1);
+    state.set_col(child2, 2, 1);
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    let child3 = state.add(Some(root));
+    state.set_row(child3, 1, 2);
+    state.set_col(child3, 0, 1);
+
+    let child4 = state.add(Some(root));
+    state.set_row(child4, 1, 1);
+    state.set_col(child4, 1, 2);
+
+    let child5 = state.add(Some(root));
+    state.set_row(child5, 3, 1);
+    state.set_col(child5, 0, 1);
+
+    let child6 = state.add(Some(root));
+    state.set_row(child6, 2, 2);
+    state.set_col(child6, 1, 1);
+
+    let child7 = state.add(Some(root));
+    state.set_row(child7, 2, 2);
+    state.set_col(child7, 2, 1);
 
 
-    render(world, root);
+
+    layout(&mut state.cache, &state.tree, &state.style);
+
+
+    render(state, root);
     
 }

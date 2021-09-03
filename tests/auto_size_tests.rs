@@ -6,14 +6,14 @@ use morphorm_ecs::*;
 /// Test of auto width on the root node with no children
 #[test]
 fn root_node_auto_width_no_child() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
+    let computed_root_width = state.cache.width(root);
 
     assert_eq!(computed_root_width, 0.0);
 }
@@ -21,18 +21,18 @@ fn root_node_auto_width_no_child() {
 /// Test of auto width on the root node with one child with pixel width
 #[test]
 fn root_node_auto_width_one_child_pixel_width() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    let child = world.add(Some(root));
-    world.set_width(root, Units::Pixels(200.0));
+    let child = state.add(Some(root));
+    state.set_width(root, Units::Pixels(200.0));
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
-    let computed_child_width = world.cache.width(child);
+    let computed_root_width = state.cache.width(root);
+    let computed_child_width = state.cache.width(child);
 
     assert_eq!(computed_root_width, 200.0);
     assert_eq!(computed_child_width, 200.0);
@@ -41,18 +41,18 @@ fn root_node_auto_width_one_child_pixel_width() {
 /// Test of auto width on the root node with one child with percentage width
 #[test]
 fn root_node_auto_width_one_child_percentage_width() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    let child = world.add(Some(root));
-    world.set_width(root, Units::Percentage(50.0));
+    let child = state.add(Some(root));
+    state.set_width(root, Units::Percentage(50.0));
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
-    let computed_child_width = world.cache.width(child);
+    let computed_root_width = state.cache.width(root);
+    let computed_child_width = state.cache.width(child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -61,18 +61,18 @@ fn root_node_auto_width_one_child_percentage_width() {
 /// Test of auto width on the root node with one child with stretch width
 #[test]
 fn root_node_auto_width_one_child_stretch_width() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    let child = world.add(Some(root));
-    world.set_width(root, Units::Stretch(1.0));
+    let child = state.add(Some(root));
+    state.set_width(root, Units::Stretch(1.0));
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
-    let computed_child_width = world.cache.width(child);
+    let computed_root_width = state.cache.width(root);
+    let computed_child_width = state.cache.width(child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -81,18 +81,18 @@ fn root_node_auto_width_one_child_stretch_width() {
 /// Test of auto width on the root node with one child with auto width
 #[test]
 fn root_node_auto_width_one_child_auto_width() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    let child = world.add(Some(root));
-    world.set_width(root, Units::Auto);
+    let child = state.add(Some(root));
+    state.set_width(root, Units::Auto);
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
-    let computed_child_width = world.cache.width(child);
+    let computed_root_width = state.cache.width(root);
+    let computed_child_width = state.cache.width(child);
 
     assert_eq!(computed_root_width, 0.0);
     assert_eq!(computed_child_width, 0.0);
@@ -101,22 +101,22 @@ fn root_node_auto_width_one_child_auto_width() {
 /// Test of auto width on the root node with one child with auto width and one grandchild with pixel width
 #[test]
 fn root_node_auto_width_one_child_auto_width_one_grandchild_auto_width() {
-    let mut world = World::default();
+    let mut state = State::default();
 
-    let root = world.add(None);
-    world.set_width(root, Units::Auto);
+    let root = state.add(None);
+    state.set_width(root, Units::Auto);
 
-    let child = world.add(Some(root));
-    world.set_width(root, Units::Auto);
+    let child = state.add(Some(root));
+    state.set_width(root, Units::Auto);
 
-    let grandchild = world.add(Some(child));
-    world.set_width(root, Units::Pixels(200.0));
+    let grandchild = state.add(Some(child));
+    state.set_width(root, Units::Pixels(200.0));
 
-    layout(&mut world.cache, &world.tree, &world.store);
+    layout(&mut state.cache, &state.tree, &state.style);
 
-    let computed_root_width = world.cache.width(root);
-    let computed_child_width = world.cache.width(child);
-    let computed_grandchild_width = world.cache.width(grandchild);
+    let computed_root_width = state.cache.width(root);
+    let computed_child_width = state.cache.width(child);
+    let computed_grandchild_width = state.cache.width(grandchild);
 
     assert_eq!(computed_root_width, 200.0);
     assert_eq!(computed_child_width, 200.0);

@@ -1,11 +1,15 @@
+
+pub mod prop_set;
+pub use prop_set::PropSet;
+
 use morphorm::{LayoutType, PositionType, Units};
 use std::{collections::HashMap};
 
 use crate::entity::Entity;
 
-/// A storage struct representing a component store for an ECS
+/// A storage struct representing a component style for an ECS
 #[derive(Default)]
-pub struct Store {
+pub struct Style {
     pub visible: HashMap<Entity, bool>,
 
     pub layout_type: HashMap<Entity, LayoutType>,

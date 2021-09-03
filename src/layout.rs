@@ -25,8 +25,8 @@ pub struct ComputedData<N: for<'b> Node<'b>> {
     axis: Axis,
 }
 
-/// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
-pub fn layout<'a, C, H>(cache: &mut C, hierarchy: &'a H, store: &'a <<H as Hierarchy<'a>>::Item as Node>::Data)
+/// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are styled within the provided cache
+pub fn layout<'a, C, H>(cache: &mut C, hierarchy: &'a H, style: &'a <<H as Hierarchy<'a>>::Item as Node>::Data)
 where
     C: Cache<Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
@@ -43,10 +43,11 @@ where
         cache.set_child_height_max(parent, 0.0);
         
 
-        cache.set_geo_changed(parent, GeometryChanged::POSX_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::POSY_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::WIDTH_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::HEIGHT_CHANGED, false);
+        // Reset changed flags
+        // cache.set_geo_changed(parent, GeometryChanged::POSX_CHANGED, false);
+        // cache.set_geo_changed(parent, GeometryChanged::POSY_CHANGED, false);
+        // cache.set_geo_changed(parent, GeometryChanged::WIDTH_CHANGED, false);
+        // cache.set_geo_changed(parent, GeometryChanged::HEIGHT_CHANGED, false);
         
         
 
@@ -57,7 +58,7 @@ where
 
             cache.set_stack_first_child(node, false);
             
-            let position_type = node.position_type(store).unwrap_or_default();
+            let position_type = node.position_type(style).unwrap_or_default();
 
             match position_type {
                 PositionType::ParentDirected => {
@@ -93,45 +94,41 @@ where
         
         let parent = hierarchy.parent(node);
 
-        let (parent_width, parent_height) = if let Some(parent) = parent {
+        // Skip over nodes where the parent is not auto sized
+        // if let Some(parent) = parent {
+        //     if parent.width(style).unwrap_or(Units::Stretch(1.0)) != Units::Auto {
+        //         continue;
+        //     }
+        // }
+
+        let (parent_width, _parent_height) = if let Some(parent) = parent {
             (cache.new_width(parent), cache.new_height(parent))
         } else {
             (0.0, 0.0)
         };
 
-        let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
+        let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(style)).unwrap_or_default();
 
-        let child_left = parent.map_or(None, |parent| parent.child_left(store)).unwrap_or_default();
-        let child_right = parent.map_or(None, |parent| parent.child_right(store)).unwrap_or_default();
-        let child_top = parent.map_or(None, |parent| parent.child_top(store)).unwrap_or_default();
-        let child_bottom = parent.map_or(None, |parent| parent.child_bottom(store)).unwrap_or_default();
+        let child_left = parent.map_or(None, |parent| parent.child_left(style)).unwrap_or_default();
+        let child_right = parent.map_or(None, |parent| parent.child_right(style)).unwrap_or_default();
 
-        let row_between = parent.map_or(None, |parent| parent.row_between(store)).unwrap_or_default();
-        let col_between = parent.map_or(None, |parent| parent.col_between(store)).unwrap_or_default();
+        let col_between = parent.map_or(None, |parent| parent.col_between(style)).unwrap_or_default();
 
 
-        let layout_type = node.layout_type(store).unwrap_or_default();
+        let layout_type = node.layout_type(style).unwrap_or_default();
 
-        let mut left = node.left(store).unwrap_or_default();
-        let mut right = node.right(store).unwrap_or_default();
-        let mut top = node.top(store).unwrap_or_default();
-        let mut bottom = node.bottom(store).unwrap_or_default();
+        let mut left = node.left(style).unwrap_or_default();
+        let mut right = node.right(style).unwrap_or_default();
 
+        let min_left = node.min_left(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let max_left = node.max_left(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        let min_right = node.min_right(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let max_right = node.max_right(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
 
-        let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-
-        let width = node.width(store).unwrap_or(Units::Stretch(1.0));
-        let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+        let width = node.width(style).unwrap_or(Units::Stretch(1.0));
 
         // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
-        let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
+        let min_width = node.min_width(style).unwrap_or_default().value_or(parent_width, 
             match layout_type {
                 LayoutType::Column => cache.child_width_max(node),
                 LayoutType::Row => cache.child_width_sum(node),
@@ -139,41 +136,15 @@ where
             }
         );
 
-        let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        let max_width = node.max_width(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
 
-        // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
-        let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
-                match layout_type {
-                    LayoutType::Column => cache.child_height_sum(node),
-                    LayoutType::Row => cache.child_height_max(node),
-                    LayoutType::Grid => cache.grid_col_max(node),
-                }
-        );
-
-        let max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
-
-        let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let border_left = node.border_left(style).unwrap_or_default().value_or(parent_width, 0.0);
+        let border_right = node.border_right(style).unwrap_or_default().value_or(parent_width, 0.0);
 
         // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
         // The override is also dependent on position in stack (first, last, other) and layout type
         match parent_layout_type {
             LayoutType::Column => {
-                if top == Units::Auto {
-                    if cache.stack_first_child(node) {
-                        top = child_top;
-                    } else {
-                        top = row_between;
-                    }
-                }
-
-                if bottom == Units::Auto {
-                    if cache.stack_last_child(node) {
-                        bottom = child_bottom;
-                    }
-                }
                 
                 if left == Units::Auto {
                     left = child_left;
@@ -198,14 +169,6 @@ where
                         right = child_right;
                     }
                 }
-                
-                if top == Units::Auto {
-                    top = child_top;
-                }
-
-                if bottom == Units::Auto {
-                    bottom = child_bottom;
-                }
             }
 
             // Should grids have parent overrides? (probably not)
@@ -216,12 +179,7 @@ where
         let mut new_width = 0.0;
         let mut new_right = 0.0;
 
-        let mut new_top = 0.0;
-        let mut new_height = 0.0;
-        let mut new_bottom = 0.0;
-
         let mut horizontal_used_space = 0.0;
-        let mut vertical_used_space = 0.0;
 
         match parent_layout_type {
             LayoutType::Column | LayoutType::Row => {
@@ -273,7 +231,137 @@ where
         
                     _ => {}
                 }
+
+                let position_type = node.position_type(style).unwrap_or_default();
+
+                cache.set_new_width(node, new_width);
+                cache.set_left(node, new_left);
+                cache.set_right(node, new_right);
+                
+                if let Some(parent) = parent {
+                    if position_type == PositionType::ParentDirected {
+
+                        cache.set_child_width_sum(
+                            parent,
+                            cache.child_width_sum(parent) + horizontal_used_space,
+                        );
+            
+                        cache.set_child_width_max(
+                            parent,
+                            horizontal_used_space.max(cache.child_width_max(parent)),
+                        );
+                    }                    
+                } else {
+                    break;
+                }
+            }
+
+            LayoutType::Grid => {
+                // TODO
+            }
+        }
+    }
+
+    for node in hierarchy.up_iter() {
+
+        // Skip non-visible nodes
+        let visible = cache.visible(node);
+        if !visible {
+            continue;
+        }
         
+        let parent = hierarchy.parent(node);
+
+        // Skip over nodes where the parent is not auto sized
+        // if let Some(parent) = parent {
+        //     if parent.height(style).unwrap_or(Units::Stretch(1.0)) != Units::Auto {
+        //         continue;
+        //     }
+        // }
+
+        //println!("Not Skipped: {:?}", node);
+
+        let (parent_width, parent_height) = if let Some(parent) = parent {
+            (cache.new_width(parent), cache.new_height(parent))
+        } else {
+            (0.0, 0.0)
+        };
+
+        let parent_layout_type = parent.map_or(None, |parent| parent.layout_type(style)).unwrap_or_default();
+
+        let child_top = parent.map_or(None, |parent| parent.child_top(style)).unwrap_or_default();
+        let child_bottom = parent.map_or(None, |parent| parent.child_bottom(style)).unwrap_or_default();
+
+        let row_between = parent.map_or(None, |parent| parent.row_between(style)).unwrap_or_default();
+
+        let layout_type = node.layout_type(style).unwrap_or_default();
+
+        let mut top = node.top(style).unwrap_or_default();
+        let mut bottom = node.bottom(style).unwrap_or_default();
+
+        let min_top = node.min_top(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let max_top = node.max_top(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        let min_bottom = node.min_bottom(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let max_bottom = node.max_bottom(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+
+        let height = node.height(style).unwrap_or(Units::Stretch(1.0));
+
+        // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
+        let min_height = node.min_height(style).unwrap_or_default().value_or( parent_height,
+                match layout_type {
+                    LayoutType::Column => cache.child_height_sum(node),
+                    LayoutType::Row => cache.child_height_max(node),
+                    LayoutType::Grid => cache.grid_col_max(node),
+                }
+        );
+
+        let max_height = node.max_height(style).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+
+        let border_top = node.border_top(style).unwrap_or_default().value_or(parent_width, 0.0);
+        let border_bottom = node.border_bottom(style).unwrap_or_default().value_or(parent_width, 0.0);
+
+        // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
+        // The override is also dependent on position in stack (first, last, other) and layout type
+        match parent_layout_type {
+            LayoutType::Column => {
+                if top == Units::Auto {
+                    if cache.stack_first_child(node) {
+                        top = child_top;
+                    } else {
+                        top = row_between;
+                    }
+                }
+
+                if bottom == Units::Auto {
+                    if cache.stack_last_child(node) {
+                        bottom = child_bottom;
+                    }
+                }
+            }
+
+            LayoutType::Row => {
+                
+                if top == Units::Auto {
+                    top = child_top;
+                }
+
+                if bottom == Units::Auto {
+                    bottom = child_bottom;
+                }
+            }
+
+            // Should grids have parent overrides? (probably not)
+            _=> {}
+        }
+
+        let mut new_top = 0.0;
+        let mut new_height = 0.0;
+        let mut new_bottom = 0.0;
+
+        let mut vertical_used_space = 0.0;
+
+        match parent_layout_type {
+            LayoutType::Column | LayoutType::Row => {
                 match top {
                     Units::Pixels(val) => {
                         new_top = val.clamp(min_top, max_top);
@@ -323,12 +411,9 @@ where
                     _ => {}
                 }
 
-                let position_type = node.position_type(store).unwrap_or_default();
+                let position_type = node.position_type(style).unwrap_or_default();
 
-                cache.set_new_width(node, new_width);
                 cache.set_new_height(node, new_height);
-                cache.set_left(node, new_left);
-                cache.set_right(node, new_right);
                 cache.set_top(node, new_top);
                 cache.set_bottom(node, new_bottom);
                 
@@ -343,16 +428,6 @@ where
                         cache.set_child_height_max(
                             parent,
                             vertical_used_space.max(cache.child_height_max(parent)),
-                        );
-            
-                        cache.set_child_width_sum(
-                            parent,
-                            cache.child_width_sum(parent) + horizontal_used_space,
-                        );
-            
-                        cache.set_child_width_max(
-                            parent,
-                            horizontal_used_space.max(cache.child_width_max(parent)),
                         );
                     }                    
                 } else {
@@ -374,25 +449,36 @@ where
             continue;
         }
 
+        // if let Some(grand_parent) = hierarchy.parent(parent) {
+        //     let grand_parent_geo_changed = cache.geometry_changed(grand_parent);
+        //     let parent_geo_changed = cache.geometry_changed(parent);
+            
+        //     if parent_geo_changed.is_empty() && grand_parent_geo_changed.is_empty() {
+        //         //println!("Skipped: {:?}", parent);
+        //         continue;
+        //     } else {
+        //         println!("Not Skipped: {:?} {:?} {:?}", parent, parent_geo_changed, grand_parent_geo_changed);
+        //     }
+
+        // }
         
+        let parent_layout_type = parent.layout_type(style).unwrap_or_default();
+        let child_left = parent.child_left(style).unwrap_or_default();
+        let child_right = parent.child_right(style).unwrap_or_default();
+        let child_top = parent.child_top(style).unwrap_or_default();
+        let child_bottom = parent.child_bottom(style).unwrap_or_default();
 
-        let parent_layout_type = parent.layout_type(store).unwrap_or_default();
-        let child_left = parent.child_left(store).unwrap_or_default();
-        let child_right = parent.child_right(store).unwrap_or_default();
-        let child_top = parent.child_top(store).unwrap_or_default();
-        let child_bottom = parent.child_bottom(store).unwrap_or_default();
-
-        let row_between = parent.row_between(store).unwrap_or_default();
-        let col_between = parent.col_between(store).unwrap_or_default();
+        let row_between = parent.row_between(style).unwrap_or_default();
+        let col_between = parent.col_between(style).unwrap_or_default();
 
         let mut parent_width = cache.new_width(parent);
         let mut parent_height = cache.new_height(parent);
 
 
-        let parent_border_left = parent.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let parent_border_right = parent.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let parent_border_top = parent.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let parent_border_bottom = parent.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let parent_border_left = parent.border_left(style).unwrap_or_default().value_or(parent_width, 0.0);
+        let parent_border_right = parent.border_right(style).unwrap_or_default().value_or(parent_width, 0.0);
+        let parent_border_top = parent.border_top(style).unwrap_or_default().value_or(parent_width, 0.0);
+        let parent_border_bottom = parent.border_bottom(style).unwrap_or_default().value_or(parent_width, 0.0);
 
         parent_width -= parent_border_left + parent_border_right;
         parent_height -= parent_border_top + parent_border_bottom;
@@ -418,28 +504,28 @@ where
                         continue;
                     }
 
-                    let layout_type = node.layout_type(store).unwrap_or_default();
+                    let layout_type = node.layout_type(style).unwrap_or_default();
 
-                    let mut left = node.left(store).unwrap_or_default();
-                    let mut right = node.right(store).unwrap_or_default();
-                    let mut top = node.top(store).unwrap_or_default();
-                    let mut bottom = node.bottom(store).unwrap_or_default();
+                    let mut left = node.left(style).unwrap_or_default();
+                    let mut right = node.right(style).unwrap_or_default();
+                    let mut top = node.top(style).unwrap_or_default();
+                    let mut bottom = node.bottom(style).unwrap_or_default();
             
             
-                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-                    let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-                    let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-                    let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-                    let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_left = node.min_left(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_left = node.max_left(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_right = node.min_right(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_right = node.max_right(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_top = node.min_top(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_top = node.max_top(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_bottom = node.min_bottom(style).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_bottom = node.max_bottom(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
             
-                    let width = node.width(store).unwrap_or(Units::Stretch(1.0));
-                    let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+                    let width = node.width(style).unwrap_or(Units::Stretch(1.0));
+                    let height = node.height(style).unwrap_or(Units::Stretch(1.0));
             
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
-                    let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
+                    let min_width = node.min_width(style).unwrap_or_default().value_or(parent_width, 
                         match layout_type {
                             LayoutType::Column => cache.child_width_max(node),
                             LayoutType::Row => cache.child_width_sum(node),
@@ -447,10 +533,10 @@ where
                         }
                     );
             
-                    let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let max_width = node.max_width(style).unwrap_or_default().value_or(parent_width, std::f32::MAX);
             
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
-                    let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
+                    let min_height = node.min_height(style).unwrap_or_default().value_or( parent_height,
                             match layout_type {
                                 LayoutType::Column => {
                                     cache.child_height_sum(node)
@@ -460,14 +546,14 @@ where
                             }
                     );
             
-                    let max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+                    let max_height = node.max_height(style).unwrap_or_default().value_or(parent_height, std::f32::MAX);
             
-                    let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
-                    let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
-                    let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
-                    let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_left = node.border_left(style).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_right = node.border_right(style).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_top = node.border_top(style).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_bottom = node.border_bottom(style).unwrap_or_default().value_or(parent_width, 0.0);
             
-                    let position_type = node.position_type(store).unwrap_or_default();
+                    let position_type = node.position_type(style).unwrap_or_default();
 
                     // Parent overrides
                     match parent_layout_type {
@@ -794,7 +880,7 @@ where
                     
                     let node = computed_data.node.clone();
 
-                    let position_type = node.position_type(store).unwrap_or_default();
+                    let position_type = node.position_type(style).unwrap_or_default();
 
                     match position_type {
                         PositionType::SelfDirected => {
@@ -886,7 +972,7 @@ where
 
                     let node = computed_data.node.clone();
 
-                    let position_type = node.position_type(store).unwrap_or_default();
+                    let position_type = node.position_type(style).unwrap_or_default();
 
                     match position_type {
                         PositionType::SelfDirected => {
@@ -991,7 +1077,7 @@ where
                     let new_width = cache.new_width(node);
                     let new_height = cache.new_height(node);
 
-                    let position_type = node.position_type(store).unwrap_or_default();
+                    let position_type = node.position_type(style).unwrap_or_default();
 
                     let (new_posx, new_posy) = match position_type {
                         PositionType::SelfDirected => {
@@ -1040,14 +1126,19 @@ where
                     cache.set_width(node, new_width);
                     cache.set_height(node, new_height);
                 }
+            
+                cache.set_geo_changed(parent, GeometryChanged::CHANGE_POSX, false);
+                cache.set_geo_changed(parent, GeometryChanged::CHANGE_POSY, false);
+                cache.set_geo_changed(parent, GeometryChanged::CHANGE_WIDTH, false);
+                cache.set_geo_changed(parent, GeometryChanged::CHANGE_HEIGHT, false);
             }
 
             LayoutType::Grid => {
                 /////////////////////////////////////////////////////
                 // Determine Size of non-flexible rows and columns //
                 /////////////////////////////////////////////////////
-                let grid_rows = parent.grid_rows(store).unwrap_or_default();
-                let grid_cols = parent.grid_cols(store).unwrap_or_default();
+                let grid_rows = parent.grid_rows(style).unwrap_or_default();
+                let grid_cols = parent.grid_cols(style).unwrap_or_default();
 
                 let mut row_heights = vec![(0.0, 0.0); 2*grid_rows.len() + 2];
                 let mut col_widths = vec![(0.0, 0.0,); 2*grid_cols.len() + 2];
@@ -1061,13 +1152,13 @@ where
                 let mut row_stretch_sum = 0.0;
                 let mut col_stretch_sum = 0.0;
 
-                let row_between = parent.row_between(store).unwrap_or_default();
-                let col_between = parent.col_between(store).unwrap_or_default();
+                let row_between = parent.row_between(style).unwrap_or_default();
+                let col_between = parent.col_between(style).unwrap_or_default();
 
-                let child_left = parent.child_left(store).unwrap_or_default();
-                let child_right = parent.child_right(store).unwrap_or_default();
-                let child_top = parent.child_top(store).unwrap_or_default();
-                let child_bottom = parent.child_bottom(store).unwrap_or_default();
+                let child_left = parent.child_left(style).unwrap_or_default();
+                let child_right = parent.child_right(style).unwrap_or_default();
+                let child_top = parent.child_top(style).unwrap_or_default();
+                let child_bottom = parent.child_bottom(style).unwrap_or_default();
 
                 match child_top {
                     Units::Pixels(val) => {
@@ -1316,13 +1407,13 @@ where
                         continue;
                     }
 
-                    let row_start = 2 * node.row_index(store).unwrap_or_default() + 1;
-                    let row_span = 2 * node.row_span(store).unwrap_or(1) - 1;
+                    let row_start = 2 * node.row_index(style).unwrap_or_default() + 1;
+                    let row_span = 2 * node.row_span(style).unwrap_or(1) - 1;
                     let row_end = row_start + row_span;
 
 
-                    let col_start = 2 * node.col_index(store).unwrap_or_default() + 1;
-                    let col_span = 2 * node.col_span(store).unwrap_or(1) - 1;
+                    let col_start = 2 * node.col_index(style).unwrap_or_default() + 1;
+                    let col_span = 2 * node.col_span(style).unwrap_or(1) - 1;
                     let col_end = col_start + col_span;
 
                     let new_posx = col_widths[col_start].0;
@@ -1346,6 +1437,11 @@ where
                     if new_height != cache.height(node) {
                         cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
                     }
+
+                    cache.set_geo_changed(node, GeometryChanged::CHANGE_POSX, false);
+                    cache.set_geo_changed(node, GeometryChanged::CHANGE_POSY, false);
+                    cache.set_geo_changed(node, GeometryChanged::CHANGE_WIDTH, false);
+                    cache.set_geo_changed(node, GeometryChanged::CHANGE_HEIGHT, false);
 
                     cache.set_posx(node, new_posx);
                     cache.set_posy(node, new_posy);

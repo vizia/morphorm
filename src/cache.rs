@@ -1,7 +1,7 @@
 use crate::Node;
 use crate::units::GeometryChanged;
 
-/// The Cache stores the result of layout as well as intermediate values for each node
+/// The Cache styles the result of layout as well as intermediate values for each node
 pub trait Cache {
     type Item: for<'a> Node<'a>;
 
