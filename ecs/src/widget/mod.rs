@@ -89,6 +89,10 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
         layer.width = width;
         layer.height = height;
 
+        if layer.image.is_none() {
+            state.resource_manager.images.create(canvas, layer).expect("Failed to create layer image");
+        }
+
         if let Some(image_id) = layer.image {
 
             canvas.set_render_target(RenderTarget::Image(image_id));
@@ -111,6 +115,6 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
             canvas.fill_text(posx + width/2.0, posy + height/2.0, &entity.to_string(), paint).expect("Failed to render text.");
             
             canvas.set_render_target(RenderTarget::Screen);
-        }
+        } 
     }
 }

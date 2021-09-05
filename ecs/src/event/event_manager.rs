@@ -1,7 +1,7 @@
 
 use std::collections::HashMap;
 
-use glutin::{event_loop::EventLoopWindowTarget, window::WindowId};
+use glutin::{ContextWrapper, PossiblyCurrent, event_loop::EventLoopWindowTarget, window::WindowId};
 
 use crate::{AppEvent, Canvas, CurrentContextWrapper, Entity, Propagation, State, Tree, TreeExt, TreeOp, Window, Units};
 
@@ -71,7 +71,7 @@ impl EventManager {
 
                     _=> {}
                 }
-                
+
                 state.cache.layer.insert(entity, current_layer_index);
 
             }
@@ -80,29 +80,19 @@ impl EventManager {
         }
     }
 
-    // Step 7 - Redraw
+    // Step 8 - Composite layers into final image
+    pub fn composite(&mut self, state: &mut State, window_id: WindowId) {
+        // Determine which layers belong to which window
+        // Redraw the layers
+         
+    }
+
+
+    // Step 7 - Redraw widgets into layers
     pub fn draw(&mut self, state: &mut State, window_id: WindowId) {
         if let Some(window) = self.windows.get(&window_id) {
             // Make all the other windows not current
-            for (_, other) in self.windows.iter() {
-                
-                if let Some(mut window_component) = state.components.remove(other) {
-                    if let Some(window_widget) = window_component.downcast_mut::<Window>() {
-                        if let Some(current_context_wrapper) = window_widget.handle.take() {
-                            let new_windowed_context = match current_context_wrapper {
-                                CurrentContextWrapper::PossiblyCurrent(windowed_context) => {
-                                    CurrentContextWrapper::NotCurrent(unsafe { windowed_context.make_not_current().unwrap()})
-                                }
-
-                                t => t,
-                            };
-                            window_widget.handle = Some(new_windowed_context);
-                        }
-                    }
-
-                    state.components.insert(*other, window_component);
-                }
-            } 
+            self.set_not_current(state, window_id);
 
             if let Some(mut window_component) = state.components.remove(window) {
                 if let Some(window_widget) = window_component.downcast_mut::<Window>() {
@@ -111,30 +101,7 @@ impl EventManager {
                             CurrentContextWrapper::PossiblyCurrent(windowed_context) => {
                                 let new_context = unsafe { windowed_context.make_current().unwrap()};
                                 
-                                let dpi_factor = new_context.window().scale_factor();
-                                let size = new_context.window().inner_size();
-                                
-                                window_widget.canvas.as_mut().unwrap().set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-                                window_widget.canvas.as_mut().unwrap().clear_rect(
-                                    0,
-                                    0,
-                                    size.width as u32,
-                                    size.height as u32,
-                                    femtovg::Color::rgb(255, 80, 80),
-                                );
-
-                                for entity in self.tree.down_iter() {
-                                    if let Some(mut component) = state.components.remove(&entity) {
-
-                                        component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
-
-                                        state.components.insert(entity, component);
-                                    }
-                                }
-                                
-                                window_widget.canvas.as_mut().unwrap().flush();
-
-                                new_context.swap_buffers().expect("Failed to swap buffers.");
+                                self.draw_widgets(state, *window, window_widget, &new_context);
 
                                 CurrentContextWrapper::PossiblyCurrent(new_context)
                             }
@@ -142,45 +109,7 @@ impl EventManager {
                             CurrentContextWrapper::NotCurrent(windowed_context) => {
                                 let new_context = unsafe { windowed_context.make_current().unwrap()};
                                 
-                                let dpi_factor = new_context.window().scale_factor();
-                                let size = new_context.window().inner_size();
-                                
-                                window_widget.canvas.as_mut().unwrap().set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-                                window_widget.canvas.as_mut().unwrap().clear_rect(
-                                    0,
-                                    0,
-                                    size.width as u32,
-                                    size.height as u32,
-                                    femtovg::Color::rgb(255, 80, 80),
-                                );
-                                
-                                //println!("Tree: {:?}", self.tree);
-                                if let Some(first_child) = window.first_child(&self.tree) {
-                                    let mut tree_iterator = first_child.tree_iter(&self.tree);
-
-                                    while let Some(entity) = tree_iterator.next() {
-                                        
-                                        if entity.prev_sibling(&self.tree) == Some(*window) {
-                                            break;
-                                        }
-    
-                                        if let Some(mut component) = state.components.remove(&entity) {
-                                            if component.is_window() {
-                                                let next = tree_iterator.next_branch(Some(entity));
-                                            } else {
-                                                component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
-                                            }
-
-                                            
-
-                                            state.components.insert(entity, component);
-                                        }
-                                    }   
-                                }
-                                
-                                window_widget.canvas.as_mut().unwrap().flush();
-
-                                new_context.swap_buffers().expect("Failed to swap buffers.");
+                                self.draw_widgets(state, *window, window_widget, &new_context);
 
                                 CurrentContextWrapper::PossiblyCurrent(new_context)
                             },
@@ -397,4 +326,70 @@ impl EventManager {
             // }
         }
     }
+
+
+    fn set_not_current(&self, state: &mut State, window_id: WindowId) {
+        for (_, other) in self.windows.iter() {
+            if let Some(mut window_component) = state.components.remove(other) {
+                if let Some(window_widget) = window_component.downcast_mut::<Window>() {
+                    if let Some(current_context_wrapper) = window_widget.handle.take() {
+                        let new_windowed_context = match current_context_wrapper {
+                            CurrentContextWrapper::PossiblyCurrent(windowed_context) => {
+                                CurrentContextWrapper::NotCurrent(unsafe { windowed_context.make_not_current().unwrap()})
+                            }
+
+                            t => t,
+                        };
+                        window_widget.handle = Some(new_windowed_context);
+                    }
+                }
+
+                state.components.insert(*other, window_component);
+            }
+        } 
+    }
+
+    fn draw_widgets(&self, state: &mut State, window: Entity, window_widget: &mut Window, new_context: &ContextWrapper<PossiblyCurrent, glutin::window::Window>) {
+        let dpi_factor = new_context.window().scale_factor();
+        let size = new_context.window().inner_size();
+        
+        window_widget.canvas.as_mut().unwrap().set_size(size.width as u32, size.height as u32, dpi_factor as f32);
+        window_widget.canvas.as_mut().unwrap().clear_rect(
+            0,
+            0,
+            size.width as u32,
+            size.height as u32,
+            femtovg::Color::rgb(255, 80, 80),
+        );
+        
+        //println!("Tree: {:?}", self.tree);
+        if let Some(first_child) = window.first_child(&self.tree) {
+            let mut tree_iterator = first_child.tree_iter(&self.tree);
+
+            while let Some(entity) = tree_iterator.next() {
+                
+                if entity.prev_sibling(&self.tree) == Some(window) {
+                    break;
+                }
+
+                if let Some(mut component) = state.components.remove(&entity) {
+                    if component.is_window() {
+                        let next = tree_iterator.next_branch(Some(entity));
+                    } else {
+                        component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
+                    }
+
+                    
+
+                    state.components.insert(entity, component);
+                }
+            }   
+        }
+        
+        window_widget.canvas.as_mut().unwrap().flush();
+
+        new_context.swap_buffers().expect("Failed to swap buffers.");
+    }
 }
+
+
