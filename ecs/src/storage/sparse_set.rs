@@ -3,6 +3,7 @@ use crate::Entity;
 
 
 
+#[derive(Default)]
 pub struct SparseSet<T> {
     pub indices: Vec<usize>,
     pub data: Vec<T>,
@@ -60,7 +61,7 @@ impl<T> SparseSet<T> {
         if entity.index() < self.indices.len() {
             let data_index = self.indices[entity.index()];
             if data_index < self.data.len() {
-                return &self.data[data_index];
+                return Some(&self.data[data_index]);
             }
         }
 
@@ -71,7 +72,7 @@ impl<T> SparseSet<T> {
         if entity.index() < self.indices.len() {
             let data_index = self.indices[entity.index()];
             if data_index < self.data.len() {
-                return &mut self.data[data_index];
+                return Some(&mut self.data[data_index]);
             }
         }
 

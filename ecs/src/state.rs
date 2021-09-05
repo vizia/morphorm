@@ -12,7 +12,7 @@ use crate::tree::Tree;
 
 use rand::Rng;
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Layer {
     pub posx: f32,
     pub posy: f32,

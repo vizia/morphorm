@@ -89,7 +89,7 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
         layer.width = width;
         layer.height = height;
 
-        if let Some(image_id) = layer.image_id {
+        if let Some(image_id) = layer.image {
 
             canvas.set_render_target(RenderTarget::Image(image_id));
 

@@ -10,11 +10,11 @@ pub struct ResourceManager {
 
 
 
-pub struct LayersResourceManager {
-    free_layers: VecDeque<Layer>,
-}
+// pub struct LayersResourceManager {
+//     free_layers: VecDeque<Layer>,
+// }
 
-impl LayersResourceManager {
+// impl LayersResourceManager {
     // pub fn new() -> Self {
     //     Self {
 
@@ -27,4 +27,4 @@ impl LayersResourceManager {
     // }
 
 
-}
+// }
