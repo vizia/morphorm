@@ -22,14 +22,14 @@ impl Index {
         self.0 == std::u32::MAX
     }
 
-    // fn set_index(&mut self, index: u32) {
-    //     if self.is_null() {
-    //         self.0 = index;
-    //     } else {
-    //         let count = self.count() + 1;
-    //         self.0 = (index | count << COUNT_MASK);
-    //     }
-    // }
+    fn set_index(&mut self, index: u32) {
+        if self.is_null() {
+            self.0 = index;
+        } else {
+            let count = self.count();
+            self.0 = (index | count << INDEX_BITS);
+        }
+    }
 
     fn index(&self) -> usize {
         if self.0 == std::u32::MAX {
@@ -60,11 +60,9 @@ impl Clone for Index {
 }
 
 
-
-#[derive(Default)]
 pub struct SparseSet<T> {
     indices: Vec<Index>,
-    data: Vec<T>,
+    pub data: Vec<T>,
 }
 
 impl<T> SparseSet<T> {
@@ -87,6 +85,33 @@ impl<T> SparseSet<T> {
         } else {
             self.indices[entity.index()] = Index::new(self.data.len() as u32, 0);
             self.data.push(data);
+        }
+    }
+
+    pub fn remove(&mut self, entity: Entity) {
+        if entity.index() >= self.indices.len() {
+            return;
+        }
+
+        let data_index = self.indices[entity.index()].index();
+
+        if data_index >= self.data.len() {
+            return;
+        }
+
+        let data_count = self.indices[entity.index()].count();
+
+        if data_count == 1 {
+            for item in self.indices.iter_mut() {
+                if item.index() == self.data.len() - 1 {
+                    item.set_index(data_index as u32);
+                }
+            }
+
+            self.data.swap_remove(data_index);
+            self.indices[entity.index()] = Index::null();
+        } else {
+            self.indices[entity.index()] = Index::new(data_index as u32, (data_count - 1) as u32);
         }
     }
 
@@ -130,6 +155,23 @@ impl<T> SparseSet<T> {
         }
 
         None
+    }
+
+    pub fn get_index(&self, entity: Entity) -> Option<usize> {
+        if entity.index() < self.indices.len() {
+            Some(self.indices[entity.index()].index())
+        } else {
+            None
+        }
+    } 
+}
+
+impl<T> Default for SparseSet<T> {
+    fn default() -> Self {
+        Self {
+            indices: Vec::new(),
+            data: Vec::new(),
+        }
     }
 }
 

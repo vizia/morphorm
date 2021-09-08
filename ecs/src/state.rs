@@ -2,9 +2,10 @@
 use std::collections::{HashMap, VecDeque};
 
 use femtovg::{FontId, ImageId};
+use glutin::window::WindowId;
 // use morphorm::{Units, LayoutType, PositionType, Cache, GeometryChanged};
 
-use crate::{NodeCache, ResourceManager, SparseSet, TreeExt, TreeOp};
+use crate::{ImageResource, NodeCache, ResourceManager, SparseSet, TreeExt, TreeOp};
 use crate::entity::{Entity, EntityManager};
 use crate::event::{Event, Component};
 use crate::style::Style;
@@ -12,13 +13,24 @@ use crate::tree::Tree;
 
 use rand::Rng;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Layer {
-    pub posx: f32,
-    pub posy: f32,
-    pub width: f32,
-    pub height: f32,
+    // The left edge of the layer in pixels
+    pub posx: usize,
+    // The right edge of the layer in pixels
+    pub posy: usize,
+    // The width of the layer in pixels
+    pub width: usize,
+    // The height of the layer in pixels
+    pub height: usize,
+    // The image id of the layer if one is allocated, else None
     pub image: Option<ImageId>,
+    // Whether or not the widgets in the layer need to be redrawn
+    pub needs_redraw: bool,
+
+    pub needs_clear: bool,
+    // The id of the window the layer should be drawn into
+    pub window: WindowId,
 }
 
 

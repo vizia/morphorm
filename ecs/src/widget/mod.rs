@@ -79,23 +79,32 @@ impl<T: Widget> Component for T {
 fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
     
     if let Some(layer) = state.layers.get_mut(entity) {
-        let posx = state.cache.posx(entity);
-        let posy = state.cache.posy(entity);
+        let posx = state.cache.posx(entity) - layer.posx as f32;
+        let posy = state.cache.posy(entity) - layer.posy as f32;
         let width = state.cache.width(entity);
         let height = state.cache.height(entity);
 
-        layer.posx = posx;
-        layer.posy = posy;
-        layer.width = width;
-        layer.height = height;
+        
+        // layer.width = width as usize;
+        // layer.height = height as usize;
 
-        if layer.image.is_none() {
-            state.resource_manager.images.create(canvas, layer).expect("Failed to create layer image");
-        }
+        // if layer.image.is_none() {
+        //     state.resource_manager.images.create(canvas, layer).expect("Failed to create layer image");
+        // }
 
         if let Some(image_id) = layer.image {
+            //println!("Draw {:?} to layer: {:?} with dimensions {} {}", entity, layer.image, layer.width, layer.height);
+
+            // if let Ok((w, h)) = canvas.image_size(image_id) {
+            //     println!("Image Layer Size: {} {}", w, h);
+            // }
 
             canvas.set_render_target(RenderTarget::Image(image_id));
+            if layer.needs_clear {
+                //println!("Clear Layer");
+                canvas.clear_rect(0, 0, layer.width as u32, layer.height as u32, Color::rgba(0, 0, 0, 0));
+                layer.needs_clear = false;
+            }
 
             let red = state.style.red.get(&entity).unwrap_or(&0u8);
             let green = state.style.green.get(&entity).unwrap_or(&0u8);
@@ -107,6 +116,8 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
             let paint = Paint::color(Color::rgb(*red,*green,*blue));
             canvas.fill_path(&mut path, paint);
 
+            //println!("Draw Path: {} {} {} {}", posx, posy, width, height);
+
             let mut paint = Paint::color(Color::black());
             paint.set_font_size(24.0);
             paint.set_text_align(Align::Center);
@@ -114,7 +125,9 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
             paint.set_font(&vec![state.font.unwrap()]);
             canvas.fill_text(posx + width/2.0, posy + height/2.0, &entity.to_string(), paint).expect("Failed to render text.");
             
-            canvas.set_render_target(RenderTarget::Screen);
+            //canvas.set_render_target(RenderTarget::Screen);
         } 
+
+        //canvas.set_render_target(RenderTarget::Screen);
     }
 }

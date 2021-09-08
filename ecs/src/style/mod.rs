@@ -57,4 +57,6 @@ pub struct Style {
     pub red: HashMap<Entity, u8>,
     pub green: HashMap<Entity, u8>,
     pub blue: HashMap<Entity, u8>,
+
+    pub should_redraw: HashMap<Entity, bool>,
 }

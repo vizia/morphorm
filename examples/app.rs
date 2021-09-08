@@ -25,7 +25,8 @@ fn main() {
         Element::new().build(state, window, |builder| builder);
         Element::new().build(state, sub_window, |builder| 
             builder
-                .set_width(Units::Pixels(200.0))
+                .set_width(Units::Pixels(300.0))
+                .set_height(Units::Pixels(100.0))
         );
         Element::new().build(state, window, |builder| builder);
         Element::new().build(state, sub_window, |builder| 

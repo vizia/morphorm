@@ -53,8 +53,8 @@ impl Entity {
     }
 
     /// Creates a new entity with a given index and generation
-    pub(crate) fn new(index: u32, generation: u32) -> Entity {
-        Entity(index | generation << ENTITY_INDEX_BITS)
+    pub(crate) fn new(index: u32, generation: u32) -> Self {
+        Self(index | generation << ENTITY_INDEX_BITS)
     }
 
     /// Returns true if the entity is null
@@ -81,7 +81,11 @@ impl Entity {
     }
 
     pub(crate) fn index(&self) -> usize {
-        (self.0 & ENTITY_INDEX_MASK) as usize
+        if self.0 == std::u32::MAX {
+            std::usize::MAX
+        } else {
+            (self.0 & ENTITY_INDEX_MASK) as usize
+        }
     }
 }
 

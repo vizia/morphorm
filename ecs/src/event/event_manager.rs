@@ -1,11 +1,15 @@
 
 use std::collections::HashMap;
 
+use rand::Rng;
+
+
+use femtovg::{Paint, Path, RenderTarget};
 use glutin::{ContextWrapper, PossiblyCurrent, event_loop::EventLoopWindowTarget, window::WindowId};
 
-use crate::{AppEvent, Canvas, CurrentContextWrapper, Entity, Propagation, State, Tree, TreeExt, TreeOp, Window, Units};
+use crate::{AppEvent, Canvas, CurrentContextWrapper, Entity, Propagation, State, Tree, TreeExt, TreeOp, Units, Window, state::Layer};
 
-use morphorm::Hierarchy;
+use morphorm::{Hierarchy, Cache};
 
 // Step 0 - Cleanup unused resources
 // Step 1 - Handle any events
@@ -44,47 +48,107 @@ impl EventManager {
     // Step 6 - Determine layers
     pub fn calculate_layers(&mut self, state: &mut State, window_id: WindowId) {
 
-        println!("Calculate Layers");
-        
+        if let Some(window) = self.windows.get(&window_id) {
+            self.set_not_current(state, window_id);
 
-        for entity in self.tree.down_iter() {
-            let desired_width = state.style.width.get(&entity).cloned().unwrap_or_default();
-            let desired_height = state.style.height.get(&entity).cloned().unwrap_or_default();
+            // Determine which layers widgets should be drawn into
+            // as well as the position and size of those layers
+            if let Some(mut window_component) = state.components.remove(window) {
+                if let Some(window_widget) = window_component.downcast_mut::<Window>() {
+                    if let Some(current_context_wrapper) = window_widget.handle.take() {
+                        let new_windowed_context = match current_context_wrapper {
 
-            if let Some(parent) = state.tree.parent(entity) {
-                let parent_layer = state.cache.layer.get(&parent).cloned().unwrap_or_default();
-                let mut current_layer_index = parent_layer;
-                match desired_width {
-                    Units::Pixels(_) => {
-                        match desired_height {
-                            Units::Pixels(_) => {
-                                // Pop a new layer off the free list
-                                // Assign this entity to that layer
-                                current_layer_index += 1;
-                                
-                                
-                            }
+                            CurrentContextWrapper::NotCurrent(windowed_context) => {
+                                let new_context = unsafe { windowed_context.make_current().unwrap()};
+
+                                if let Some(layer) = state.layers.get_mut(*window) {
+                                    layer.posx = layer.posx.min(state.cache.posx(*window) as usize);
+                                    layer.posy = layer.posy.min(state.cache.posy(*window) as usize);
+                                    layer.width = layer.width.max(state.cache.width(*window) as usize);
+                                    layer.height = layer.height.max(state.cache.height(*window) as usize);
+
+                                    if state.style.should_redraw.get(window) == Some(&true) {
+                                        layer.needs_redraw = true;
+                                        layer.needs_clear = true;
+                                    }
+                                }
+
+                                self.calc_layers(state, *window, window_widget.canvas.as_mut().unwrap(), window_id);
+
+                                // Reallocate layer images if the size has changed
+                                for layer in state.layers.data.iter_mut() {
+                                    if layer.window == window_id {
+                                        //if layer.width != layer.image.width {
+                                            //state.resource_manager.images.remove(layer.image);
+                                        layer.image = state.resource_manager.images.get(window_widget.canvas.as_mut().unwrap(), layer.image, layer.width, layer.height).ok();
+                                        layer.needs_clear = true;
+                                        layer.needs_redraw = true;
+                                        //}
+                                    }
+                                }
+
+                                window_widget.handle = Some(CurrentContextWrapper::PossiblyCurrent(new_context));
+                            },
 
                             _=> {}
-                        }
+                        };
                     }
-
-                    _=> {}
                 }
 
-                state.cache.layer.insert(entity, current_layer_index);
-
+                state.components.insert(*window, window_component);
             }
-
-            println!("Paint entity: {} to layer: {:?}", entity, state.cache.layer.get(&entity));
+        
+            
+        
         }
+   
     }
 
     // Step 8 - Composite layers into final image
     pub fn composite(&mut self, state: &mut State, window_id: WindowId) {
-        // Determine which layers belong to which window
+
         // Redraw the layers
-         
+        if let Some(window) = self.windows.get(&window_id) {
+            self.set_not_current(state, window_id);
+
+            if let Some(mut window_component) = state.components.remove(window) {
+                if let Some(window_widget) = window_component.downcast_mut::<Window>() {
+                    if let Some(current_context_wrapper) = window_widget.handle.take() {
+                        let new_windowed_context = match current_context_wrapper {
+
+                            CurrentContextWrapper::NotCurrent(windowed_context) => {
+                                let new_context = unsafe { windowed_context.make_current().unwrap()};
+                                
+                                let dpi_factor = new_context.window().scale_factor();
+                                let size = new_context.window().inner_size();
+                                
+                                window_widget.canvas.as_mut().unwrap().set_size(size.width as u32, size.height as u32, dpi_factor as f32);
+                                window_widget.canvas.as_mut().unwrap().clear_rect(
+                                    0,
+                                    0,
+                                    size.width as u32,
+                                    size.height as u32,
+                                    femtovg::Color::rgb(80, 80, 255),
+                                );
+
+                                self.draw_layers(state, window_widget.canvas.as_mut().unwrap(), window_id);
+
+                                new_context.swap_buffers().expect("Failed to swap buffers.");
+
+                                window_widget.handle = Some(CurrentContextWrapper::PossiblyCurrent(new_context));
+                            },
+
+                            // Unreachable because we made all the window contexts not current before this
+                            _=> {}
+                        };
+                        
+                    }
+                }
+
+                state.components.insert(*window, window_component);
+            }
+        }
+   
     }
 
 
@@ -97,24 +161,29 @@ impl EventManager {
             if let Some(mut window_component) = state.components.remove(window) {
                 if let Some(window_widget) = window_component.downcast_mut::<Window>() {
                     if let Some(current_context_wrapper) = window_widget.handle.take() {
-                        let new_windowed_context = match current_context_wrapper {
-                            CurrentContextWrapper::PossiblyCurrent(windowed_context) => {
-                                let new_context = unsafe { windowed_context.make_current().unwrap()};
-                                
-                                self.draw_widgets(state, *window, window_widget, &new_context);
-
-                                CurrentContextWrapper::PossiblyCurrent(new_context)
-                            }
-
+                        match current_context_wrapper {
                             CurrentContextWrapper::NotCurrent(windowed_context) => {
                                 let new_context = unsafe { windowed_context.make_current().unwrap()};
                                 
-                                self.draw_widgets(state, *window, window_widget, &new_context);
+                                if let Some(layer) = state.layers.get_mut(*window) {
+                                    // if layer.needs_clear {
+                                    //     window_widget.canvas.as_mut().unwrap().clear_rect(
+                                    //         0,
+                                    //         0,
+                                    //         layer.width as u32,
+                                    //         layer.height as u32,
+                                    //         femtovg::Color::rgb(255, 80, 80),
+                                    //     );
+                                    // }
+                                }
 
-                                CurrentContextWrapper::PossiblyCurrent(new_context)
+                                self.draw_widgets(state, *window, window_widget, &new_context);
+                                window_widget.handle = Some(CurrentContextWrapper::PossiblyCurrent(new_context));
+                                
                             },
+
+                            _=> {}
                         };
-                        window_widget.handle = Some(new_windowed_context);
                     }
                 }
 
@@ -350,19 +419,7 @@ impl EventManager {
     }
 
     fn draw_widgets(&self, state: &mut State, window: Entity, window_widget: &mut Window, new_context: &ContextWrapper<PossiblyCurrent, glutin::window::Window>) {
-        let dpi_factor = new_context.window().scale_factor();
-        let size = new_context.window().inner_size();
-        
-        window_widget.canvas.as_mut().unwrap().set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-        window_widget.canvas.as_mut().unwrap().clear_rect(
-            0,
-            0,
-            size.width as u32,
-            size.height as u32,
-            femtovg::Color::rgb(255, 80, 80),
-        );
-        
-        //println!("Tree: {:?}", self.tree);
+
         if let Some(first_child) = window.first_child(&self.tree) {
             let mut tree_iterator = first_child.tree_iter(&self.tree);
 
@@ -374,9 +431,130 @@ impl EventManager {
 
                 if let Some(mut component) = state.components.remove(&entity) {
                     if component.is_window() {
-                        let next = tree_iterator.next_branch(Some(entity));
+                        tree_iterator.next_branch(Some(entity));
                     } else {
+                        if let Some(layer) = state.layers.get(entity) {
+                            println!("Entity: {} Layer: {:?}", entity, layer);
+                        }
                         component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
+                    }
+
+                    state.components.insert(entity, component);
+                }
+            }   
+        }
+    }
+
+    fn draw_layers(&self, state: &mut State, canvas: &mut Canvas, window_id: WindowId) {
+
+        
+        canvas.set_render_target(RenderTarget::Screen);
+        for layer in state.layers.data.iter_mut() {
+            if layer.window == window_id {
+                if let Some(image_id) = layer.image {
+                    //println!("Composite layer: {} {} {} {} {:?}", layer.posx, layer.posy, layer.width, layer.height, layer.image);
+                    let mut path = Path::new();
+                    path.rect(layer.posx as f32, layer.posy as f32, layer.width as f32, layer.height as f32);
+                    let mut paint = Paint::image(image_id, layer.posx as f32, layer.posy as f32, layer.width as f32, layer.height as f32, 0.0, 1.0);
+                    canvas.fill_path(&mut path, paint);
+                }                
+            }
+
+            layer.needs_redraw = false;
+            layer.needs_clear = false;
+            layer.posx = std::usize::MAX;
+            layer.posy = std::usize::MAX;
+            layer.width = 0;
+            layer.height = 0;
+        }
+        canvas.flush();
+
+        
+    }
+
+    fn calc_layers(&self, state: &mut State, window: Entity, canvas: &mut Canvas, window_id: WindowId) {
+        
+        if let Some(first_child) = window.first_child(&self.tree) {
+            let mut tree_iterator = first_child.tree_iter(&self.tree);
+
+            while let Some(entity) = tree_iterator.next() {
+                if entity.prev_sibling(&self.tree) == Some(window) {
+                    break;
+                }
+
+                if let Some(mut component) = state.components.remove(&entity) {
+                    if component.is_window() {
+                        tree_iterator.next_branch(Some(entity));
+                    } else {
+                        let desired_width = state.style.width.get(&entity).cloned().unwrap_or_default();
+                        let desired_height = state.style.height.get(&entity).cloned().unwrap_or_default();
+            
+                        if let Some(parent) = state.tree.parent(entity) {
+                            // Safe to unwrap because this algorithm iterates down the tree and assigns a layer to each entity
+                            let parent_layer_index = state.layers.get_index(parent).unwrap();
+            
+            
+                            match desired_width {
+                                Units::Pixels(width) => {
+                                    match desired_height {
+                                        Units::Pixels(height) => {
+                                            //println!("Entity {} should be on separate layer.", entity);
+                                            // Size specified in pixels so widget can be drawn on a separate layer to its parent
+                                            // First, check if there's already an assigned layer and whether it's equal to the parent layer
+                                            // If it is equal then we can grab a layer from the resource manager and insert it into the set
+                                            if state.layers.get_index(entity) == Some(parent_layer_index) || state.layers.get(entity).is_none() {
+                                                //println!("Created new layer for entity: {}", entity);
+                                                state.layers.insert(entity, Layer {
+                                                    posx: std::usize::MAX,
+                                                    posy: std::usize::MAX,
+                                                    width: 0,
+                                                    height: 0,
+                                                    image: state.resource_manager.images.get(canvas, None, width as usize, height as usize).ok(),
+                                                    needs_redraw: true,
+                                                    needs_clear: true,
+                                                    window: window_id,
+                                                });
+                                            }
+            
+                                        }
+            
+                                        _=> {
+                                            state.layers.set_data_index(entity, parent);
+                                        }
+                                    }
+                                }
+            
+                                _=> {
+                                    state.layers.set_data_index(entity, parent);
+                                }
+                            }
+
+
+
+                            if let Some(layer) = state.layers.get_mut(entity) {
+
+                                //if layer.needs_reposition {
+                                layer.posx = layer.posx.min(state.cache.posx(entity) as usize);
+                                layer.posy = layer.posy.min(state.cache.posy(entity) as usize);
+                                layer.width = layer.width.max(state.cache.width(entity) as usize);
+                                layer.height = layer.height.max(state.cache.width(entity) as usize);
+
+                                //println!("Entity: {} Layer {:?} px {} py {}", entity, layer.image, state.cache.posx(entity), state.cache.posy(entity) );
+                                //}
+
+                                if state.style.should_redraw.get(&entity) == Some(&true) {
+                                    layer.needs_redraw = true;
+                                    layer.needs_clear = true;
+                                    //println!("Layer: {:?} needs clear", layer.image);
+                                }
+                            }
+
+                            //println!("So entity: {} should be drawn to window: {:?}, on layer with image id: {:?}", entity, window_id, state.layers.get(entity).unwrap().image);
+
+            
+                            //state.cache.layer.insert(entity, current_layer_index);
+            
+                        }
                     }
 
                     
@@ -385,10 +563,6 @@ impl EventManager {
                 }
             }   
         }
-        
-        window_widget.canvas.as_mut().unwrap().flush();
-
-        new_context.swap_buffers().expect("Failed to swap buffers.");
     }
 }
 

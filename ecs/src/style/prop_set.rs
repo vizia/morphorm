@@ -23,6 +23,7 @@ pub trait PropSet: AsEntity + Sized {
     /// Set the desired width
     fn set_width(self, state: &mut State, value: Units) -> Self {
         state.style.width.insert(self.entity(), value);
+        state.style.should_redraw.insert(self.entity(), true);
 
         self
     }
@@ -30,6 +31,7 @@ pub trait PropSet: AsEntity + Sized {
     /// Set the desired height
     fn set_height(self, state: &mut State, value: Units) -> Self {
         state.style.height.insert(self.entity(), value);
+        state.style.should_redraw.insert(self.entity(), true);
 
         self
     }

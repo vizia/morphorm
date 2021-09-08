@@ -1,7 +1,7 @@
 
 
 use glutin::{error::OsError, event_loop::{ControlFlow, EventLoop}, window::{WindowBuilder, WindowId}};
-use crate::{Entity, EventManager, State, Window, PropSet, Units};
+use crate::{Entity, EventManager, PropSet, State, Units, Window, state::Layer};
 
 type GEvent<'a, T> = glutin::event::Event<'a, T>;
 type WinEvent<'a> = glutin::event::WindowEvent<'a>;
@@ -43,6 +43,7 @@ impl Application {
 
         state.cache.layer.insert(root, 0);
 
+
         (app)(&mut state, root);
 
 
@@ -69,6 +70,7 @@ impl Application {
                     //let now = std::time::Instant::now();
                     event_manager.calculate_layers(&mut state, window_id);
                     event_manager.draw(&mut state, window_id);
+                    event_manager.composite(&mut state, window_id);
                     //println!("{}", now.elapsed().as_millis());
                 }
 
@@ -99,6 +101,11 @@ impl Application {
                         WinEvent::Resized(size) => {
                             if let Some(entity) = event_manager.windows.get(&window_id) {
                                 entity.set_width(&mut state, Units::Pixels(size.width as f32)).set_height(&mut state, Units::Pixels(size.height as f32));
+                                // Layout skips the main window so need to set the cached size manually
+                                if let Some(rect) = state.cache.rect.get_mut(entity) {
+                                    rect.width = size.width as f32;
+                                    rect.height = size.height as f32;
+                                }
                             }
                         }
 

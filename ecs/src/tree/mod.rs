@@ -192,8 +192,8 @@ mod tests {
         let mut tree = Tree::default();
         let mut entity_manager = EntityManager::default();
 
-        let root = entity_manager.create();
-        assert_eq!(root, Entity(0));
+        let root = entity_manager.create().expect("Failed");
+        assert_eq!(root, Entity::root());
 
         tree.add(root, None);
 

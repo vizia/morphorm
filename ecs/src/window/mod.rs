@@ -1,4 +1,4 @@
-use femtovg::renderer::OpenGl;
+use femtovg::{ImageFlags, PixelFormat, renderer::OpenGl};
 use glutin::{ContextBuilder, ContextWrapper, NotCurrent, PossiblyCurrent, event_loop::EventLoopWindowTarget, window::{WindowId}};
 
 // pub mod window_description;
@@ -9,7 +9,7 @@ pub use glutin::window::WindowBuilder;
 pub mod window_event;
 pub use window_event::WindowEvent;
 
-use crate::{AppEvent, Entity, EventExt, PositionType, PropSet, State, Units, Widget, Rect};
+use crate::{AppEvent, Entity, EventExt, PositionType, PropSet, Rect, State, Units, Widget, state::Layer};
 
 
 pub type Canvas = femtovg::Canvas<femtovg::renderer::OpenGl>;
@@ -73,6 +73,7 @@ impl Window {
             height: size.height as f32,
         });
 
+        
         canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
         canvas.clear_rect(
             0,
@@ -81,9 +82,22 @@ impl Window {
             size.height as u32,
             femtovg::Color::rgb(255, 80, 80),
         );
-
+        
         let window_id = windowed_context.window().id();
+        
+        state.layers.insert(entity, Layer {
+            posx: std::usize::MAX,
+            posy: std::usize::MAX,
+            width: size.width as usize,
+            height: size.height as usize,
+            image: state.resource_manager.images.get(&mut canvas, None, size.width as usize, size.height as usize).ok(),
+            needs_redraw: true,
+            needs_clear: true,
+            window: window_id,
+        });
 
+        //println!("Window: {} is on layer with image id: {:?}", entity, state.layers.get(entity).unwrap().image);
+        
         self.handle = Some(CurrentContextWrapper::PossiblyCurrent(windowed_context));
         self.canvas = Some(canvas);
 
