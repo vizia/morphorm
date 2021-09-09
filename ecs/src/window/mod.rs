@@ -90,7 +90,7 @@ impl Window {
             posy: std::usize::MAX,
             width: size.width as usize,
             height: size.height as usize,
-            image: state.resource_manager.images.get(&mut canvas, None, size.width as usize, size.height as usize).ok(),
+            image: None,
             needs_redraw: true,
             needs_clear: true,
             window: window_id,

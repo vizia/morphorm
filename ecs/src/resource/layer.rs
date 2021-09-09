@@ -51,21 +51,22 @@ impl LayersResourceManager {
     //     }
     // }
 
-    pub fn get(&mut self, canvas: &mut Canvas, image_id: Option<ImageId>, width: usize, height: usize) -> Result<ImageId, ErrorKind> {
+    pub fn get(&mut self, canvas: &mut Canvas, image_id: &mut Option<ImageId>, width: usize, height: usize) -> bool {
         
         if let Some(image) = image_id {
-            if let Ok((w, h)) = canvas.image_size(image) {
+            if let Ok((w, h)) = canvas.image_size(*image) {
                 if width != w || height != h {
-                    canvas.delete_image(image);
+                    canvas.delete_image(*image);
                     //canvas.realloc_image(image, width, height, PixelFormat::Rgba8, ImageFlags::FLIP_Y).expect("Failed to realloc");
-                    return canvas.create_image_empty(width, height, PixelFormat::Rgba8, ImageFlags::FLIP_Y);
-
+                    *image_id = canvas.create_image_empty(width, height, PixelFormat::Rgba8, ImageFlags::FLIP_Y).ok();
+                    return true;
                 }
             }
 
-            Ok(image)
+            return false;
         } else {
-            canvas.create_image_empty(width, height, PixelFormat::Rgba8, ImageFlags::FLIP_Y)
+            *image_id = canvas.create_image_empty(width, height, PixelFormat::Rgba8, ImageFlags::FLIP_Y).ok();
+            return true;
         }
     
     }

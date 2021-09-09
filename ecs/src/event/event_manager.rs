@@ -80,9 +80,9 @@ impl EventManager {
                                     if layer.window == window_id {
                                         //if layer.width != layer.image.width {
                                             //state.resource_manager.images.remove(layer.image);
-                                        layer.image = state.resource_manager.images.get(window_widget.canvas.as_mut().unwrap(), layer.image, layer.width, layer.height).ok();
-                                        layer.needs_clear = true;
-                                        layer.needs_redraw = true;
+                                        let flag = state.resource_manager.images.get(window_widget.canvas.as_mut().unwrap(), &mut layer.image, layer.width, layer.height);
+                                        layer.needs_clear = flag;
+                                        layer.needs_redraw = flag;
                                         //}
                                     }
                                 }
@@ -434,9 +434,10 @@ impl EventManager {
                         tree_iterator.next_branch(Some(entity));
                     } else {
                         if let Some(layer) = state.layers.get(entity) {
-                            println!("Entity: {} Layer: {:?}", entity, layer);
+                            if layer.needs_redraw {
+                                component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
+                            }
                         }
-                        component.on_draw(state, entity, window_widget.canvas.as_mut().unwrap());
                     }
 
                     state.components.insert(entity, component);
@@ -488,46 +489,76 @@ impl EventManager {
                     } else {
                         let desired_width = state.style.width.get(&entity).cloned().unwrap_or_default();
                         let desired_height = state.style.height.get(&entity).cloned().unwrap_or_default();
+
+                        
             
                         if let Some(parent) = state.tree.parent(entity) {
                             // Safe to unwrap because this algorithm iterates down the tree and assigns a layer to each entity
                             let parent_layer_index = state.layers.get_index(parent).unwrap();
-            
-            
-                            match desired_width {
-                                Units::Pixels(width) => {
-                                    match desired_height {
-                                        Units::Pixels(height) => {
-                                            //println!("Entity {} should be on separate layer.", entity);
-                                            // Size specified in pixels so widget can be drawn on a separate layer to its parent
-                                            // First, check if there's already an assigned layer and whether it's equal to the parent layer
-                                            // If it is equal then we can grab a layer from the resource manager and insert it into the set
-                                            if state.layers.get_index(entity) == Some(parent_layer_index) || state.layers.get(entity).is_none() {
-                                                //println!("Created new layer for entity: {}", entity);
-                                                state.layers.insert(entity, Layer {
-                                                    posx: std::usize::MAX,
-                                                    posy: std::usize::MAX,
-                                                    width: 0,
-                                                    height: 0,
-                                                    image: state.resource_manager.images.get(canvas, None, width as usize, height as usize).ok(),
-                                                    needs_redraw: true,
-                                                    needs_clear: true,
-                                                    window: window_id,
-                                                });
-                                            }
-            
-                                        }
-            
-                                        _=> {
-                                            state.layers.set_data_index(entity, parent);
-                                        }
+
+                            let width = state.cache.width(entity);
+                            let height = state.cache.height(entity);
+
+                            if let Some(unique_layer_flag) =  state.style.unique_layer.get(&entity) {
+                                if *unique_layer_flag {
+                                    
+                                    if state.layers.get_index(entity) == Some(parent_layer_index) || state.layers.get(entity).is_none() {
+                                        println!("Entity {} is on a unique layer", entity);
+                                        //let mut image = None;
+                                        //let flag= state.resource_manager.images.get(canvas, &mut image, width as usize, height as usize);
+                                        state.layers.insert(entity, Layer {
+                                            posx: std::usize::MAX,
+                                            posy: std::usize::MAX,
+                                            width: 0,
+                                            height: 0,
+                                            image: None,
+                                            needs_redraw: true,
+                                            needs_clear: true,
+                                            window: window_id,
+                                        });
                                     }
                                 }
-            
-                                _=> {
-                                    state.layers.set_data_index(entity, parent);
-                                }
+                            } else {
+                                match desired_width {
+                                    Units::Pixels(width) => {
+                                        match desired_height {
+                                            Units::Pixels(height) => {
+                                                //println!("Entity {} should be on separate layer.", entity);
+                                                // Size specified in pixels so widget can be drawn on a separate layer to its parent
+                                                // First, check if there's already an assigned layer and whether it's equal to the parent layer
+                                                // If it is equal then we can grab a layer from the resource manager and insert it into the set
+                                                if state.layers.get_index(entity) == Some(parent_layer_index) || state.layers.get(entity).is_none() {
+                                                    //println!("Created new layer for entity: {}", entity);
+                                                    //let mut image = None;
+                                                    //let flag= state.resource_manager.images.get(canvas, &mut image, width as usize, height as usize);
+                                                    state.layers.insert(entity, Layer {
+                                                        posx: std::usize::MAX,
+                                                        posy: std::usize::MAX,
+                                                        width: 0,
+                                                        height: 0,
+                                                        image: None,
+                                                        needs_redraw: true,
+                                                        needs_clear: true,
+                                                        window: window_id,
+                                                    });
+                                                }
+                
+                                            }
+                
+                                            _=> {
+                                                state.layers.set_data_index(entity, parent);
+                                            }
+                                        }
+                                    }
+                
+                                    _=> {
+                                        state.layers.set_data_index(entity, parent);
+                                    }
+                                }                                
                             }
+            
+            
+
 
 
 
@@ -537,7 +568,7 @@ impl EventManager {
                                 layer.posx = layer.posx.min(state.cache.posx(entity) as usize);
                                 layer.posy = layer.posy.min(state.cache.posy(entity) as usize);
                                 layer.width = layer.width.max(state.cache.width(entity) as usize);
-                                layer.height = layer.height.max(state.cache.width(entity) as usize);
+                                layer.height = layer.height.max(state.cache.height(entity) as usize);
 
                                 //println!("Entity: {} Layer {:?} px {} py {}", entity, layer.image, state.cache.posx(entity), state.cache.posy(entity) );
                                 //}

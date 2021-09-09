@@ -59,4 +59,5 @@ pub struct Style {
     pub blue: HashMap<Entity, u8>,
 
     pub should_redraw: HashMap<Entity, bool>,
+    pub unique_layer: HashMap<Entity, bool>,
 }

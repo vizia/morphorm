@@ -93,7 +93,7 @@ fn draw_widget(state: &mut State, entity: Entity, canvas: &mut Canvas) {
         // }
 
         if let Some(image_id) = layer.image {
-            //println!("Draw {:?} to layer: {:?} with dimensions {} {}", entity, layer.image, layer.width, layer.height);
+            println!("Draw {:?} with {} {} to layer: {:?} with {} {}", entity, width, height, layer.image, layer.width, layer.height);
 
             // if let Ok((w, h)) = canvas.image_size(image_id) {
             //     println!("Image Layer Size: {} {}", w, h);

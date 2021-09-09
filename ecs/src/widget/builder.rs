@@ -24,6 +24,12 @@ impl<'a, W: Widget> Builder<'a, W> {
         self.entity
     }
 
+    pub fn set_unique_layer(self, value: bool) -> Self {
+        self.state.style.unique_layer.insert(self.entity, value);
+
+        self
+    }
+
     pub fn set_left(self, value: Units) -> Self {
         self.entity.set_left(self.state, value);
 
