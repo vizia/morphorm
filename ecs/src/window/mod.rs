@@ -4,7 +4,9 @@ use glutin::{ContextBuilder, ContextWrapper, NotCurrent, PossiblyCurrent, event_
 // pub mod window_description;
 // pub use window_description::*;
 
-pub use glutin::window::WindowBuilder;
+// pub use glutin::window::WindowBuilder;
+
+pub type WindowDescription = glutin::window::WindowBuilder;
 
 pub mod window_event;
 pub use window_event::WindowEvent;
@@ -21,15 +23,15 @@ pub enum CurrentContextWrapper {
 
 #[derive(Default)]
 pub struct Window {
-    window_builder: WindowBuilder,
+    window_description: WindowDescription,
     pub handle: Option<CurrentContextWrapper>,
     pub canvas: Option<Canvas>,
 }
 
 impl Window {
-    pub fn new(window_builder: WindowBuilder) -> Self {
+    pub fn new(window_description: WindowDescription) -> Self {
         Self {
-            window_builder,
+            window_description,
             handle: None,
             canvas: None,
         }
@@ -42,7 +44,7 @@ impl Window {
         //     300,
         // ));
 
-        let windowed_context = ContextBuilder::new().build_windowed(self.window_builder.clone(), event_loop).expect("Failed to make window");
+        let windowed_context = ContextBuilder::new().build_windowed(self.window_description.clone(), event_loop).expect("Failed to make window");
 
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
@@ -114,7 +116,7 @@ impl Widget for Window {
 
         entity.emit(state, AppEvent::CreateWindow(entity));
 
-        if let Some(window_size) = self.window_builder.window.inner_size {
+        if let Some(window_size) = self.window_description.window.inner_size {
             entity
                 .set_width(state, Units::Pixels(window_size.to_physical::<u32>(1.0).width as f32))
                 .set_height(state, Units::Pixels(window_size.to_physical::<u32>(1.0).height as f32));

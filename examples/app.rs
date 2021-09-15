@@ -4,7 +4,7 @@ use morphorm::LayoutType;
 use morphorm_ecs::*;
 
 fn main() {
-    let window_description = WindowBuilder::new()
+    let window_description = WindowDescription::new()
         .with_title("Main Window");
 
     let app = Application::new(window_description, |state, window| {
