@@ -1,6 +1,6 @@
 [package]
 name = "morphorm"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 author = "George Atkinson"
 license = "MIT"
@@ -19,3 +19,6 @@ morphorm-ecs = {version = "0.1.0", path = "ecs"}
 winit = { version = "0.25", default-features = false }
 femtovg = {version = "0.2.2", default-features = false}
 glutin = "0.27.0"
+
+[lib]
+doctest = false
