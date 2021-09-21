@@ -21,8 +21,8 @@
 //!   to the node type and so the computed results cannot be styled within the node itself (due to the borrow checker). 
 //!
 //! Once the appropriate traits have been implmented, layout can be performed on the whole tree, e.g.
-//! ```
-//! layout(&mut state.cache, &state.tree, &state.style);
+//! ```no_run
+//! layout(&mut world.cache, &world.tree, &world.store);
 //! ```
 //! In this example the cache, tree, and a style for the node properties are kept in an ECS state struct and a node is simply an entity id.
 //!

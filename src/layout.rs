@@ -36,6 +36,12 @@ where
     // This needs to be done at least once before the rest of layout and when the position_type of a node changes
     for parent in hierarchy.down_iter() {
 
+        // Skip non-visible nodes
+        let visible = cache.visible(parent);
+        if !visible {
+            continue;
+        }
+
         // Reset the sum and max for the parent
         cache.set_child_width_sum(parent, 0.0);
         cache.set_child_height_sum(parent, 0.0);
@@ -55,6 +61,12 @@ where
         let mut last_child = None;
 
         for node in hierarchy.child_iter(parent) {
+
+            // Skip non-visible nodes
+            let visible = cache.visible(node);
+            if !visible {
+                continue;
+            }
 
             cache.set_stack_first_child(node, false);
             
@@ -499,7 +511,7 @@ where
                 ///////////////////////////////////
                 for node in hierarchy.child_iter(parent) {
 
-                    let visible = cache.visible(parent);
+                    let visible = cache.visible(node);
                     if !visible {
                         continue;
                     }

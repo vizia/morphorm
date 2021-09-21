@@ -2,10 +2,12 @@
 name = "morphorm-ecs"
 version = "0.1.0"
 edition = "2018"
+description = "A mini ECS used for testing the morphorm crate."
+license = "MIT"
 
 [dependencies]
-morphorm = {version = "0.1.0", path = "../"}
 raw-window-handle = "0.3.3"
 rand = "0.8.4"
 femtovg = "0.2.2"
 glutin = "0.27.0"
+morphorm = {version = "0.2.0", path = "../"}
