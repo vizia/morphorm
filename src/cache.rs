@@ -1,5 +1,5 @@
 use crate::Node;
-use crate::units::GeometryChanged;
+use crate::types::GeometryChanged;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
 pub trait Cache {

@@ -1,5 +1,4 @@
 use glutin::event::VirtualKeyCode;
-use morphorm_ecs::tree::DownwardIterator;
 pub use morphorm_ecs::{Entity, World};
 
 pub use morphorm::*;
@@ -91,9 +90,9 @@ pub fn render(mut world: World, root: Entity) {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::KeyboardInput {
-                    device_id,
+                    device_id: _,
                     input,
-                    is_synthetic,
+                    is_synthetic: _,
                 } => {
                     if input.virtual_keycode == Some(VirtualKeyCode::H) {
                         let nodes = world.tree.flatten();
@@ -139,7 +138,7 @@ pub fn render(mut world: World, root: Entity) {
                     paint.set_text_align(Align::Center);
                     paint.set_text_baseline(Baseline::Middle);
                     paint.set_font(&vec![font]);
-                    canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
+                    let _ = canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
 
                 }
 

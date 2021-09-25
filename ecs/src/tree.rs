@@ -68,7 +68,7 @@ impl Tree {
         self.first_child.get(entity.index()).map_or(None, |first_child| *first_child)
     }
 
-    pub fn get_last_child(&self, entity: Entity) -> Option<Entity> {
+    pub fn get_last_child(&self, _entity: Entity) -> Option<Entity> {
         todo!()
     }
 
