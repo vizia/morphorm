@@ -68,6 +68,7 @@ where
             }
 
             cache.set_stack_first_child(node, false);
+            cache.set_stack_last_child(node, false);
             
             let position_type = node.position_type(store).unwrap_or_default();
 
