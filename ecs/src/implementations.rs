@@ -487,6 +487,14 @@ impl Cache for NodeCache {
         *self.vertical_stretch_sum.get_mut(&node).unwrap() = value;
     }
 
+    fn set_grid_row_max(&mut self, node: Self::Item, value: f32) {
+        *self.grid_row_max.get_mut(&node).unwrap() = value;
+    }
+
+    fn set_grid_col_max(&mut self, node: Self::Item, value: f32) {
+        *self.grid_row_max.get_mut(&node).unwrap() = value;
+    }
+
     fn set_width(&mut self, node: Self::Item, value: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.width = value;

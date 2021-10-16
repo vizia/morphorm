@@ -7,9 +7,10 @@ pub trait Cache {
 
     // Getters
 
-
+    /// Get the geometry changed bitflag of the node
     fn geometry_changed(&self, node: Self::Item) -> GeometryChanged;
 
+    /// Get the visibility flag of the node
     fn visible(&self, node: Self::Item) -> bool;
 
     /// Get the computed width of a node
@@ -24,9 +25,13 @@ pub trait Cache {
     /// Get the computed y position of a node
     fn posy(&self, node: Self::Item) -> f32;
 
+    /// Get the computed space to the left of a node
     fn left(&self, node: Self::Item) -> f32;
+    /// Get the computed space to the right of a node
     fn right(&self, node: Self::Item) -> f32;
+    /// Get the computed space above a node
     fn top(&self, node: Self::Item) -> f32;
+    /// Get the computed space below a node
     fn bottom(&self, node: Self::Item) -> f32;
 
     fn new_width(&self, node: Self::Item) -> f32;
@@ -47,8 +52,14 @@ pub trait Cache {
     /// Get the computed maximum grid row
     fn grid_row_max(&self, node: Self::Item) -> f32;
 
+    /// Set the computed maximum grid row size
+    fn set_grid_row_max(&mut self, node: Self::Item, value: f32);
+
     /// Get the computed maximum grid column
     fn grid_col_max(&self, node: Self::Item) -> f32;
+
+    /// Set the computed maximum grid column size
+    fn set_grid_col_max(&mut self, node: Self::Item, value: f32);
 
     // Setters
 
