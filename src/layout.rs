@@ -839,6 +839,9 @@ where
                     }
 
                     // Compute the new left/width/height based on free space, stretch factor, and stretch_sum
+                    #[cfg(feature = "rounding")]
+                    let mut new_value = (horizontal_free_space * computed_data.value / horizontal_stretch_sum).round();
+                    #[cfg(not(feature = "rounding"))]
                     let mut new_value = horizontal_free_space * computed_data.value / horizontal_stretch_sum;
 
                     // Clamp the new left/width/right to be between min_ left/width/right and max_ left/width/right
@@ -882,8 +885,8 @@ where
                                 }
 
                                 LayoutType::Row => {
-                                    horizontal_free_space -= new_value;
-                                    horizontal_stretch_sum -= computed_data.value;
+                                    parent_horizontal_free_space -= new_value;
+                                    parent_horizontal_stretch_sum -= computed_data.value;
                                 }
 
                                 _ => {}
@@ -929,8 +932,11 @@ where
                         vertical_stretch_sum = 1.0;
                     }
 
-                    
+                    #[cfg(feature = "rounding")]
+                    let mut new_value = (vertical_free_space * computed_data.value / vertical_stretch_sum).round();
+                    #[cfg(not(feature = "rounding"))]
                     let mut new_value = vertical_free_space * computed_data.value / vertical_stretch_sum;
+
                     new_value = new_value.clamp(computed_data.min, computed_data.max);
 
                     match computed_data.axis {
