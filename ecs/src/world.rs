@@ -73,6 +73,15 @@ impl World {
         self.store.bottom.insert(entity, value);
     }
 
+    /// Set the desired child_ space
+    pub fn set_child_space(&mut self, entity: Entity, value: Units) {
+        self.store.child_left.insert(entity, value);
+        self.store.child_right.insert(entity, value);
+        self.store.child_top.insert(entity, value);
+        self.store.child_bottom.insert(entity, value);
+    }
+
+
     /// Set the desired child_left space
     pub fn set_child_left(&mut self, entity: Entity, value: Units) {
         self.store.child_left.insert(entity, value);
