@@ -99,4 +99,8 @@ pub trait Cache {
     fn set_stack_first_child(&mut self, node: Self::Item, value: bool);
     fn stack_last_child(&self, node: Self::Item) -> bool;
     fn set_stack_last_child(&mut self, node: Self::Item, value: bool);
+
+    /// Get the wrap index of the node
+    fn wrap_index(&self, node: Self::Item) -> usize;
+    fn set_wrap_index(&mut self, node: Self::Item, value: usize);
 }

@@ -63,6 +63,8 @@ pub fn render(mut world: World, root: Entity) {
                     windowed_context.resize(*physical_size);
                     world.set_width(root, Units::Pixels(physical_size.width as f32));
                     world.set_height(root, Units::Pixels(physical_size.height as f32));
+                    world.set_min_width(root, Units::Pixels(0.0));
+                    world.set_min_height(root, Units::Pixels(0.0));
                     world.cache.set_width(root, physical_size.width as f32);
                     world.cache.set_height(root, physical_size.height as f32);
 

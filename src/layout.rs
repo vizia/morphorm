@@ -1,4 +1,6 @@
 
+use core::num;
+
 use crate::Node;
 use crate::Cache;
 use crate::Hierarchy;
@@ -23,6 +25,12 @@ pub struct ComputedData<N: for<'b> Node<'b>> {
     min: f32,
     max: f32,
     axis: Axis,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RowData<N: for<'b> Node<'b>> {
+    node: Option<N>,
+    row_height: f32,
 }
 
 /// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
@@ -416,10 +424,588 @@ where
         let mut parent_vertical_stretch_sum = 0.0;
 
         match parent_layout_type {
+
+            LayoutType::Column => {}
+
+            LayoutType::Row => {
+                let mut horizontal_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
+                let mut vertical_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
+                
+                let mut temp_posx = 0.0;
+                let mut num_of_wraps = 1;
+
+                let mut wraps: Vec<f32> = Vec::new();
+                wraps.push(0.0);
+
+                for node in hierarchy.child_iter(parent) {
+
+                    let visible = cache.visible(node);
+                    if !visible {
+                        continue;
+                    }
+
+                    let layout_type = node.layout_type(store).unwrap_or_default();
+
+                    let mut left = node.left(store).unwrap_or_default();
+                    let mut right = node.right(store).unwrap_or_default();
+
+            
+            
+                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+
+            
+                    let width = node.width(store).unwrap_or(Units::Stretch(1.0));
+
+            
+                    // This could be cached during up phase because it shouldn't change between up phase and down phase
+                    let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
+                        match layout_type {
+                            LayoutType::Column => cache.child_width_max(node),
+                            LayoutType::Row => cache.child_width_sum(node),
+                            LayoutType::Grid => cache.grid_row_max(node),
+                        }
+                    );
+            
+                    let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+
+            
+                    let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
+
+            
+                    let position_type = node.position_type(store).unwrap_or_default();
+
+           
+                    // Parent Overrides
+                      
+                    if left == Units::Auto {
+                        if cache.stack_first_child(node) {
+                            left = child_left;
+                        } else {
+                            left = col_between;
+                        }
+                    }
+    
+                    if right == Units::Auto {
+                        if cache.stack_last_child(node) {
+                            right = child_right;
+                        }
+                    }
+            
+
+                    let mut new_left = 0.0;
+                    let mut new_width = 0.0;
+                    let mut new_right = 0.0;
+
+
+
+                    let mut horizontal_stretch_sum = 0.0;
+                    let mut vertical_stretch_sum = 0.0;
+
+                    let mut horizontal_free_space = parent_width;
+                    let mut vertical_free_space = parent_height;
+
+                    
+                    
+
+                    // TODO - replace all these match' with a function
+                    match left {
+                        Units::Pixels(val) => {
+                            new_left = val.clamp(min_left, max_left);
+                            horizontal_free_space -= new_left;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_left = (val/100.0) * parent_width;
+                            new_left = new_left.clamp(min_left, max_left);
+                            horizontal_free_space -= new_left;
+                        }
+
+                        Units::Stretch(val) => {
+                            horizontal_stretch_sum += val;
+                            horizontal_axis.push(ComputedData {
+                                node: node.clone(),
+                                value: val,
+                                min: min_left,
+                                max: max_left,
+                                axis: Axis::Before,
+                            });                        
+                        }
+
+                        _ => {}
+                    }
+
+                    match width {
+                        Units::Pixels(val) => {
+                            new_width = val.clamp(min_width, max_width);
+                            horizontal_free_space -= new_width;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_width = (val/100.0) * parent_width;
+                            new_width = new_width.clamp(min_width, max_width);
+                            horizontal_free_space -= new_width;
+                        }
+
+                        Units::Stretch(val) => {
+                            horizontal_stretch_sum += val;
+                            horizontal_axis.push(
+                                ComputedData {
+                                    node: node.clone(),
+                                    value: val,
+                                    min: min_width,
+                                    max: max_width,
+                                    axis: Axis::Size,
+                                }
+                            );
+                        }
+
+                        Units::Auto => {
+                            match layout_type {
+                                LayoutType::Column => {
+                                    new_width =
+                                        cache.child_width_max(node);
+                                }
+
+                                LayoutType::Row | LayoutType::Grid=> {
+                                    new_width =
+                                        cache.child_width_sum(node);
+                                }
+                            }
+
+                            new_width = new_width.clamp(min_width, max_width);
+
+                            new_width += border_left + border_right;
+                            horizontal_free_space -= new_width;
+                        }
+                    }
+
+                    match right {
+                        Units::Pixels(val) => {
+                            new_right = val.clamp(min_right, max_right);
+                            horizontal_free_space -= new_right;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_right = (val/100.0) * parent_width;
+                            new_right = new_right.clamp(min_right, max_right);
+                            horizontal_free_space -= new_right;
+                        }
+
+                        Units::Stretch(val) => {
+                            horizontal_stretch_sum += val;
+                            horizontal_axis.push(
+                                ComputedData {
+                                    node: node.clone(),
+                                    value: val,
+                                    min: min_right,
+                                    max: max_right,
+                                    axis: Axis::After,
+                                }
+                            );
+                        }
+
+                        _ => {}
+                    }
+
+                    let mut new_child_right = 0.0;
+
+                    match child_right {
+                        Units::Pixels(val) => {
+                            new_child_right = val.clamp(min_right, max_right);
+                        }
+
+                        Units::Percentage(val) => {
+                            new_child_right = (val/100.0) * parent_width;
+                            new_child_right = new_right.clamp(min_right, max_right);
+                        }
+
+                        _ => {}
+                    }
+
+                    
+                    let main_size = new_left + new_width + new_right;
+                    
+                    println!("{} {} {}", temp_posx, main_size, parent_width);
+                  
+                    // Group nodes into rows
+                    if temp_posx + main_size + new_child_right >= parent_width {
+                        temp_posx = 0.0;
+                        num_of_wraps += 1;
+                        
+                        wraps.push(0.0);
+                    } 
+                    
+                    cache.set_wrap_index(node, wraps.len() - 1);
+
+                    println!("node: {:?} wrap index: {}", node, wraps.len()-1);
+
+
+                    temp_posx += main_size;
+
+
+                   
+
+
+                    cache.set_left(node, new_left);
+                    cache.set_new_width(node, new_width);
+                    cache.set_right(node, new_right);
+
+
+                
+                    if position_type == PositionType::ParentDirected {
+                        parent_vertical_free_space -= parent_height - vertical_free_space;
+                        parent_horizontal_free_space -= parent_width - horizontal_free_space;
+                        parent_vertical_stretch_sum += vertical_stretch_sum;
+                        parent_horizontal_stretch_sum += horizontal_stretch_sum;
+                    }
+
+                    cache
+                        .set_horizontal_free_space(node, horizontal_free_space);
+                    cache
+                        .set_horizontal_stretch_sum(node, horizontal_stretch_sum);
+                    cache
+                        .set_vertical_free_space(node, vertical_free_space);
+                    cache
+                        .set_vertical_stretch_sum(node, vertical_stretch_sum);
+                
+                }
+
+                let mut child_iter = hierarchy.child_iter(parent).peekable();
+
+                while let Some(node) = child_iter.next() {
+
+                    let wrap_index = cache.wrap_index(node);
+
+                    // if let Some(next_node) = child_iter.peek() {
+                    //     let next_node_wrap_index = cache.wrap_index(*next_node);
+                    //     println!("{:?} {} {:?} {}", node, wrap_index, next_node, next_node_wrap_index);
+                    //     if next_node_wrap_index > wrap_index {
+                    //         // TODO - make this agnostic to direction
+                    //         let right = child_right;
+
+
+                    //         let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    //         let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+
+                    //         let mut new_right = 0.0;
+
+                    //         match right {
+                    //             Units::Pixels(val) => {
+                    //                 new_right = val.clamp(min_right, max_right);
+                    //             }
+        
+                    //             Units::Percentage(val) => {
+                    //                 new_right = (val/100.0) * parent_width;
+                    //                 new_right = new_right.clamp(min_right, max_right);
+                    //             }
+        
+                    //             // Units::Stretch(val) => {
+                    //             //     horizontal_stretch_sum += val;
+                    //             //     horizontal_axis.push(
+                    //             //         ComputedData {
+                    //             //             node: node.clone(),
+                    //             //             value: val,
+                    //             //             min: min_right,
+                    //             //             max: max_right,
+                    //             //             axis: Axis::After,
+                    //             //         }
+                    //             //     );
+                    //             // }
+        
+                    //             _ => {}
+                    //         }
+
+                    //         cache.set_right(node, new_right);
+                    //     }
+                    // }
+
+                    //let node = row.node.unwrap();
+
+                    let layout_type = node.layout_type(store).unwrap_or_default();
+
+                    let mut top = node.top(store).unwrap_or_default();
+                    let mut bottom = node.bottom(store).unwrap_or_default();
+                    let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+
+                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+
+                    let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
+                        match layout_type {
+                            LayoutType::Column => {
+                                cache.child_height_sum(node)
+                            },
+                            LayoutType::Row => cache.child_height_max(node),
+                            LayoutType::Grid => cache.grid_col_max(node),
+                        }
+                    );
+        
+                    let max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+
+                    let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let border_bottom = node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+
+                    let mut new_top = 0.0;
+                    let mut new_height = 0.0;
+                    let mut new_bottom = 0.0;
+
+                    // if top == Units::Auto {
+                    //     if row_index == 0 {
+                    //         top = child_top;
+                    //     } else {
+                    //         top = row_between;
+                    //     }
+                    // }
+    
+                    // if bottom == Units::Auto {
+                    //     if row_index == num_of_wraps-1 {
+                    //         bottom = child_bottom;
+                    //     }
+                    // }
+
+                    match top {
+                        Units::Pixels(val) => {
+                            new_top = val.clamp(min_top, max_top);
+                            //vertical_free_space -= new_top;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_top = (val/100.0) * parent_height;
+                            new_top = new_top.clamp(min_top, max_top);
+                            //vertical_free_space -= new_top;
+                        }
+
+                        // Units::Stretch(val) => {
+                        //     vertical_stretch_sum += val;
+                        //     vertical_axis.push(
+                        //         ComputedData {
+                        //             node: node.clone(),
+                        //             value: val,
+                        //             min: min_bottom,
+                        //             max: max_bottom,
+                        //             axis: Axis::Before,
+                        //         }
+                        //     );
+                        // }
+
+                        _ => {}
+                    }
+
+                    match height {
+                        Units::Pixels(val) => {
+                            new_height = val.clamp(min_height, max_height);
+                            //vertical_free_space -= new_height;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_height = (val/100.0) * parent_height;
+                            new_height = new_height.clamp(min_height, max_height);
+                            //vertical_free_space -= new_height;
+                        }
+
+                        // Units::Stretch(val) => {
+                        //     vertical_stretch_sum += val;
+                        //     vertical_axis.push(
+                        //         ComputedData {
+                        //             node: node.clone(),
+                        //             value: val,
+                        //             min: min_bottom,
+                        //             max: max_bottom,
+                        //             axis: Axis::Size,
+                        //         }
+                        //     );
+                        // }
+
+                        Units::Auto => {
+                            match layout_type {
+                                LayoutType::Column | LayoutType::Grid => {
+                                    new_height =
+                                        cache.child_height_sum(node);
+                                }
+
+                                LayoutType::Row => {
+                                    new_height =
+                                        cache.child_height_max(node);
+                                }
+                            }
+
+                            new_height = new_height.clamp(min_height, max_height);
+
+                            new_height += border_top + border_bottom;
+                            //vertical_free_space -= new_height;
+                        }
+                        _=> {}
+                    }
+
+                    match bottom {
+                        Units::Pixels(val) => {
+                            new_bottom = val.clamp(min_bottom, max_bottom);
+                            //vertical_free_space -= val;
+                        }
+
+                        Units::Percentage(val) => {
+                            new_bottom = (val/100.0) * parent_height;
+                            new_bottom = new_bottom.clamp(min_bottom, max_bottom);
+                            //vertical_free_space -= new_bottom;
+                        }
+
+                        // Units::Stretch(val) => {
+                        //     //vertical_stretch_sum += val;
+                        //     vertical_axis.push(
+                        //         ComputedData {
+                        //             node: node.clone(),
+                        //             value: val,
+                        //             min: min_bottom,
+                        //             max: max_bottom,
+                        //             axis: Axis::After,
+                        //         }
+                        //     );
+                        // }
+
+                        _ => {}
+                    }
+
+                    cache.set_top(node, new_top);
+                    cache.set_new_height(node, new_height);
+                    cache.set_bottom(node, new_bottom);
+
+                    
+                    wraps[wrap_index] = wraps[wrap_index].max(new_top + new_height + new_bottom);
+                    
+                }
+
+                println!("Wraps: {:?}", wraps);
+
+                let mut current_posx = 0.0;
+                let mut current_posy = 0.0;
+
+                let parent_posx = cache.posx(parent) + parent_border_left;
+                let parent_posy = cache.posy(parent) + parent_border_top;
+
+                let mut current_wrap = 0;
+
+                ///////////////////////
+                // Position Children //
+                ///////////////////////
+                for node in hierarchy.child_iter(parent) {
+
+                    let visible = cache.visible(node);
+                    if !visible {
+                        continue;
+                    }
+
+                    let left = cache.left(node);
+                    let right = cache.right(node);
+                    let top = cache.top(node);
+                    let bottom = cache.bottom(node);
+
+                    let new_width = cache.new_width(node);
+                    let new_height = cache.new_height(node);
+
+                    let position_type = node.position_type(store).unwrap_or_default();
+
+                    let (new_posx, new_posy) = match position_type {
+                        PositionType::SelfDirected => {
+                            (parent_posx + left, parent_posy + top)
+                        }
+
+                        PositionType::ParentDirected => {
+
+                            match parent_layout_type {
+                                LayoutType::Column => {
+                                    //current_posy += top + new_height + bottom;
+                                }
+        
+                                LayoutType::Row => {
+                                    let wrap_index = cache.wrap_index(node);
+
+                                    if wrap_index != current_wrap {
+                                        current_wrap = wrap_index;
+                                        current_posx = 0.0;
+                                        current_posy += wraps[current_wrap];
+                                    }
+
+
+
+                                    // if current_posx + left + new_width + right >= parent_posx + parent_width {
+                                    //     current_posx = 0.0;
+                                    //     // current_posy += space.top + height + space.bottom;
+                                    //     current_posy += wraps[current_wrap];
+                                    //     current_wrap += 1;
+                                    // }
+                                }
+        
+                                _=> {}
+                            }
+
+                            let new_posx = parent_posx + current_posx + left;
+                            let new_posy = parent_posy + current_posy + top;
+
+                            //println!("npx: {}", new_posx);
+
+                            match parent_layout_type {
+                                LayoutType::Column => {
+                                    current_posy += top + new_height + bottom;
+                                }
+
+                                LayoutType::Row => {
+                                    current_posx += left + new_width + right;
+                                }
+
+                                _ => {}
+                            }
+
+                            (new_posx, new_posy)
+                        }
+                    };
+                    
+
+                    if new_posx != cache.posx(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
+                    }
+
+                    if new_posy != cache.posy(node) {
+                        cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                    }
+
+                    if new_width != cache.width(node) {
+                        cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
+                    }
+
+                    if new_height != cache.height(node) {
+                        cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
+                    }
+
+                    cache.set_posx(node, new_posx);
+                    cache.set_posy(node, new_posy);
+                    cache.set_width(node, new_width);
+                    cache.set_height(node, new_height);
+                }
+
+            }
+
+            /*
             LayoutType::Row | LayoutType::Column => {
                 let mut horizontal_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
                 let mut vertical_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
 
+                let mut temp_main = 0.0;
+                let mut num_of_wraps = 1;
+
+                let mut wraps: Vec<f32> = Vec::new();
+                wraps.push(0.0);
+
+                let (parent_main, parent_cross) = if parent_layout_type == LayoutType::Row {
+                    (parent_width, parent_height)
+                } else {
+                    (parent_height, parent_width)
+                };
                 
                 // ////////////////////////////////
                 // Calculate inflexible children //
@@ -753,6 +1339,27 @@ where
                         _ => {}
                     }
 
+                    let (main_size, cross_size) = if parent_layout_type == LayoutType::Row {
+                        (new_left + new_width + new_right, new_top + new_height + new_bottom)
+                    } else {
+                        (new_top + new_height + new_bottom, new_left + new_width + new_right)
+                    };
+
+                    println!("{:?} {} {}", node, temp_main + main_size, parent_main);
+
+                    if temp_main + main_size >= parent_main {
+                        temp_main = 0.0;
+                        num_of_wraps += 1;
+                        wraps.push(cross_size);
+                    } else {
+                        wraps[num_of_wraps as usize - 1] = wraps[num_of_wraps as usize - 1].max(cross_size);
+                    }
+
+                    temp_main += main_size;
+
+                    // println!("{:?} cross {}", node, cross_size);
+
+
                     cache.set_new_width(node, new_width);
                     cache.set_new_height(node, new_height);
                     cache.set_left(node, new_left);
@@ -776,12 +1383,21 @@ where
                     cache
                         .set_vertical_stretch_sum(node, vertical_stretch_sum);
                 
-
-                    
-                
                 }
 
+                
+                let mut current_wrap = 0;
+                temp_main = 0.0;
 
+                let num_of_stretch_rows = wraps.iter().filter(|&x| *x <= (parent_cross/num_of_wraps as f32)).count();
+                let used_space = wraps.iter().filter(|&x| *x > (parent_cross/num_of_wraps as f32)).sum::<f32>();
+
+
+                println!("Num stretch rows: {:?}  Used space: {}", num_of_stretch_rows, used_space);
+
+                //wraps.iter_mut().for_each(|x| if *x <= (parent_cross/num_of_wraps as f32) { *x = (parent_cross - used_space)/num_of_stretch_rows as f32 });
+                
+                println!("Wraps: {:?} {:?}", parent, wraps);
 
                 if parent_horizontal_stretch_sum == 0.0 {
                     parent_horizontal_stretch_sum = 1.0;
@@ -992,6 +1608,8 @@ where
                 let parent_posx = cache.posx(parent) + parent_border_left;
                 let parent_posy = cache.posy(parent) + parent_border_top;
 
+                let mut current_wrap = 0;
+
                 ///////////////////////
                 // Position Children //
                 ///////////////////////
@@ -1018,8 +1636,28 @@ where
                         }
 
                         PositionType::ParentDirected => {
+
+                            match parent_layout_type {
+                                LayoutType::Column => {
+                                    //current_posy += top + new_height + bottom;
+                                }
+        
+                                LayoutType::Row => {
+                                    if current_posx + left + new_width + right >= parent_posx + parent_width {
+                                        current_posx = 0.0;
+                                        // current_posy += space.top + height + space.bottom;
+                                        current_posy += wraps[current_wrap];
+                                        current_wrap += 1;
+                                    }
+                                }
+        
+                                _=> {}
+                            }
+
                             let new_posx = parent_posx + current_posx + left;
                             let new_posy = parent_posy + current_posy + top;
+
+                            //println!("npx: {}", new_posx);
 
                             match parent_layout_type {
                                 LayoutType::Column => {
@@ -1060,7 +1698,7 @@ where
                     cache.set_height(node, new_height);
                 }
             }
-
+            */
             LayoutType::Grid => {
                 /////////////////////////////////////////////////////
                 // Determine Size of non-flexible rows and columns //

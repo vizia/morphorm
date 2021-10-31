@@ -271,6 +271,8 @@ pub struct NodeCache {
     geometry_changed: HashMap<Entity, GeometryChanged>,
 
     visible: HashMap<Entity, bool>,
+
+    wrap_index: HashMap<Entity, usize>,
 }
 
 impl NodeCache {
@@ -303,6 +305,8 @@ impl NodeCache {
         self.geometry_changed.insert(entity, Default::default());
 
         self.visible.insert(entity, true);
+
+        self.wrap_index.insert(entity, 0);
     }
 }
 
@@ -566,5 +570,13 @@ impl Cache for NodeCache {
 
     fn set_stack_last_child(&mut self, node: Self::Item, value: bool) {
         *self.stack_last_child.get_mut(&node).unwrap() = value;
+    }
+
+    fn wrap_index(&self, node: Self::Item) -> usize {
+        *self.wrap_index.get(&node).unwrap()
+    }
+
+    fn set_wrap_index(&mut self, node: Self::Item, value: usize) {
+        *self.wrap_index.get_mut(&node).unwrap() = value;
     }
 }
