@@ -28,9 +28,13 @@ pub struct ComputedData<N: for<'b> Node<'b>> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RowData<N: for<'b> Node<'b>> {
-    node: Option<N>,
-    row_height: f32,
+pub struct WrapData {
+    main_stretch_sum: f32,
+    main_used_space: f32,
+    cross_stretch_sum: f32,
+    cross_used_space: f32,
+    child_left: f32,
+    child_right: f32,
 }
 
 /// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
@@ -423,6 +427,34 @@ where
         let mut parent_horizontal_stretch_sum = 0.0;
         let mut parent_vertical_stretch_sum = 0.0;
 
+        let mut new_child_left = 0.0;
+
+        match child_left {
+            Units::Pixels(val) => {
+                new_child_left = val;
+            }
+
+            Units::Percentage(val) => {
+                new_child_left = (val/100.0) * parent_width;
+            }
+
+            _ => {}
+        }
+
+        let mut new_child_right = 0.0;
+
+        match child_right {
+            Units::Pixels(val) => {
+                new_child_right = val;
+            }
+
+            Units::Percentage(val) => {
+                new_child_right = (val/100.0) * parent_width;
+            }
+
+            _ => {}
+        }
+
         match parent_layout_type {
 
             LayoutType::Column => {}
@@ -434,8 +466,15 @@ where
                 let mut temp_posx = 0.0;
                 let mut num_of_wraps = 1;
 
-                let mut wraps: Vec<f32> = Vec::new();
-                wraps.push(0.0);
+                let mut wraps: Vec<WrapData> = Vec::new();
+                wraps.push(WrapData{
+                    main_stretch_sum: 0.0,
+                    main_used_space: 0.0,
+                    cross_stretch_sum: 0.0,
+                    cross_used_space: 0.0,
+                    child_left: new_child_left,
+                    child_right: 0.0,
+                });
 
                 for node in hierarchy.child_iter(parent) {
 
@@ -481,23 +520,23 @@ where
            
                     // Parent Overrides
                       
-                    if left == Units::Auto {
-                        if cache.stack_first_child(node) {
-                            left = child_left;
-                        } else {
-                            left = col_between;
-                        }
-                    }
+                    // if left == Units::Auto {
+                    //     if cache.stack_first_child(node) {
+                    //         left = child_left;
+                    //     } else {
+                    //         left = col_between;
+                    //     }
+                    // }
     
-                    if right == Units::Auto {
-                        if cache.stack_last_child(node) {
-                            right = child_right;
-                        }
-                    }
+                    // if right == Units::Auto {
+                    //     if cache.stack_last_child(node) {
+                    //         right = child_right;
+                    //     }
+                    // }
             
 
                     let mut new_left = 0.0;
-                    let mut new_width = 0.0;
+                    let mut new_width = min_width;
                     let mut new_right = 0.0;
 
 
@@ -506,7 +545,9 @@ where
                     let mut vertical_stretch_sum = 0.0;
 
                     let mut horizontal_free_space = parent_width;
+                    let mut horizontal_used_space = 0.0;
                     let mut vertical_free_space = parent_height;
+                    let mut vertical_used_space = 0.0;
 
                     
                     
@@ -516,12 +557,14 @@ where
                         Units::Pixels(val) => {
                             new_left = val.clamp(min_left, max_left);
                             horizontal_free_space -= new_left;
+                            horizontal_used_space += new_left;
                         }
 
                         Units::Percentage(val) => {
                             new_left = (val/100.0) * parent_width;
                             new_left = new_left.clamp(min_left, max_left);
                             horizontal_free_space -= new_left;
+                            horizontal_used_space += new_left;
                         }
 
                         Units::Stretch(val) => {
@@ -542,12 +585,14 @@ where
                         Units::Pixels(val) => {
                             new_width = val.clamp(min_width, max_width);
                             horizontal_free_space -= new_width;
+                            horizontal_used_space += new_width;
                         }
 
                         Units::Percentage(val) => {
                             new_width = (val/100.0) * parent_width;
                             new_width = new_width.clamp(min_width, max_width);
                             horizontal_free_space -= new_width;
+                            horizontal_used_space += new_width;
                         }
 
                         Units::Stretch(val) => {
@@ -580,6 +625,7 @@ where
 
                             new_width += border_left + border_right;
                             horizontal_free_space -= new_width;
+                            horizontal_used_space += new_width;
                         }
                     }
 
@@ -587,12 +633,14 @@ where
                         Units::Pixels(val) => {
                             new_right = val.clamp(min_right, max_right);
                             horizontal_free_space -= new_right;
+                            horizontal_used_space += new_right;
                         }
 
                         Units::Percentage(val) => {
                             new_right = (val/100.0) * parent_width;
                             new_right = new_right.clamp(min_right, max_right);
                             horizontal_free_space -= new_right;
+                            horizontal_used_space += new_right;
                         }
 
                         Units::Stretch(val) => {
@@ -611,44 +659,48 @@ where
                         _ => {}
                     }
 
-                    let mut new_child_right = 0.0;
-
-                    match child_right {
-                        Units::Pixels(val) => {
-                            new_child_right = val.clamp(min_right, max_right);
-                        }
-
-                        Units::Percentage(val) => {
-                            new_child_right = (val/100.0) * parent_width;
-                            new_child_right = new_right.clamp(min_right, max_right);
-                        }
-
-                        _ => {}
-                    }
-
+                    
+                    let cl = if left == Units::Auto {new_child_left} else {new_left};
+                    let cr = if right == Units::Auto {new_child_left} else {new_left};
                     
                     let main_size = new_left + new_width + new_right;
                     
-                    println!("{} {} {}", temp_posx, main_size, parent_width);
+                    //println!("{} {} {}", temp_posx, main_size, parent_width);
                   
                     // Group nodes into rows
-                    if temp_posx + main_size + new_child_right >= parent_width {
+                    if temp_posx + main_size + cl + cr > parent_width {
                         temp_posx = 0.0;
                         num_of_wraps += 1;
                         
-                        wraps.push(0.0);
+                        wraps.push(WrapData{
+                            main_stretch_sum: 0.0,
+                            main_used_space: 0.0,
+                            cross_stretch_sum: 0.0,
+                            cross_used_space: 0.0,
+                            child_left: if left == Units::Auto {new_child_left} else {new_left},
+                            child_right: 0.0,
+                        });
                     } 
                     
-                    cache.set_wrap_index(node, wraps.len() - 1);
+                    cache.set_wrap_index(node, num_of_wraps - 1);
 
-                    println!("node: {:?} wrap index: {}", node, wraps.len()-1);
+                    // if let Some(prev_node) = prev_node {
+                    //     cache.set_stack_last_child(prev_node, false);
+                    //     cache.set_stack_last_child(node, true);
+                    // }
+
+                    // prev_node = Some(node);
+
+                    if let Some(wrap_data) = wraps.get_mut(num_of_wraps - 1) {
+                        wrap_data.main_used_space += horizontal_used_space;
+                        wrap_data.main_stretch_sum += horizontal_stretch_sum;
+                        wrap_data.child_right = if right == Units::Auto {new_child_right} else {new_right};
+                    }
+
+                    //println!("node: {:?} wrap index: {}", node, wraps.len()-1);
 
 
                     temp_posx += main_size;
-
-
-                   
-
 
                     cache.set_left(node, new_left);
                     cache.set_new_width(node, new_width);
@@ -671,59 +723,8 @@ where
                         .set_vertical_free_space(node, vertical_free_space);
                     cache
                         .set_vertical_stretch_sum(node, vertical_stretch_sum);
-                
-                }
-
-                let mut child_iter = hierarchy.child_iter(parent).peekable();
-
-                while let Some(node) = child_iter.next() {
 
                     let wrap_index = cache.wrap_index(node);
-
-                    // if let Some(next_node) = child_iter.peek() {
-                    //     let next_node_wrap_index = cache.wrap_index(*next_node);
-                    //     println!("{:?} {} {:?} {}", node, wrap_index, next_node, next_node_wrap_index);
-                    //     if next_node_wrap_index > wrap_index {
-                    //         // TODO - make this agnostic to direction
-                    //         let right = child_right;
-
-
-                    //         let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-                    //         let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-
-                    //         let mut new_right = 0.0;
-
-                    //         match right {
-                    //             Units::Pixels(val) => {
-                    //                 new_right = val.clamp(min_right, max_right);
-                    //             }
-        
-                    //             Units::Percentage(val) => {
-                    //                 new_right = (val/100.0) * parent_width;
-                    //                 new_right = new_right.clamp(min_right, max_right);
-                    //             }
-        
-                    //             // Units::Stretch(val) => {
-                    //             //     horizontal_stretch_sum += val;
-                    //             //     horizontal_axis.push(
-                    //             //         ComputedData {
-                    //             //             node: node.clone(),
-                    //             //             value: val,
-                    //             //             min: min_right,
-                    //             //             max: max_right,
-                    //             //             axis: Axis::After,
-                    //             //         }
-                    //             //     );
-                    //             // }
-        
-                    //             _ => {}
-                    //         }
-
-                    //         cache.set_right(node, new_right);
-                    //     }
-                    // }
-
-                    //let node = row.node.unwrap();
 
                     let layout_type = node.layout_type(store).unwrap_or_default();
 
@@ -772,13 +773,13 @@ where
                     match top {
                         Units::Pixels(val) => {
                             new_top = val.clamp(min_top, max_top);
-                            //vertical_free_space -= new_top;
+                            vertical_used_space += new_top;
                         }
 
                         Units::Percentage(val) => {
                             new_top = (val/100.0) * parent_height;
                             new_top = new_top.clamp(min_top, max_top);
-                            //vertical_free_space -= new_top;
+                            vertical_used_space += new_top;
                         }
 
                         // Units::Stretch(val) => {
@@ -800,13 +801,13 @@ where
                     match height {
                         Units::Pixels(val) => {
                             new_height = val.clamp(min_height, max_height);
-                            //vertical_free_space -= new_height;
+                            vertical_used_space += new_height;
                         }
 
                         Units::Percentage(val) => {
                             new_height = (val/100.0) * parent_height;
                             new_height = new_height.clamp(min_height, max_height);
-                            //vertical_free_space -= new_height;
+                            vertical_used_space += new_height;
                         }
 
                         // Units::Stretch(val) => {
@@ -838,7 +839,7 @@ where
                             new_height = new_height.clamp(min_height, max_height);
 
                             new_height += border_top + border_bottom;
-                            //vertical_free_space -= new_height;
+                            vertical_used_space += new_height;
                         }
                         _=> {}
                     }
@@ -846,13 +847,13 @@ where
                     match bottom {
                         Units::Pixels(val) => {
                             new_bottom = val.clamp(min_bottom, max_bottom);
-                            //vertical_free_space -= val;
+                            vertical_used_space += val;
                         }
 
                         Units::Percentage(val) => {
                             new_bottom = (val/100.0) * parent_height;
                             new_bottom = new_bottom.clamp(min_bottom, max_bottom);
-                            //vertical_free_space -= new_bottom;
+                            vertical_used_space += new_bottom;
                         }
 
                         // Units::Stretch(val) => {
@@ -876,23 +877,124 @@ where
                     cache.set_bottom(node, new_bottom);
 
                     
-                    wraps[wrap_index] = wraps[wrap_index].max(new_top + new_height + new_bottom);
+                    wraps[wrap_index].cross_used_space = wraps[wrap_index].cross_used_space.max(vertical_used_space);
                     
                 }
 
-                println!("Wraps: {:?}", wraps);
+                //println!("Wraps: {:?}", wraps);
 
-                let mut current_posx = 0.0;
+                /////////////////////////////////////////
+                // Calculate flexible Row space & size //
+                /////////////////////////////////////////  
+                              
+                // Sort the stretch elements in each axis by the maximum size
+                horizontal_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
+                vertical_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
+
+                let mut horizontal_stretch_sum = 0.0;
+                let mut horizontal_free_space = 0.0;
+                let mut vertical_stretch_sum = 0.0;
+                let mut vertical_free_space = 0.0;
+
+
+                for computed_data in horizontal_axis.iter() {
+                    
+                    let node = computed_data.node.clone();
+
+                    let wrap_index = cache.wrap_index(node);
+
+                    let position_type = node.position_type(store).unwrap_or_default();
+
+                    match position_type {
+                        PositionType::SelfDirected => {
+                            horizontal_free_space = cache.horizontal_free_space(node);
+                            horizontal_stretch_sum = cache.horizontal_stretch_sum(node);
+                        }
+
+                        PositionType::ParentDirected => {
+
+                            horizontal_stretch_sum = wraps[wrap_index].main_stretch_sum;
+                            horizontal_free_space = parent_width - wraps[wrap_index].main_used_space - wraps[wrap_index].child_left - wraps[wrap_index].child_right;
+                        }
+                    }
+
+                    // Prevent a divide by zero when the stretch sum is 0
+                    if horizontal_stretch_sum == 0.0 {
+                        horizontal_stretch_sum = 1.0;
+                    }
+
+                    // Compute the new left/width/height based on free space, stretch factor, and stretch_sum
+                    #[cfg(feature = "rounding")]
+                    let mut new_value = (horizontal_free_space * computed_data.value / horizontal_stretch_sum).round();
+                    #[cfg(not(feature = "rounding"))]
+                    let mut new_value = horizontal_free_space * computed_data.value / horizontal_stretch_sum;
+
+                    // Clamp the new left/width/right to be between min_ left/width/right and max_ left/width/right
+                    new_value = new_value.clamp(computed_data.min, computed_data.max);
+
+                    // Could perhaps replace this with a closure
+                    match computed_data.axis {
+                        Axis::Before => {
+                            cache.set_left(node, new_value);
+                        }
+
+                        Axis::Size => {
+                            cache.set_new_width(node, new_value);
+                        }
+
+                        Axis::After => {
+                            cache.set_right(node, new_value);
+                        }
+                    }
+
+                    match position_type {
+                        PositionType::SelfDirected => {
+                            cache.set_horizontal_stretch_sum(node, horizontal_stretch_sum - computed_data.value);
+                            cache.set_horizontal_free_space(
+                                node,
+                                horizontal_free_space - new_value,
+                            );
+                        }
+
+                        PositionType::ParentDirected => {
+                            match parent_layout_type {
+                                LayoutType::Column => {
+                                    cache.set_horizontal_stretch_sum(
+                                        node,
+                                        horizontal_stretch_sum - computed_data.value,
+                                    );
+                                    cache.set_horizontal_free_space(
+                                        node,
+                                        horizontal_free_space - new_value,
+                                    );
+                                }
+
+                                LayoutType::Row => {
+                                    parent_horizontal_free_space -= new_value;
+                                    parent_horizontal_stretch_sum -= computed_data.value;
+                                }
+
+                                _ => {}
+                            };
+                        }
+                    }
+                }
+
+
+
+                ///////////////////////
+                // Position Children //
+                ///////////////////////
+                let mut current_wrap = 0;
+                
+                
+                let mut current_posx = wraps[current_wrap].child_left;
                 let mut current_posy = 0.0;
 
                 let parent_posx = cache.posx(parent) + parent_border_left;
                 let parent_posy = cache.posy(parent) + parent_border_top;
 
-                let mut current_wrap = 0;
-
-                ///////////////////////
-                // Position Children //
-                ///////////////////////
+                
                 for node in hierarchy.child_iter(parent) {
 
                     let visible = cache.visible(node);
@@ -927,8 +1029,8 @@ where
 
                                     if wrap_index != current_wrap {
                                         current_wrap = wrap_index;
-                                        current_posx = 0.0;
-                                        current_posy += wraps[current_wrap];
+                                        current_posx = wraps[current_wrap].child_left;
+                                        current_posy += wraps[current_wrap-1].cross_used_space;
                                     }
 
 
