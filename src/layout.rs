@@ -800,7 +800,100 @@ where
                 let mut vertical_stretch_sum = 0.0;
                 let mut vertical_free_space = 0.0;
 
-                /////////////////////////////////////////
+
+                ////////////////////////////////////////////
+                // Calculate flexible Column space & size //
+                ////////////////////////////////////////////
+                for computed_data in vertical_axis.iter() {
+
+                    let node = computed_data.node.clone();
+
+                    let position_type = node.position_type(store).unwrap_or_default();
+
+                    match position_type {
+                        PositionType::SelfDirected => {
+                            vertical_free_space = cache.vertical_free_space(node);
+                            vertical_stretch_sum = cache.vertical_stretch_sum(node);
+                        }
+
+                        PositionType::ParentDirected => {
+                            match parent_layout_type {
+                                LayoutType::Column => {
+                                    vertical_stretch_sum = parent_vertical_stretch_sum;
+                                    vertical_free_space = parent_vertical_free_space;
+                                }
+
+                                LayoutType::Row => {
+                                    vertical_free_space = cache.vertical_free_space(node);
+                                    vertical_stretch_sum = cache.vertical_stretch_sum(node);
+                                }     
+                                
+                                _=> {}
+                            }
+
+                        }
+                    }
+
+                    if vertical_stretch_sum == 0.0 {
+                        vertical_stretch_sum = 1.0;
+                    }
+
+                    #[cfg(feature = "rounding")]
+                    let mut new_value = (vertical_free_space * computed_data.value / vertical_stretch_sum).round();
+                    #[cfg(not(feature = "rounding"))]
+                    let mut new_value = vertical_free_space * computed_data.value / vertical_stretch_sum;
+
+                    new_value = new_value.clamp(computed_data.min, computed_data.max);
+
+                    match computed_data.axis {
+                        Axis::Before => {
+                            cache.set_top(node, new_value);
+                        }
+
+                        Axis::Size => {
+                            cache.set_new_height(node, new_value);
+                        }
+
+                        Axis::After => {
+                            cache.set_bottom(node, new_value);
+                        }
+                    }
+
+                    match position_type {
+                        PositionType::SelfDirected => {
+                            cache.set_vertical_stretch_sum(node, vertical_stretch_sum - computed_data.value);
+                            cache.set_vertical_free_space(
+                                node,
+                                vertical_free_space - new_value,
+                            );
+                        }
+
+                        PositionType::ParentDirected => {
+                            match parent_layout_type {
+                                LayoutType::Row => {
+                                    cache.set_vertical_stretch_sum(
+                                        node,
+                                        vertical_stretch_sum - computed_data.value,
+                                    );
+                                    cache.set_vertical_free_space(
+                                        node,
+                                        vertical_free_space - new_value,
+                                    );
+                                }
+
+                                LayoutType::Column => {
+                                    parent_vertical_free_space -= new_value;
+                                    parent_vertical_stretch_sum -= computed_data.value;
+                                }
+
+                                _ => {}
+                            };
+                        }
+                    }
+                }
+                
+                
+                ////////////////////////////////////////
                 // Calculate flexible Row space & size //
                 /////////////////////////////////////////
                 for computed_data in horizontal_axis.iter() {
@@ -887,97 +980,6 @@ where
                                 LayoutType::Row => {
                                     parent_horizontal_free_space -= new_value;
                                     parent_horizontal_stretch_sum -= computed_data.value;
-                                }
-
-                                _ => {}
-                            };
-                        }
-                    }
-                }
-
-                ////////////////////////////////////////////
-                // Calculate flexible Column space & size //
-                ////////////////////////////////////////////
-                for computed_data in vertical_axis.iter() {
-
-                    let node = computed_data.node.clone();
-
-                    let position_type = node.position_type(store).unwrap_or_default();
-
-                    match position_type {
-                        PositionType::SelfDirected => {
-                            vertical_free_space = cache.vertical_free_space(node);
-                            vertical_stretch_sum = cache.vertical_stretch_sum(node);
-                        }
-
-                        PositionType::ParentDirected => {
-                            match parent_layout_type {
-                                LayoutType::Column => {
-                                    vertical_stretch_sum = parent_vertical_stretch_sum;
-                                    vertical_free_space = parent_vertical_free_space;
-                                }
-
-                                LayoutType::Row => {
-                                    vertical_free_space = cache.vertical_free_space(node);
-                                    vertical_stretch_sum = cache.vertical_stretch_sum(node);
-                                }     
-                                
-                                _=> {}
-                            }
-
-                        }
-                    }
-
-                    if vertical_stretch_sum == 0.0 {
-                        vertical_stretch_sum = 1.0;
-                    }
-
-                    #[cfg(feature = "rounding")]
-                    let mut new_value = (vertical_free_space * computed_data.value / vertical_stretch_sum).round();
-                    #[cfg(not(feature = "rounding"))]
-                    let mut new_value = vertical_free_space * computed_data.value / vertical_stretch_sum;
-
-                    new_value = new_value.clamp(computed_data.min, computed_data.max);
-
-                    match computed_data.axis {
-                        Axis::Before => {
-                            cache.set_top(node, new_value);
-                        }
-
-                        Axis::Size => {
-                            cache.set_new_height(node, new_value);
-                        }
-
-                        Axis::After => {
-                            cache.set_bottom(node, new_value);
-                        }
-                    }
-
-                    match position_type {
-                        PositionType::SelfDirected => {
-                            cache.set_vertical_stretch_sum(node, vertical_stretch_sum - computed_data.value);
-                            cache.set_vertical_free_space(
-                                node,
-                                vertical_free_space - new_value,
-                            );
-                        }
-
-                        PositionType::ParentDirected => {
-                            match parent_layout_type {
-                                LayoutType::Row => {
-                                    cache.set_vertical_stretch_sum(
-                                        node,
-                                        vertical_stretch_sum - computed_data.value,
-                                    );
-                                    cache.set_vertical_free_space(
-                                        node,
-                                        vertical_free_space - new_value,
-                                    );
-                                }
-
-                                LayoutType::Column => {
-                                    parent_vertical_free_space -= new_value;
-                                    parent_vertical_stretch_sum -= computed_data.value;
                                 }
 
                                 _ => {}

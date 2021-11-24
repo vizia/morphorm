@@ -53,4 +53,6 @@ pub struct Store {
     pub red: HashMap<Entity, u8>,
     pub green: HashMap<Entity, u8>,
     pub blue: HashMap<Entity, u8>,
+
+    pub intrinsic_width: HashMap<Entity, Box<dyn Fn(f32) -> f32>>,
 }
