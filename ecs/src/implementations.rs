@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::iter::Rev;
+use std::slice::SliceIndex;
 
 use morphorm::*;
 
@@ -150,6 +151,10 @@ impl<'a> Node<'a> for Entity {
 
     fn border_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
         store.border.get(self).cloned()
+    }
+
+    fn intrinsic_size(&self, store: &'_ Self::Data, size: f32) -> Option<f32> {
+        store.intrinsic_size.get(self).map(|intrinsic_size| (intrinsic_size)(size))
     }
 }
 

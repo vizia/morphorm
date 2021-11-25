@@ -182,11 +182,7 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
         Some(Units::Auto)
     }
 
-    fn intrinsic_width(&self, store: &'_ Self::Data, height: f32) -> Option<f32> {
-        None
-    }
-
-    fn intrinsic_height(&self, store: &'_ Self::Data, width: f32) -> Option<f32> {
+    fn intrinsic_size(&self, store: &'_ Self::Data, size: f32) -> Option<f32> {
         None
     }
 

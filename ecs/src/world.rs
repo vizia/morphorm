@@ -142,10 +142,10 @@ impl World {
         self.store.min_height.insert(entity, value);
     }
 
-    pub fn set_intrinsic_width<F>(&mut self, entity: Entity, f: F)
+    pub fn set_intrinsic_size<F>(&mut self, entity: Entity, f: F)
     where F: 'static + Fn(f32) -> f32
     {
-        self.store.intrinsic_width.insert(entity, Box::new(f));
+        self.store.intrinsic_size.insert(entity, Box::new(f));
     }
     
 }
