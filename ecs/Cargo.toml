@@ -7,4 +7,5 @@ license = "MIT"
 
 [dependencies]
 morphorm = {version = "0.2.0", path = "../"}
+femtovg = {version = "0.2.8", default-features = false}
 rand = "0.8.4"

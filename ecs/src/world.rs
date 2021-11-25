@@ -142,8 +142,12 @@ impl World {
         self.store.min_height.insert(entity, value);
     }
 
+    pub fn set_text(&mut self, entity: Entity, value: String) {
+        self.store.text.insert(entity, value);
+    }
+
     pub fn set_intrinsic_size<F>(&mut self, entity: Entity, f: F)
-    where F: 'static + Fn(f32) -> f32
+    where F: 'static + Fn(&Store, f32) -> f32
     {
         self.store.intrinsic_size.insert(entity, Box::new(f));
     }

@@ -154,7 +154,7 @@ impl<'a> Node<'a> for Entity {
     }
 
     fn intrinsic_size(&self, store: &'_ Self::Data, size: f32) -> Option<f32> {
-        store.intrinsic_size.get(self).map(|intrinsic_size| (intrinsic_size)(size))
+        store.intrinsic_size.get(self).map(|intrinsic_size| (intrinsic_size)(&store, size))
     }
 }
 

@@ -241,7 +241,7 @@ where
                 match left {
                     Units::Pixels(val) => {
                         new_left = val.clamp(min_left, max_left);
-                        horizontal_used_space += new_left;
+                        //horizontal_used_space += new_left;
                     }
         
                     _ => {}
@@ -250,7 +250,7 @@ where
                 match width {
                     Units::Pixels(val) => {
                         new_width = val.clamp(min_width, max_width);
-                        horizontal_used_space += new_width;
+                        //horizontal_used_space += new_width;
                     }
         
                     Units::Auto => {
@@ -272,11 +272,14 @@ where
 
                         new_width += border_left + border_right;
         
-                        horizontal_used_space += new_width;
+                        //horizontal_used_space += new_width.max(min_width);
+                        //println!("{:?} hus: {}", node, horizontal_used_space);
                     }
         
                     _ => {}
                 }
+
+                horizontal_used_space += new_width.max(min_width);
         
                 match right {
                     Units::Pixels(val) => {

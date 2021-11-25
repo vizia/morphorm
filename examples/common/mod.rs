@@ -133,12 +133,30 @@ pub fn render(mut world: World, root: Entity) {
                     canvas.fill_path(&mut path, paint);
 
 
-                    let mut paint = Paint::color(Color::black());
-                    paint.set_font_size(24.0);
-                    paint.set_text_align(Align::Center);
-                    paint.set_text_baseline(Baseline::Middle);
-                    paint.set_font(&vec![font]);
-                    let _ = canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
+                    
+                    if let Some(text) = world.store.text.get(&node) {
+                        let mut paint = Paint::color(Color::black());
+                        paint.set_font_size(12.0);
+                        paint.set_text_align(Align::Left);
+                        paint.set_text_baseline(Baseline::Top);
+                        paint.set_font(&vec![font]);
+                        let font_metrics = canvas.measure_font(paint).expect("Error measuring font");
+                        let mut y = posy;
+                        if let Ok(text_lines) = canvas.break_text_vec(width, text, paint) {
+                            //println!("font height: {}", font_metrics.height());
+                            for line in text_lines.into_iter() {
+                                let _ = canvas.fill_text(posx, y, &text[line], paint);
+                                y += font_metrics.height();
+                            }
+                        }
+                    } else {
+                        let mut paint = Paint::color(Color::black());
+                        paint.set_font_size(24.0);
+                        paint.set_text_align(Align::Center);
+                        paint.set_text_baseline(Baseline::Middle);
+                        paint.set_font(&vec![font]);
+                        let _ = canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
+                    }
 
                 }
 

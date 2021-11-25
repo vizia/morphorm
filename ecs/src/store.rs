@@ -54,5 +54,10 @@ pub struct Store {
     pub green: HashMap<Entity, u8>,
     pub blue: HashMap<Entity, u8>,
 
-    pub intrinsic_size: HashMap<Entity, Box<dyn Fn(f32) -> f32>>,
+    pub intrinsic_size: HashMap<Entity, Box<dyn Fn(&Store, f32) -> f32>>,
+
+    pub text: HashMap<Entity, String>,
+
+    pub text_context: femtovg::TextContext,
+    pub font_id: Option<femtovg::FontId>,
 }
