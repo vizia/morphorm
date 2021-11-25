@@ -5,8 +5,10 @@ use bitflags::bitflags;
 pub enum LayoutType {
     /// Stack child elements horizontally
     Row,
+    RowReverse,
     /// Stack child elements vertically
     Column,
+    ColumnReverse,
     /// Position child elements into specified rows and columns
     Grid,
 }

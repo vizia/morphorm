@@ -11,6 +11,8 @@ pub trait Hierarchy<'a> {
     type DownIter: Iterator<Item = Self::Item>;
     /// A type representing an iterator which iterates through the children of a specified node
     type ChildIter: Iterator<Item = Self::Item>;
+    /// A type representing an iterator which iterates through the children of a node in reverse order
+    type RevChildIter: Iterator<Item = Self::Item>;
 
     /// Returns an iterator which walks up the hierarchy
     fn up_iter(&'a self) -> Self::UpIter;
@@ -20,6 +22,9 @@ pub trait Hierarchy<'a> {
 
     /// Returns an iterator over the child nodes of a specified node
     fn child_iter(&'a self, node: Self::Item) -> Self::ChildIter;
+
+    /// Return an iterator over the child nodes of a specified node in reverse order
+    fn rev_child_iter(&'a self, node: Self::Item) -> Self::RevChildIter;
 
     /// Get the parent node of the specified node
     fn parent(&self, node: Self::Item) -> Option<Self::Item>;

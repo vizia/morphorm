@@ -146,8 +146,8 @@ where
         // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
         let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
             match layout_type {
-                LayoutType::Column => cache.child_width_max(node),
-                LayoutType::Row => cache.child_width_sum(node),
+                LayoutType::Column | LayoutType::ColumnReverse => cache.child_width_max(node),
+                LayoutType::Row | LayoutType::RowReverse => cache.child_width_sum(node),
                 LayoutType::Grid => cache.grid_row_max(node),
             }
         );
@@ -157,8 +157,8 @@ where
         // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
         let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                 match layout_type {
-                    LayoutType::Column => cache.child_height_sum(node),
-                    LayoutType::Row => cache.child_height_max(node),
+                    LayoutType::Column | LayoutType::ColumnReverse => cache.child_height_sum(node),
+                    LayoutType::Row | LayoutType::RowReverse => cache.child_height_max(node),
                     LayoutType::Grid => cache.grid_col_max(node),
                 }
         );
@@ -197,6 +197,30 @@ where
                 }
             }
 
+            LayoutType::ColumnReverse => {
+                if top == Units::Auto {
+                    if cache.stack_last_child(node) {
+                        top = child_top;
+                    } else {
+                        top = row_between;
+                    }
+                }
+
+                if bottom == Units::Auto {
+                    if cache.stack_first_child(node) {
+                        bottom = child_bottom;
+                    }
+                }
+                
+                if left == Units::Auto {
+                    left = child_left;
+                }
+
+                if right == Units::Auto {
+                    right = child_right;
+                }
+            }
+
             LayoutType::Row => {
                 if left == Units::Auto {
                     if cache.stack_first_child(node) {
@@ -208,6 +232,30 @@ where
 
                 if right == Units::Auto {
                     if cache.stack_last_child(node) {
+                        right = child_right;
+                    }
+                }
+                
+                if top == Units::Auto {
+                    top = child_top;
+                }
+
+                if bottom == Units::Auto {
+                    bottom = child_bottom;
+                }
+            }
+
+            LayoutType::RowReverse => {
+                if left == Units::Auto {
+                    if cache.stack_last_child(node) {
+                        left = child_left;
+                    } else {
+                        left = col_between;
+                    }
+                }
+
+                if right == Units::Auto {
+                    if cache.stack_first_child(node) {
                         right = child_right;
                     }
                 }
@@ -237,7 +285,7 @@ where
         let mut vertical_used_space = 0.0;
 
         match parent_layout_type {
-            LayoutType::Column | LayoutType::Row => {
+            LayoutType::Column | LayoutType::Row | LayoutType::ColumnReverse | LayoutType::RowReverse => {
                 match left {
                     Units::Pixels(val) => {
                         new_left = val.clamp(min_left, max_left);
@@ -255,11 +303,11 @@ where
         
                     Units::Auto => {
                         match layout_type {
-                            LayoutType::Column => {
+                            LayoutType::Column | LayoutType::ColumnReverse => {
                                 new_width = cache.child_width_max(node);
                             }
         
-                            LayoutType::Row => {
+                            LayoutType::Row | LayoutType::RowReverse => {
                                 new_width = cache.child_width_sum(node);
                             }
         
@@ -304,11 +352,11 @@ where
         
                     Units::Auto => {
                         match layout_type {
-                            LayoutType::Column => {
+                            LayoutType::Column | LayoutType::ColumnReverse => {
                                 new_height = cache.child_height_sum(node);
                             }
         
-                            LayoutType::Row => {
+                            LayoutType::Row | LayoutType::RowReverse => {
                                 new_height = cache.child_height_max(node);
                             }
         
@@ -416,7 +464,7 @@ where
         let mut parent_vertical_stretch_sum = 0.0;
 
         match parent_layout_type {
-            LayoutType::Row | LayoutType::Column => {
+            LayoutType::Row | LayoutType::Column | LayoutType::RowReverse | LayoutType::ColumnReverse => {
                 let mut horizontal_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
                 let mut vertical_axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
 
@@ -454,8 +502,8 @@ where
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
                         match layout_type {
-                            LayoutType::Column => cache.child_width_max(node),
-                            LayoutType::Row => cache.child_width_sum(node),
+                            LayoutType::Column | LayoutType::ColumnReverse => cache.child_width_max(node),
+                            LayoutType::Row | LayoutType::RowReverse => cache.child_width_sum(node),
                             LayoutType::Grid => cache.grid_row_max(node),
                         }
                     );
@@ -465,10 +513,10 @@ where
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                             match layout_type {
-                                LayoutType::Column => {
+                                LayoutType::Column | LayoutType::ColumnReverse => {
                                     cache.child_height_sum(node)
                                 },
-                                LayoutType::Row => cache.child_height_max(node),
+                                LayoutType::Row | LayoutType::RowReverse => cache.child_height_max(node),
                                 LayoutType::Grid => cache.grid_col_max(node),
                             }
                     );
@@ -507,6 +555,30 @@ where
                                 right = child_right;
                             }
                         }
+
+                        LayoutType::ColumnReverse => {
+                            if top == Units::Auto {
+                                if cache.stack_last_child(node) {
+                                    top = child_top;
+                                } else {
+                                    top = row_between;
+                                }
+                            }
+            
+                            if bottom == Units::Auto {
+                                if cache.stack_first_child(node) {
+                                    bottom = child_bottom;
+                                }
+                            }
+                            
+                            if left == Units::Auto {
+                                left = child_left;
+                            }
+            
+                            if right == Units::Auto {
+                                right = child_right;
+                            }
+                        }
             
                         LayoutType::Row => {
                             if left == Units::Auto {
@@ -519,6 +591,30 @@ where
             
                             if right == Units::Auto {
                                 if cache.stack_last_child(node) {
+                                    right = child_right;
+                                }
+                            }
+                            
+                            if top == Units::Auto {
+                                top = child_top;
+                            }
+            
+                            if bottom == Units::Auto {
+                                bottom = child_bottom;
+                            }
+                        }
+
+                        LayoutType::RowReverse => {
+                            if left == Units::Auto {
+                                if cache.stack_last_child(node) {
+                                    left = child_left;
+                                } else {
+                                    left = col_between;
+                                }
+                            }
+            
+                            if right == Units::Auto {
+                                if cache.stack_first_child(node) {
                                     right = child_right;
                                 }
                             }
@@ -606,12 +702,12 @@ where
 
                         Units::Auto => {
                             match layout_type {
-                                LayoutType::Column => {
+                                LayoutType::Column | LayoutType::ColumnReverse => {
                                     new_width =
                                         cache.child_width_max(node);
                                 }
 
-                                LayoutType::Row | LayoutType::Grid=> {
+                                LayoutType::Row | LayoutType::RowReverse | LayoutType::Grid=> {
                                     new_width =
                                         cache.child_width_sum(node);
                                 }
@@ -707,12 +803,12 @@ where
 
                         Units::Auto => {
                             match layout_type {
-                                LayoutType::Column | LayoutType::Grid => {
+                                LayoutType::Column | LayoutType::ColumnReverse | LayoutType::Grid => {
                                     new_height =
                                         cache.child_height_sum(node);
                                 }
 
-                                LayoutType::Row => {
+                                LayoutType::Row | LayoutType::RowReverse => {
                                     new_height =
                                         cache.child_height_max(node);
                                 }
@@ -817,12 +913,12 @@ where
 
                         PositionType::ParentDirected => {
                             match parent_layout_type {
-                                LayoutType::Row => {
+                                LayoutType::Row | LayoutType::RowReverse => {
                                     horizontal_stretch_sum = parent_horizontal_stretch_sum;
                                     horizontal_free_space = parent_horizontal_free_space;
                                 }
 
-                                LayoutType::Column => {
+                                LayoutType::Column | LayoutType::ColumnReverse => {
                                     horizontal_free_space = cache.horizontal_free_space(node);
                                     horizontal_stretch_sum = cache.horizontal_stretch_sum(node);
                                 }
@@ -884,7 +980,7 @@ where
                                     );
                                 }
 
-                                LayoutType::Row => {
+                                LayoutType::Row | LayoutType::RowReverse => {
                                     parent_horizontal_free_space -= new_value;
                                     parent_horizontal_stretch_sum -= computed_data.value;
                                 }
@@ -912,12 +1008,12 @@ where
 
                         PositionType::ParentDirected => {
                             match parent_layout_type {
-                                LayoutType::Column => {
+                                LayoutType::Column | LayoutType::ColumnReverse => {
                                     vertical_stretch_sum = parent_vertical_stretch_sum;
                                     vertical_free_space = parent_vertical_free_space;
                                 }
 
-                                LayoutType::Row => {
+                                LayoutType::Row | LayoutType::RowReverse => {
                                     vertical_free_space = cache.vertical_free_space(node);
                                     vertical_stretch_sum = cache.vertical_stretch_sum(node);
                                 }     
@@ -964,7 +1060,7 @@ where
 
                         PositionType::ParentDirected => {
                             match parent_layout_type {
-                                LayoutType::Row => {
+                                LayoutType::Row | LayoutType::RowReverse => {
                                     cache.set_vertical_stretch_sum(
                                         node,
                                         vertical_stretch_sum - computed_data.value,
@@ -975,7 +1071,7 @@ where
                                     );
                                 }
 
-                                LayoutType::Column => {
+                                LayoutType::Column | LayoutType::ColumnReverse => {
                                     parent_vertical_free_space -= new_value;
                                     parent_vertical_stretch_sum -= computed_data.value;
                                 }
@@ -995,70 +1091,145 @@ where
                 ///////////////////////
                 // Position Children //
                 ///////////////////////
-                for node in hierarchy.child_iter(parent) {
+                match parent_layout_type {
+                    LayoutType::Row | LayoutType::Column => {
+                        for node in hierarchy.child_iter(parent) {
 
-                    let visible = cache.visible(node);
-                    if !visible {
-                        continue;
-                    }
-
-                    let left = cache.left(node);
-                    let right = cache.right(node);
-                    let top = cache.top(node);
-                    let bottom = cache.bottom(node);
-
-                    let new_width = cache.new_width(node);
-                    let new_height = cache.new_height(node);
-
-                    let position_type = node.position_type(store).unwrap_or_default();
-
-                    let (new_posx, new_posy) = match position_type {
-                        PositionType::SelfDirected => {
-                            (parent_posx + left, parent_posy + top)
-                        }
-
-                        PositionType::ParentDirected => {
-                            let new_posx = parent_posx + current_posx + left;
-                            let new_posy = parent_posy + current_posy + top;
-
-                            match parent_layout_type {
-                                LayoutType::Column => {
-                                    current_posy += top + new_height + bottom;
-                                }
-
-                                LayoutType::Row => {
-                                    current_posx += left + new_width + right;
-                                }
-
-                                _ => {}
+                            let visible = cache.visible(node);
+                            if !visible {
+                                continue;
                             }
-
-                            (new_posx, new_posy)
+        
+                            let left = cache.left(node);
+                            let right = cache.right(node);
+                            let top = cache.top(node);
+                            let bottom = cache.bottom(node);
+        
+                            let new_width = cache.new_width(node);
+                            let new_height = cache.new_height(node);
+        
+                            let position_type = node.position_type(store).unwrap_or_default();
+        
+                            let (new_posx, new_posy) = match position_type {
+                                PositionType::SelfDirected => {
+                                    (parent_posx + left, parent_posy + top)
+                                }
+        
+                                PositionType::ParentDirected => {
+                                    let new_posx = parent_posx + current_posx + left;
+                                    let new_posy = parent_posy + current_posy + top;
+        
+                                    match parent_layout_type {
+                                        LayoutType::Column => {
+                                            current_posy += top + new_height + bottom;
+                                        }
+        
+                                        LayoutType::Row => {
+                                            current_posx += left + new_width + right;
+                                        }
+        
+                                        _ => {}
+                                    }
+        
+                                    (new_posx, new_posy)
+                                }
+                            };
+                            
+        
+                            if new_posx != cache.posx(node) {
+                                cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
+                            }
+        
+                            if new_posy != cache.posy(node) {
+                                cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                            }
+        
+                            if new_width != cache.width(node) {
+                                cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
+                            }
+        
+                            if new_height != cache.height(node) {
+                                cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
+                            }
+        
+                            cache.set_posx(node, new_posx);
+                            cache.set_posy(node, new_posy);
+                            cache.set_width(node, new_width);
+                            cache.set_height(node, new_height);
                         }
-                    };
-                    
-
-                    if new_posx != cache.posx(node) {
-                        cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
                     }
 
-                    if new_posy != cache.posy(node) {
-                        cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                    LayoutType::RowReverse | LayoutType::ColumnReverse => {
+                        for node in hierarchy.rev_child_iter(parent) {
+                            
+                            let visible = cache.visible(node);
+                            if !visible {
+                                continue;
+                            }
+                            
+                            let left = cache.left(node);
+                            let right = cache.right(node);
+                            let top = cache.top(node);
+                            let bottom = cache.bottom(node);
+                            
+                            let new_width = cache.new_width(node);
+                            let new_height = cache.new_height(node);
+                            println!("position: {:?} {} {}", node, new_width, new_height);
+                            
+                            let position_type = node.position_type(store).unwrap_or_default();
+        
+                            let (new_posx, new_posy) = match position_type {
+                                PositionType::SelfDirected => {
+                                    (parent_posx + left, parent_posy + top)
+                                }
+        
+                                PositionType::ParentDirected => {
+                                    let new_posx = parent_posx + current_posx + left;
+                                    let new_posy = parent_posy + current_posy + top;
+        
+                                    match parent_layout_type {
+                                        LayoutType::ColumnReverse => {
+                                            current_posy += top + new_height + bottom;
+                                        }
+        
+                                        LayoutType::RowReverse => {
+                                            current_posx += left + new_width + right;
+                                        }
+        
+                                        _ => {}
+                                    }
+        
+                                    (new_posx, new_posy)
+                                }
+                            };
+                            
+        
+                            if new_posx != cache.posx(node) {
+                                cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
+                            }
+        
+                            if new_posy != cache.posy(node) {
+                                cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
+                            }
+        
+                            if new_width != cache.width(node) {
+                                cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
+                            }
+        
+                            if new_height != cache.height(node) {
+                                cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
+                            }
+        
+                            cache.set_posx(node, new_posx);
+                            cache.set_posy(node, new_posy);
+                            cache.set_width(node, new_width);
+                            cache.set_height(node, new_height);
+                        }
                     }
 
-                    if new_width != cache.width(node) {
-                        cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
-                    }
-
-                    if new_height != cache.height(node) {
-                        cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
-                    }
-
-                    cache.set_posx(node, new_posx);
-                    cache.set_posy(node, new_posy);
-                    cache.set_width(node, new_width);
-                    cache.set_height(node, new_height);
+                    _=> {}
                 }
+
             }
 
             LayoutType::Grid => {

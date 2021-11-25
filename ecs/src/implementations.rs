@@ -164,6 +164,7 @@ impl<'a> Hierarchy<'a> for Tree {
     type DownIter = std::vec::IntoIter<Entity>;
     type UpIter = Rev<std::vec::IntoIter<Entity>>;
     type ChildIter = ChildIterator<'a>;
+    type RevChildIter = Rev<std::vec::IntoIter<Entity>>;
 
     fn up_iter(&'a self) -> Self::UpIter {
         self.flatten().into_iter().rev()
@@ -179,6 +180,10 @@ impl<'a> Hierarchy<'a> for Tree {
             tree: self,
             current_node: first_child,
         }
+    }
+
+    fn rev_child_iter(&'a self, node: Self::Item) -> Self::RevChildIter {
+        self.child_iter(node).collect::<Vec<_>>().into_iter().rev()
     }
 
     fn parent(&self, node: Self::Item) -> Option<Self::Item> {
