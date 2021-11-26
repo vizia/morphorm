@@ -26,28 +26,28 @@ pub trait Cache {
     fn posy(&self, node: Self::Item) -> f32;
 
     /// Get the computed space to the left of a node
-    fn left(&self, node: Self::Item) -> f32;
+    fn main_before(&self, node: Self::Item) -> f32;
     /// Get the computed space to the right of a node
-    fn right(&self, node: Self::Item) -> f32;
+    fn main_after(&self, node: Self::Item) -> f32;
     /// Get the computed space above a node
-    fn top(&self, node: Self::Item) -> f32;
+    fn cross_before(&self, node: Self::Item) -> f32;
     /// Get the computed space below a node
-    fn bottom(&self, node: Self::Item) -> f32;
+    fn cross_after(&self, node: Self::Item) -> f32;
 
-    fn new_width(&self, node: Self::Item) -> f32;
-    fn new_height(&self, node: Self::Item) -> f32;
-
-    /// Get the computed maximum width of the child nodes
-    fn child_width_max(&self, node: Self::Item) -> f32;
-
-    /// Get the computed sum of the widths of the child nodes
-    fn child_width_sum(&self, node: Self::Item) -> f32;
+    fn new_main(&self, node: Self::Item) -> f32;
+    fn new_cross(&self, node: Self::Item) -> f32;
 
     /// Get the computed maximum width of the child nodes
-    fn child_height_max(&self, node: Self::Item) -> f32;
+    fn child_main_max(&self, node: Self::Item) -> f32;
 
     /// Get the computed sum of the widths of the child nodes
-    fn child_height_sum(&self, node: Self::Item) -> f32;
+    fn child_main_sum(&self, node: Self::Item) -> f32;
+
+    /// Get the computed maximum width of the child nodes
+    fn child_cross_max(&self, node: Self::Item) -> f32;
+
+    /// Get the computed sum of the widths of the child nodes
+    fn child_cross_sum(&self, node: Self::Item) -> f32;
 
     /// Get the computed maximum grid row
     fn grid_row_max(&self, node: Self::Item) -> f32;
@@ -67,33 +67,33 @@ pub trait Cache {
 
     fn set_geo_changed(&mut self, node: Self::Item, flag: GeometryChanged, value: bool);
 
-    fn set_child_width_sum(&mut self, node: Self::Item, value: f32);
-    fn set_child_height_sum(&mut self, node: Self::Item, value: f32);
-    fn set_child_width_max(&mut self, node: Self::Item, value: f32);
-    fn set_child_height_max(&mut self, node: Self::Item, value: f32);
+    fn set_child_main_sum(&mut self, node: Self::Item, value: f32);
+    fn set_child_cross_sum(&mut self, node: Self::Item, value: f32);
+    fn set_child_main_max(&mut self, node: Self::Item, value: f32);
+    fn set_child_cross_max(&mut self, node: Self::Item, value: f32);
 
-    fn horizontal_free_space(&self, node: Self::Item) -> f32;
-    fn set_horizontal_free_space(&mut self, node: Self::Item, value: f32);
-    fn vertical_free_space(&self, node: Self::Item) -> f32;
-    fn set_vertical_free_space(&mut self, node: Self::Item, value: f32);
+    fn main_free_space(&self, node: Self::Item) -> f32;
+    fn set_main_free_space(&mut self, node: Self::Item, value: f32);
+    fn cross_free_space(&self, node: Self::Item) -> f32;
+    fn set_cross_free_space(&mut self, node: Self::Item, value: f32);
 
-    fn horizontal_stretch_sum(&self, node: Self::Item) -> f32;
-    fn set_horizontal_stretch_sum(&mut self, node: Self::Item, value: f32);
-    fn vertical_stretch_sum(&self, node: Self::Item) -> f32;
-    fn set_vertical_stretch_sum(&mut self, node: Self::Item, value: f32);
+    fn main_stretch_sum(&self, node: Self::Item) -> f32;
+    fn set_main_stretch_sum(&mut self, node: Self::Item, value: f32);
+    fn cross_stretch_sum(&self, node: Self::Item) -> f32;
+    fn set_cross_stretch_sum(&mut self, node: Self::Item, value: f32);
 
     fn set_width(&mut self, node: Self::Item, value: f32);
     fn set_height(&mut self, node: Self::Item, value: f32);
     fn set_posx(&mut self, node: Self::Item, value: f32);
     fn set_posy(&mut self, node: Self::Item, value: f32);
 
-    fn set_left(&mut self, node: Self::Item, value: f32);
-    fn set_right(&mut self, node: Self::Item, value: f32);
-    fn set_top(&mut self, node: Self::Item, value: f32);
-    fn set_bottom(&mut self, node: Self::Item, value: f32);
+    fn set_main_before(&mut self, node: Self::Item, value: f32);
+    fn set_main_after(&mut self, node: Self::Item, value: f32);
+    fn set_cross_before(&mut self, node: Self::Item, value: f32);
+    fn set_cross_after(&mut self, node: Self::Item, value: f32);
 
-    fn set_new_width(&mut self, node: Self::Item, value: f32);
-    fn set_new_height(&mut self, node: Self::Item, value: f32);
+    fn set_new_main(&mut self, node: Self::Item, value: f32);
+    fn set_new_cross(&mut self, node: Self::Item, value: f32);
 
     fn stack_first_child(&self, node: Self::Item) -> bool;
     fn set_stack_first_child(&mut self, node: Self::Item, value: bool);

@@ -20,97 +20,100 @@ impl<'a> Node<'a> for Entity {
         store.position_type.get(self).cloned()
     }
 
-    fn width(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.width.get(self).cloned()
+    fn main(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.main.get(self).cloned()
     }
 
-    fn height(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.height.get(self).cloned()
+    fn cross(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.cross.get(self).cloned()
     }
 
-    fn left(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.left.get(self).cloned()
-    }
-    fn right(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.right.get(self).cloned()
-    }
-    fn top(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.top.get(self).cloned()
-    }
-    fn bottom(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.bottom.get(self).cloned()
+    fn main_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.main_before.get(self).cloned()
     }
 
-    fn child_left(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.child_left.get(self).cloned()
+    fn main_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.main_after.get(self).cloned()
     }
 
-    fn child_right(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.child_right.get(self).cloned()
+    fn cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.cross_before.get(self).cloned()
     }
 
-    fn child_top(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.child_top.get(self).cloned()
+    fn cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.cross_after.get(self).cloned()
     }
 
-    fn child_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.child_bottom.get(self).cloned()
+    fn child_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.child_main_before.get(self).cloned()
     }
 
-    fn min_left(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_left.get(self).cloned()
+    fn child_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.child_main_after.get(self).cloned()
     }
 
-    fn min_right(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_right.get(self).cloned()
+    fn child_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.child_cross_before.get(self).cloned()
     }
 
-    fn min_top(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_top.get(self).cloned()
+    fn child_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.child_cross_after.get(self).cloned()
     }
 
-    fn min_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_bottom.get(self).cloned()
+    fn min_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_main_before.get(self).cloned()
     }
 
-    fn max_left(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_left.get(self).cloned()
+    fn min_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_main_after.get(self).cloned()
     }
 
-    fn max_right(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_right.get(self).cloned()
+    fn min_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_cross_before.get(self).cloned()
     }
 
-    fn max_top(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_top.get(self).cloned()
+    fn min_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_cross_after.get(self).cloned()
     }
 
-    fn max_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_bottom.get(self).cloned()
+    fn max_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_main_before.get(self).cloned()
     }
 
-    fn min_width(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_width.get(self).cloned()
+    fn max_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_main_after.get(self).cloned()
     }
 
-    fn max_width(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_width.get(self).cloned()
+    fn max_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_cross_before.get(self).cloned()
     }
 
-    fn min_height(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.min_height.get(self).cloned()
+    fn max_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_cross_after.get(self).cloned()
     }
 
-    fn max_height(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.max_height.get(self).cloned()
+    fn min_main(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_main.get(self).cloned()
     }
 
-    fn row_between(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.row_between.get(self).cloned()
+    fn max_main(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_main.get(self).cloned()
     }
 
-    fn col_between(&self, store: &'_ Self::Data) -> Option<Units> {
-        store.col_between.get(self).cloned()
+    fn min_cross(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.min_cross.get(self).cloned()
+    }
+
+    fn max_cross(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.max_cross.get(self).cloned()
+    }
+
+    fn main_between(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.main_between.get(self).cloned()
+    }
+
+    fn cross_between(&self, store: &'_ Self::Data) -> Option<Units> {
+        store.cross_between.get(self).cloned()
     }
 
     fn grid_rows(&self, store: &'_ Self::Data) -> Option<Vec<Units>> {
@@ -256,19 +259,19 @@ pub struct NodeCache {
     space: HashMap<Entity, Space>,
     size: HashMap<Entity, Size>,
 
-    child_width_max: HashMap<Entity, f32>,
-    child_height_max: HashMap<Entity, f32>,
-    child_width_sum: HashMap<Entity, f32>,
-    child_height_sum: HashMap<Entity, f32>,
+    child_main_max: HashMap<Entity, f32>,
+    child_cross_max: HashMap<Entity, f32>,
+    child_main_sum: HashMap<Entity, f32>,
+    child_cross_sum: HashMap<Entity, f32>,
 
     grid_row_max: HashMap<Entity, f32>,
     grid_col_max: HashMap<Entity, f32>,
 
-    horizontal_free_space: HashMap<Entity, f32>,
-    horizontal_stretch_sum: HashMap<Entity, f32>,
+    main_free_space: HashMap<Entity, f32>,
+    main_stretch_sum: HashMap<Entity, f32>,
 
-    vertical_free_space: HashMap<Entity, f32>,
-    vertical_stretch_sum: HashMap<Entity, f32>,
+    cross_free_space: HashMap<Entity, f32>,
+    cross_stretch_sum: HashMap<Entity, f32>,
 
     stack_first_child: HashMap<Entity, bool>,
     stack_last_child: HashMap<Entity, bool>,
@@ -284,21 +287,21 @@ impl NodeCache {
 
         self.space.insert(entity, Default::default());
 
-        self.child_width_max.insert(entity, Default::default());
-        self.child_height_max.insert(entity, Default::default());
-        self.child_width_sum.insert(entity, Default::default());
-        self.child_height_sum.insert(entity, Default::default());
+        self.child_main_max.insert(entity, Default::default());
+        self.child_cross_max.insert(entity, Default::default());
+        self.child_main_sum.insert(entity, Default::default());
+        self.child_cross_sum.insert(entity, Default::default());
 
         self.grid_row_max.insert(entity, Default::default());
         self.grid_col_max.insert(entity, Default::default());
 
-        self.horizontal_free_space
+        self.main_free_space
             .insert(entity, Default::default());
-        self.horizontal_stretch_sum
+        self.main_stretch_sum
             .insert(entity, Default::default());
 
-        self.vertical_free_space.insert(entity, Default::default());
-        self.vertical_stretch_sum.insert(entity, Default::default());
+        self.cross_free_space.insert(entity, Default::default());
+        self.cross_stretch_sum.insert(entity, Default::default());
 
         self.stack_first_child.insert(entity, Default::default());
         self.stack_last_child.insert(entity, Default::default());
@@ -368,7 +371,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn left(&self, node: Self::Item) -> f32 {
+    fn main_before(&self, node: Self::Item) -> f32 {
         if let Some(space) = self.space.get(&node) {
             return space.left;
         }
@@ -376,7 +379,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn right(&self, node: Self::Item) -> f32 {
+    fn main_after(&self, node: Self::Item) -> f32 {
         if let Some(space) = self.space.get(&node) {
             return space.right;
         }
@@ -384,7 +387,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn top(&self, node: Self::Item) -> f32 {
+    fn cross_before(&self, node: Self::Item) -> f32 {
         if let Some(space) = self.space.get(&node) {
             return space.top;
         }
@@ -392,7 +395,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn bottom(&self, node: Self::Item) -> f32 {
+    fn cross_after(&self, node: Self::Item) -> f32 {
         if let Some(space) = self.space.get(&node) {
             return space.bottom;
         }
@@ -400,7 +403,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn new_width(&self, node: Self::Item) -> f32 {
+    fn new_main(&self, node: Self::Item) -> f32 {
         if let Some(size) = self.size.get(&node) {
             return size.width;
         }
@@ -408,7 +411,7 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn new_height(&self, node: Self::Item) -> f32 {
+    fn new_cross(&self, node: Self::Item) -> f32 {
         if let Some(size) = self.size.get(&node) {
             return size.height;
         }
@@ -416,23 +419,23 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn child_width_max(&self, node: Self::Item) -> f32 {
-        *self.child_width_max.get(&node).unwrap()
+    fn child_main_max(&self, node: Self::Item) -> f32 {
+        *self.child_main_max.get(&node).unwrap()
     }
 
     /// Get the computed sum of the widths of the child nodes
-    fn child_width_sum(&self, node: Self::Item) -> f32 {
-        *self.child_width_sum.get(&node).unwrap()
+    fn child_main_sum(&self, node: Self::Item) -> f32 {
+        *self.child_main_sum.get(&node).unwrap()
     }
 
     /// Get the computed maximum width of the child nodes
-    fn child_height_max(&self, node: Self::Item) -> f32 {
-        *self.child_height_max.get(&node).unwrap()
+    fn child_cross_max(&self, node: Self::Item) -> f32 {
+        *self.child_cross_max.get(&node).unwrap()
     }
 
     /// Get the computed sum of the widths of the child nodes
-    fn child_height_sum(&self, node: Self::Item) -> f32 {
-        *self.child_height_sum.get(&node).unwrap()
+    fn child_cross_sum(&self, node: Self::Item) -> f32 {
+        *self.child_cross_sum.get(&node).unwrap()
     }
 
     /// Get the computed maximum grid row
@@ -450,46 +453,46 @@ impl Cache for NodeCache {
         *self.visible.get_mut(&node).unwrap() = value;
     }
 
-    fn set_child_width_sum(&mut self, node: Self::Item, value: f32) {
-        *self.child_width_sum.get_mut(&node).unwrap() = value;
+    fn set_child_main_sum(&mut self, node: Self::Item, value: f32) {
+        *self.child_main_sum.get_mut(&node).unwrap() = value;
     }
 
-    fn set_child_height_sum(&mut self, node: Self::Item, value: f32) {
-        *self.child_height_sum.get_mut(&node).unwrap() = value;
+    fn set_child_cross_sum(&mut self, node: Self::Item, value: f32) {
+        *self.child_cross_sum.get_mut(&node).unwrap() = value;
     }
 
-    fn set_child_width_max(&mut self, node: Self::Item, value: f32) {
-        *self.child_width_max.get_mut(&node).unwrap() = value;
+    fn set_child_main_max(&mut self, node: Self::Item, value: f32) {
+        *self.child_main_max.get_mut(&node).unwrap() = value;
     }
 
-    fn set_child_height_max(&mut self, node: Self::Item, value: f32) {
-        *self.child_height_max.get_mut(&node).unwrap() = value;
+    fn set_child_cross_max(&mut self, node: Self::Item, value: f32) {
+        *self.child_cross_max.get_mut(&node).unwrap() = value;
     }
 
-    fn horizontal_free_space(&self, node: Self::Item) -> f32 {
-        *self.horizontal_free_space.get(&node).unwrap()
+    fn main_free_space(&self, node: Self::Item) -> f32 {
+        *self.main_free_space.get(&node).unwrap()
     }
-    fn set_horizontal_free_space(&mut self, node: Self::Item, value: f32) {
-        *self.horizontal_free_space.get_mut(&node).unwrap() = value;
+    fn set_main_free_space(&mut self, node: Self::Item, value: f32) {
+        *self.main_free_space.get_mut(&node).unwrap() = value;
     }
-    fn vertical_free_space(&self, node: Self::Item) -> f32 {
-        *self.vertical_free_space.get(&node).unwrap()
+    fn cross_free_space(&self, node: Self::Item) -> f32 {
+        *self.cross_free_space.get(&node).unwrap()
     }
-    fn set_vertical_free_space(&mut self, node: Self::Item, value: f32) {
-        *self.vertical_free_space.get_mut(&node).unwrap() = value;
+    fn set_cross_free_space(&mut self, node: Self::Item, value: f32) {
+        *self.cross_free_space.get_mut(&node).unwrap() = value;
     }
 
-    fn horizontal_stretch_sum(&self, node: Self::Item) -> f32 {
-        *self.horizontal_stretch_sum.get(&node).unwrap()
+    fn main_stretch_sum(&self, node: Self::Item) -> f32 {
+        *self.main_stretch_sum.get(&node).unwrap()
     }
-    fn set_horizontal_stretch_sum(&mut self, node: Self::Item, value: f32) {
-        *self.horizontal_stretch_sum.get_mut(&node).unwrap() = value;
+    fn set_main_stretch_sum(&mut self, node: Self::Item, value: f32) {
+        *self.main_stretch_sum.get_mut(&node).unwrap() = value;
     }
-    fn vertical_stretch_sum(&self, node: Self::Item) -> f32 {
-        *self.vertical_stretch_sum.get(&node).unwrap()
+    fn cross_stretch_sum(&self, node: Self::Item) -> f32 {
+        *self.cross_stretch_sum.get(&node).unwrap()
     }
-    fn set_vertical_stretch_sum(&mut self, node: Self::Item, value: f32) {
-        *self.vertical_stretch_sum.get_mut(&node).unwrap() = value;
+    fn set_cross_stretch_sum(&mut self, node: Self::Item, value: f32) {
+        *self.cross_stretch_sum.get_mut(&node).unwrap() = value;
     }
 
     fn set_grid_row_max(&mut self, node: Self::Item, value: f32) {
@@ -521,37 +524,37 @@ impl Cache for NodeCache {
         }
     }
 
-    fn set_left(&mut self, node: Self::Item, value: f32) {
+    fn set_main_before(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.left = value;
         }
     }
 
-    fn set_right(&mut self, node: Self::Item, value: f32) {
+    fn set_main_after(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.right = value;
         }
     }
 
-    fn set_top(&mut self, node: Self::Item, value: f32) {
+    fn set_cross_before(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.top = value;
         }
     }
 
-    fn set_bottom(&mut self, node: Self::Item, value: f32) {
+    fn set_cross_after(&mut self, node: Self::Item, value: f32) {
         if let Some(space) = self.space.get_mut(&node) {
             space.bottom = value;
         }
     }
 
-    fn set_new_width(&mut self, node: Self::Item, value: f32) {
+    fn set_new_main(&mut self, node: Self::Item, value: f32) {
         if let Some(size) = self.size.get_mut(&node) {
             size.width = value;
         }
     }
 
-    fn set_new_height(&mut self, node: Self::Item, value: f32) {
+    fn set_new_cross(&mut self, node: Self::Item, value: f32) {
         if let Some(size) = self.size.get_mut(&node) {
             size.height = value;
         }

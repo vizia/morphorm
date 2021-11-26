@@ -61,8 +61,22 @@ pub fn render(mut world: World, root: Entity) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    world.set_width(root, Units::Pixels(physical_size.width as f32));
-                    world.set_height(root, Units::Pixels(physical_size.height as f32));
+                    
+                    match world.store.layout_type.get(&root).cloned().unwrap_or_default() {
+                        LayoutType::Row => {
+                            world.set_main(root, Units::Pixels(physical_size.width as f32));
+                            world.set_cross(root, Units::Pixels(physical_size.height as f32));
+                        }
+
+                        LayoutType::Column => {
+                            world.set_main(root, Units::Pixels(physical_size.height as f32));
+                            world.set_cross(root, Units::Pixels(physical_size.width as f32));
+                        }
+
+                        _=> {}
+                    }
+                    
+                    
                     world.cache.set_width(root, physical_size.width as f32);
                     world.cache.set_height(root, physical_size.height as f32);
 

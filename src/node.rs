@@ -26,82 +26,82 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     }
 
     /// Get the desired width of the node in units
-    fn width(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn main(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Stretch(1.0))
     }
 
     /// Get the desired height of the node in units
-    fn height(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn cross(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Stretch(1.0))
     }
 
     /// Get the desired min_width of the node in units
-    fn min_width(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_main(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired min_height of the node in units
-    fn min_height(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_cross(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired max_width of the node in units
-    fn max_width(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_main(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired max_height of the node in units
-    fn max_height(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_cross(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired space to the left of the node in units
-    fn left(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn main_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space to the right of the node in units
-    fn right(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn main_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space above the node in units
-    fn top(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space below the node in units
-    fn bottom(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired min_left of the node in units
-    fn min_left(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn max_left(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn min_right(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn max_right(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn min_top(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn max_top(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn min_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn min_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired min_left of the node in units
-    fn max_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn max_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
@@ -109,38 +109,38 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     ///
     /// The `child_left` property of the parent describes the space applied to the left of all child nodes which have a `left` property of Auto
     /// The `left` property on a child node, when not set to Auto, will override the `child_left` property for that child.
-    fn child_left(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn child_main_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space to the right of all child nodes in units
     ///
     /// The `child_right` property of the parent describes the space applied to the left of all child nodes which have a `right` property of Auto
     /// The `right` property on a child node, when not set to Auto, will override the `child_right` property for that child.
-    fn child_right(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn child_main_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space above all child nodes in units
     ///
     /// The `child_top` property of the parent describes the space applied to the left of all child nodes which have a `top` property of Auto
     /// The `top` property on a child node, when not set to Auto, will override the `child_top` property for that child.
-    fn child_top(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn child_cross_before(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
     /// Get the desired space below all child nodes in units
     ///
     /// The `child_bottom` property of the parent describes the space applied to the left of all child nodes which have a `bottom` property of Auto
     /// The `bottom` property on a child node, when not set to Auto, will override the `child_bottom` property for that child.
-    fn child_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn child_cross_after(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired space between children in units when stacked in a column
-    fn row_between(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn main_between(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
     /// Get the desired space between children in units when stacked in a row
-    fn col_between(&self, store: &'_ Self::Data) -> Option<Units> {
+    fn cross_between(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
 
