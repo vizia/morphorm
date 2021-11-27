@@ -131,13 +131,13 @@ where
         let mut bottom = node.bottom(store).unwrap_or_default();
 
 
-        let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
         let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
         let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
         let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+        let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
         let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
 
         let width = node.width(store).unwrap_or(Units::Stretch(1.0));
@@ -463,13 +463,13 @@ where
                     let mut bottom = node.bottom(store).unwrap_or_default();
             
             
-                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
                     let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
                     let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
                     let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
+                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
                     let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
             
                     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
