@@ -131,13 +131,13 @@ where
         let mut bottom = node.bottom(store).unwrap_or_default();
 
 
-        let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, 0.0);
         let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, 0.0);
         let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, 0.0);
         let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+        let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
         let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
 
         let width = node.width(store).unwrap_or(Units::Stretch(1.0));
@@ -243,6 +243,10 @@ where
                         new_left = val.clamp(min_left, max_left);
                         horizontal_used_space += new_left;
                     }
+
+                    Units::Stretch(_) => {
+                        horizontal_used_space += min_left;
+                    }
         
                     _ => {}
                 }
@@ -274,6 +278,10 @@ where
         
                         horizontal_used_space += new_width;
                     }
+
+                    Units::Stretch(_) => {
+                        horizontal_used_space += min_width;
+                    }
         
                     _ => {}
                 }
@@ -283,6 +291,10 @@ where
                         new_right = val.clamp(min_right, max_right);
                         horizontal_used_space += new_right;
                     }
+
+                    Units::Stretch(_) => {
+                        horizontal_used_space += min_right;
+                    }
         
                     _ => {}
                 }
@@ -291,6 +303,10 @@ where
                     Units::Pixels(val) => {
                         new_top = val.clamp(min_top, max_top);
                         vertical_used_space += new_top;
+                    }
+
+                    Units::Stretch(_) => {
+                        vertical_used_space += min_top;
                     }
         
                     _ => {}
@@ -323,6 +339,10 @@ where
         
                         vertical_used_space += new_height;
                     }
+
+                    Units::Stretch(_) => {
+                        vertical_used_space += min_height;
+                    }
         
                     _ => {}
                 }
@@ -331,6 +351,10 @@ where
                     Units::Pixels(val) => {
                         new_bottom = val.clamp(min_bottom, max_bottom);
                         vertical_used_space += new_bottom;
+                    }
+
+                    Units::Stretch(_) => {
+                        vertical_used_space += min_bottom;
                     }
         
                     _ => {}
@@ -439,13 +463,13 @@ where
                     let mut bottom = node.bottom(store).unwrap_or_default();
             
             
-                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let min_left = node.min_left(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let max_left = node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let min_right = node.min_right(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let max_right = node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let min_top = node.min_top(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
+                    let min_bottom = node.min_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let max_bottom = node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
             
                     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
@@ -670,8 +694,8 @@ where
                                 ComputedData {
                                     node: node.clone(),
                                     value: val,
-                                    min: min_bottom,
-                                    max: max_bottom,
+                                    min: min_top,
+                                    max: max_top,
                                     axis: Axis::Before,
                                 }
                             );
@@ -698,8 +722,8 @@ where
                                 ComputedData {
                                     node: node.clone(),
                                     value: val,
-                                    min: min_bottom,
-                                    max: max_bottom,
+                                    min: min_height,
+                                    max: max_height,
                                     axis: Axis::Size,
                                 }
                             );
@@ -792,8 +816,8 @@ where
                 }
 
                 // Sort the stretch elements in each axis by the maximum size
-                horizontal_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
-                vertical_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
+                horizontal_axis.sort_by(|a, b| b.min.partial_cmp(&a.min).unwrap());
+                vertical_axis.sort_by(|a, b| b.min.partial_cmp(&a.min).unwrap());
 
                 let mut horizontal_stretch_sum = 0.0;
                 let mut horizontal_free_space = 0.0;
