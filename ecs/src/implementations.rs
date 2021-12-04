@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter::Rev;
 
 use morphorm::*;
 
@@ -161,23 +160,28 @@ where 'a: 'b
 
 impl<'a> Hierarchy<'a> for Tree {
     type Item = Entity;
-    type DownIter = std::vec::IntoIter<Entity>;
-    type UpIter = Rev<std::vec::IntoIter<Entity>>;
-    type ChildIter = ChildIterator<'a>;
 
-    fn up_iter(&'a self) -> Self::UpIter {
-        self.flatten().into_iter().rev()
+    fn up_iter<F: FnMut(Self::Item)>(&'a self, mut f: F) {
+        for entity in self.flatten().into_iter().rev() {
+            (f)(entity);
+        }
     }
 
-    fn down_iter(&'a self) -> Self::DownIter {
-        self.flatten().into_iter()
+    fn down_iter<F: FnMut(Self::Item)>(&'a self, mut f: F) {
+        for entity in self.flatten().into_iter() {
+            (f)(entity);
+        }
     }
 
-    fn child_iter(&'a self, node: Self::Item) -> Self::ChildIter {
+    fn child_iter<F: FnMut(Self::Item)>(&'a self, node: Self::Item, mut f: F) {
         let first_child = self.get_first_child(node);
-        ChildIterator {
+        let iter = ChildIterator {
             tree: self,
             current_node: first_child,
+        };
+
+        for child in iter {
+            (f)(child);
         }
     }
 

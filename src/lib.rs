@@ -19,9 +19,11 @@
 //!   to the node type and so the computed results cannot be stored within the node itself (due to the borrow checker). 
 //!
 //! Once the appropriate traits have been implmented, layout can be performed on the whole tree, e.g.
-//! ```no_run
+//!
+//! ```ignore
 //! layout(&mut world.cache, &world.tree, &world.store);
 //! ```
+//!
 //! In this example the cache, tree, and a store for the node properties are kept in an ECS world struct and a node is simply an entity id.
 //!
 //! See examples for details.
