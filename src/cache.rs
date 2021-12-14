@@ -3,7 +3,7 @@ use crate::types::GeometryChanged;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
 pub trait Cache {
-    type Item: for<'a> Node<'a>;
+    type Item: Node;
 
     // Getters
 

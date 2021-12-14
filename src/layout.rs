@@ -15,7 +15,7 @@ enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct ComputedData<N: for<'b> Node<'b>> {
+pub struct ComputedData<N: Node> {
 
     node: N,
 

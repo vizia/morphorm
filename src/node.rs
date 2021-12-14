@@ -3,7 +3,7 @@
 use crate::types::*;
 
 /// A Node describes a visual element that can be positioned and sized
-pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
+pub trait Node: Clone + Copy + std::fmt::Debug {
     /// A type representing an external store in case the position and size data is not be owned by the node itself (e.g. ECS)
     type Data;
 
@@ -14,14 +14,14 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     /// - A Column layout type means that the child nodes will be positioned vertically one after another
     /// - A Grid layout type means that the children will be positioned based on the grid_rows and grid columns
     ///   as well as the child's row_index, col_index, row_span, and col_span properties.  
-    fn layout_type(&self, store: &'_ Self::Data) -> Option<LayoutType> {
+    fn layout_type(&self, store: &Self::Data) -> Option<LayoutType> {
         Some(LayoutType::Column)
     }
 
     /// Get the  position type of the node
     ///
     /// The position type of the node determines whether the node will be positioned in-line with its siblings or independently
-    fn position_type(&self, store: &'_ Self::Data) -> Option<PositionType> {
+    fn position_type(&self, store: &Self::Data) -> Option<PositionType> {
         Some(PositionType::ParentDirected)
     }
 
