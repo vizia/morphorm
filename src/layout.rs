@@ -152,7 +152,8 @@ where
             }
         );
 
-        let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        let mut max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        max_width = max_width.max(min_width);
 
         // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
         let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
@@ -163,7 +164,8 @@ where
                 }
         );
 
-        let max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+        let mut max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+        max_height = max_height.max(min_height);
 
         let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
         let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
@@ -484,7 +486,8 @@ where
                         }
                     );
             
-                    let max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    let mut max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+                    max_width = max_width.max(min_width);
             
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
                     let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
@@ -497,8 +500,9 @@ where
                             }
                     );
             
-                    let max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
-            
+                    let mut max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
+                    max_height = max_height.max(min_height);
+
                     let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
                     let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
