@@ -144,25 +144,27 @@ where
         let height = node.height(store).unwrap_or(Units::Stretch(1.0));
 
         // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
-        let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
+        let mut min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
             match layout_type {
                 LayoutType::Column => cache.child_width_max(node),
                 LayoutType::Row => cache.child_width_sum(node),
                 LayoutType::Grid => cache.grid_row_max(node),
             }
         );
+        min_width = min_width.clamp(0.0, std::f32::MAX);
 
         let mut max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
         max_width = max_width.max(min_width);
 
         // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
-        let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
+        let mut min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                 match layout_type {
                     LayoutType::Column => cache.child_height_sum(node),
                     LayoutType::Row => cache.child_height_max(node),
                     LayoutType::Grid => cache.grid_col_max(node),
                 }
         );
+        min_height = min_height.clamp(0.0, std::f32::MAX);
 
         let mut max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
         max_height = max_height.max(min_height);
@@ -247,7 +249,7 @@ where
                     }
 
                     Units::Stretch(_) => {
-                        horizontal_used_space += min_left;
+                        horizontal_used_space += min_left.clamp(0.0, std::f32::MAX);
                     }
         
                     _ => {}
@@ -295,7 +297,7 @@ where
                     }
 
                     Units::Stretch(_) => {
-                        horizontal_used_space += min_right;
+                        horizontal_used_space += min_right.clamp(0.0, std::f32::MAX);
                     }
         
                     _ => {}
@@ -308,7 +310,7 @@ where
                     }
 
                     Units::Stretch(_) => {
-                        vertical_used_space += min_top;
+                        vertical_used_space += min_top.clamp(0.0, std::f32::MAX);
                     }
         
                     _ => {}
@@ -356,7 +358,7 @@ where
                     }
 
                     Units::Stretch(_) => {
-                        vertical_used_space += min_bottom;
+                        vertical_used_space += min_bottom.clamp(0.0, std::f32::MAX);
                     }
         
                     _ => {}
@@ -478,19 +480,20 @@ where
                     let height = node.height(store).unwrap_or(Units::Stretch(1.0));
             
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
-                    let min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
+                    let mut min_width = node.min_width(store).unwrap_or_default().value_or(parent_width, 
                         match layout_type {
                             LayoutType::Column => cache.child_width_max(node),
                             LayoutType::Row => cache.child_width_sum(node),
                             LayoutType::Grid => cache.grid_row_max(node),
                         }
                     );
+                    min_width = min_width.clamp(0.0, std::f32::MAX);
             
                     let mut max_width = node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
                     max_width = max_width.max(min_width);
             
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
-                    let min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
+                    let mut min_height = node.min_height(store).unwrap_or_default().value_or( parent_height,
                             match layout_type {
                                 LayoutType::Column => {
                                     cache.child_height_sum(node)
@@ -499,6 +502,7 @@ where
                                 LayoutType::Grid => cache.grid_col_max(node),
                             }
                     );
+                    min_height = min_height.clamp(0.0, std::f32::MAX);
             
                     let mut max_height = node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
                     max_height = max_height.max(min_height);
