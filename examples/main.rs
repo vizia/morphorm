@@ -3,7 +3,6 @@
 
 fn main() {
 
-
     // let test1 = Units2::pixels(100.0);
     // println!("Test1: {:?}", test1);
 
@@ -30,7 +29,6 @@ fn main() {
     // // world.set_height(child, Units::Stretch(1.0));
     // // world.set_left(child, Units::Pixels(50.0));
 
-
     // layout(&mut world.cache, &world.tree, &world.store);
 
     // let computed_width = world.cache.width(&child);
@@ -44,5 +42,4 @@ fn main() {
     // println!("Computed PosY: {}", computed_posy);
 
     // render(world, root);
-    
 }

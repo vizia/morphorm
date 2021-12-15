@@ -66,7 +66,7 @@ impl Units {
     pub fn is_pixels(&self) -> bool {
         match self {
             Units::Pixels(_) => true,
-            _=> false,
+            _ => false,
         }
     }
 
@@ -74,7 +74,7 @@ impl Units {
     pub fn is_percentage(&self) -> bool {
         match self {
             Units::Percentage(_) => true,
-            _=> false,
+            _ => false,
         }
     }
 
@@ -82,7 +82,7 @@ impl Units {
     pub fn is_stretch(&self) -> bool {
         match self {
             Units::Stretch(_) => true,
-            _=> false,
+            _ => false,
         }
     }
 
@@ -90,7 +90,7 @@ impl Units {
     pub fn is_auto(&self) -> bool {
         match self {
             Units::Auto => true,
-            _=> false,
+            _ => false,
         }
     }
 }
@@ -109,16 +109,14 @@ bitflags! {
         const CHANGE_HEIGHT  = 0b00001000;
         /// The x position of the node has changed
         const POSX_CHANGED   = 0b00010000;
-        /// The y position of the node has changed 
+        /// The y position of the node has changed
         const POSY_CHANGED   = 0b00100000;
         /// The width of the node has changed
         const WIDTH_CHANGED  = 0b01000000;
         /// The height of the node has changed
         const HEIGHT_CHANGED = 0b10000000;
-    }     
+    }
 }
-
-
 
 // WIP
 /*

@@ -1,11 +1,10 @@
-
 use crate::node::Node;
 
 /// Describes a visual tree of nodes which can be layed out
 pub trait Hierarchy<'a> {
     /// A type respresenting a node in the visual tree
     type Item: Node;
-    /// A type respresenting an iterator that walks up the visual tree 
+    /// A type respresenting an iterator that walks up the visual tree
     type UpIter: Iterator<Item = Self::Item>;
     /// A type representing an iterator that walks down the visual tree
     type DownIter: Iterator<Item = Self::Item>;

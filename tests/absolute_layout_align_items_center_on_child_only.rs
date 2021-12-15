@@ -4,7 +4,6 @@ use morphorm::Cache;
 use morphorm::*;
 use morphorm_ecs::*;
 
-
 #[test]
 fn absolute_layout_align_items_center() {
     let mut world = World::default();
@@ -15,7 +14,6 @@ fn absolute_layout_align_items_center() {
     world.set_width(node, Units::Pixels(110.0));
     world.set_height(node, Units::Pixels(100.0));
 
-
     let node0 = world.add(Some(node));
     world.set_width(node0, Units::Pixels(60.0));
     world.set_height(node0, Units::Pixels(40.0));
@@ -23,7 +21,6 @@ fn absolute_layout_align_items_center() {
     world.set_top(node0, Units::Stretch(1.0));
     world.set_bottom(node0, Units::Stretch(1.0));
 
-    
     layout(&mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.width(node), 110.0);

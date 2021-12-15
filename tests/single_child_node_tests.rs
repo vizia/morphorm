@@ -1,11 +1,9 @@
-
-
 use morphorm::*;
 use morphorm_ecs::*;
 
 /// Size Tests
 
-/// Test of pixel width on a single child node of the root node 
+/// Test of pixel width on a single child node of the root node
 #[test]
 fn single_child_node_pixel_width() {
     let mut world = World::default();
@@ -24,8 +22,7 @@ fn single_child_node_pixel_width() {
     assert_eq!(computed_width, 200.0);
 }
 
-
-/// Test of pixel height on a single child node of the root node 
+/// Test of pixel height on a single child node of the root node
 #[test]
 fn single_child_node_pixel_height() {
     let mut world = World::default();
@@ -44,8 +41,7 @@ fn single_child_node_pixel_height() {
     assert_eq!(computed_height, 300.0);
 }
 
-
-/// Test of pixel height on a single child node of the root node 
+/// Test of pixel height on a single child node of the root node
 #[test]
 fn single_child_node_percentage_width() {
     let mut world = World::default();
@@ -63,4 +59,3 @@ fn single_child_node_percentage_width() {
 
     assert_eq!(computed_width, 500.0);
 }
-

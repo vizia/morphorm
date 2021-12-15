@@ -154,7 +154,6 @@ pub trait Node: Clone + Copy + std::fmt::Debug {
         Some(vec![])
     }
 
-
     /// Get the desired row_index of the node in units
     fn row_index(&self, store: &'_ Self::Data) -> Option<usize> {
         Some(0)
