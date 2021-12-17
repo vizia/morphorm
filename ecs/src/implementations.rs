@@ -7,7 +7,7 @@ use crate::entity::Entity;
 use crate::store::Store;
 use crate::tree::{ChildIterator, Tree};
 
-impl Node for Entity {
+impl<'w> Node<'w> for Entity {
     type Data = Store;
 
     fn layout_type(&self, store: &'_ Self::Data) -> Option<LayoutType> {
@@ -153,7 +153,8 @@ impl Node for Entity {
     }
 }
 
-impl<'a> Node for &'a Entity
+impl<'a,'w> Node<'w> for &'a Entity
+where 'a: 'w
 {
     type Data = Store;
 }

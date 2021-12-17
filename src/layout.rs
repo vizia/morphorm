@@ -13,7 +13,7 @@ enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct ComputedData<N: Node> {
+pub struct ComputedData<N: for<'w> Node<'w>> {
     node: N,
 
     value: f32,

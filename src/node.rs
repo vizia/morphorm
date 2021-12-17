@@ -3,7 +3,7 @@
 use crate::types::*;
 
 /// A Node describes a visual element that can be positioned and sized
-pub trait Node: Clone + Copy + std::fmt::Debug {
+pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     /// A type representing an external store in case the position and size data is not be owned by the node itself (e.g. ECS)
     type Data;
 
