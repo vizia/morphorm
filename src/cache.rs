@@ -1,9 +1,9 @@
-use crate::Node;
 use crate::types::GeometryChanged;
+use crate::Node;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
 pub trait Cache {
-    type Item: for<'a> Node<'a>;
+    type Item: for<'w> Node<'w>;
 
     // Getters
 

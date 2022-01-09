@@ -4,7 +4,6 @@ use morphorm::Cache;
 use morphorm::*;
 use morphorm_ecs::*;
 
-
 #[test]
 fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
     let mut world = World::default();
@@ -22,7 +21,6 @@ fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
     world.set_position_type(node0, PositionType::SelfDirected);
     world.set_right(node0, Units::Pixels(5.0));
 
-    
     layout(&mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.width(node), 110.0);

@@ -2,7 +2,6 @@ mod common;
 use common::*;
 
 fn main() {
-
     let mut world = World::default();
 
     let root = world.add(None);
@@ -11,7 +10,6 @@ fn main() {
     world.set_child_space(root, Units::Stretch(1.0));
 
     world.set_layout_type(root, LayoutType::Row);
-
 
     let parent = world.add(Some(root));
     world.set_width(parent, Units::Stretch(1.0));
@@ -34,11 +32,7 @@ fn main() {
     world.set_width(child3, Units::Stretch(1.0));
     world.set_height(child3, Units::Pixels(100.0));
 
-
-
     layout(&mut world.cache, &world.tree, &world.store);
 
-
     render(world, root);
-    
 }

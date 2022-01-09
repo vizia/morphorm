@@ -1,5 +1,3 @@
-
-
 use morphorm::*;
 use morphorm_ecs::*;
 
@@ -96,5 +94,3 @@ fn root_node_stretch_height() {
 
     assert_eq!(computed_height, 0.0);
 }
-
-

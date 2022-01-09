@@ -1,4 +1,3 @@
-
 use crate::node::Node;
 
 /// Describes how the visual tree of nodes can be iterated through for
