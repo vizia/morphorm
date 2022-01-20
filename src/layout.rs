@@ -12,7 +12,7 @@ enum Axis {
     After,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ComputedData<N: for<'w> Node<'w>> {
     node: N,
 
@@ -837,8 +837,8 @@ pub fn layout<'a, C, H>(
                 }
 
                 // Sort the stretch elements in each axis by the maximum size
-                horizontal_axis.sort_by(|a, b| b.min.partial_cmp(&a.min).unwrap());
-                vertical_axis.sort_by(|a, b| b.min.partial_cmp(&a.min).unwrap());
+                horizontal_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
+                vertical_axis.sort_by(|a, b| a.max.partial_cmp(&b.max).unwrap());
 
                 let mut horizontal_stretch_sum = 0.0;
                 let mut horizontal_free_space = 0.0;

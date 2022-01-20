@@ -68,6 +68,10 @@ impl World {
         self.store.top.insert(entity, value);
     }
 
+    pub fn set_max_left(&mut self, entity: Entity, value: Units) {
+        self.store.max_left.insert(entity, value);
+    }
+
     /// Set the desired bottom space
     pub fn set_bottom(&mut self, entity: Entity, value: Units) {
         self.store.bottom.insert(entity, value);
@@ -138,8 +142,16 @@ impl World {
         self.store.min_width.insert(entity, value);
     }
 
+    pub fn set_max_width(&mut self, entity: Entity, value: Units) {
+        self.store.max_width.insert(entity, value);
+    }
+
     pub fn set_min_height(&mut self, entity: Entity, value: Units) {
         self.store.min_height.insert(entity, value);
+    }
+
+    pub fn set_max_height(&mut self, entity: Entity, value: Units) {
+        self.store.max_height.insert(entity, value);
     }
     
 }
