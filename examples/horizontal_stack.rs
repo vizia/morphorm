@@ -21,12 +21,12 @@ fn main() {
     let child1 = world.add(Some(parent));
     world.set_width(child1, Units::Stretch(1.0));
     world.set_height(child1, Units::Pixels(100.0));
-    world.set_max_width(child1, Units::Pixels(100.0));
+    world.set_min_width(child1, Units::Pixels(100.0));
 
     let child2 = world.add(Some(parent));
     world.set_width(child2, Units::Stretch(1.0));
     world.set_height(child2, Units::Pixels(100.0));
-    world.set_max_width(child2, Units::Pixels(200.0));
+    world.set_min_width(child2, Units::Pixels(50.0));
 
     let child3 = world.add(Some(parent));
     world.set_width(child3, Units::Stretch(1.0));
