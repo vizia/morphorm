@@ -63,24 +63,6 @@ pub fn render(mut world: World, root: Entity) {
                     world.cache.set_height(root, physical_size.height as f32);
 
                     layout(&mut world.cache, &world.tree, &world.store);
-
-                    // for node in world.tree.down_iter() {
-                    //     let geo_changed = world.cache.geometry_changed(node);
-                    //     print!("Node: {:?}", node);
-                    //     if geo_changed.contains(GeometryChanged::POSX_CHANGED) {
-                    //         print!("posx changed, ");
-                    //     }
-                    //     if geo_changed.contains(GeometryChanged::POSY_CHANGED) {
-                    //         print!("posy changed, ");
-                    //     }
-                    //     if geo_changed.contains(GeometryChanged::WIDTH_CHANGED) {
-                    //         print!("width changed, ");
-                    //     }
-                    //     if geo_changed.contains(GeometryChanged::HEIGHT_CHANGED) {
-                    //         print!("height changed, ");
-                    //     }
-                    //     println!("");
-                    // }
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
