@@ -142,6 +142,8 @@ pub fn layout<'a, C, H>(
             node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
         let max_bottom =
             node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
+        let content_width = node.content_width(store).unwrap_or_default();
+        let content_height = node.content_height(store).unwrap_or_default();
 
         let width = node.width(store).unwrap_or(Units::Stretch(1.0));
         let height = node.height(store).unwrap_or(Units::Stretch(1.0));
@@ -155,7 +157,7 @@ pub fn layout<'a, C, H>(
                 LayoutType::Grid => cache.grid_row_max(node),
             },
         );
-        min_width = min_width.clamp(0.0, std::f32::MAX);
+        min_width = min_width.clamp(content_width, std::f32::MAX);
 
         let mut max_width =
             node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
@@ -170,7 +172,7 @@ pub fn layout<'a, C, H>(
                 LayoutType::Grid => cache.grid_col_max(node),
             },
         );
-        min_height = min_height.clamp(0.0, std::f32::MAX);
+        min_height = min_height.clamp(content_height, std::f32::MAX);
 
         let mut max_height =
             node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
@@ -508,8 +510,10 @@ pub fn layout<'a, C, H>(
 
                     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
                     let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+                    let content_width = node.content_width(store).unwrap_or(0.0);
+                    let content_height = node.content_height(store).unwrap_or(0.0);
 
-                    // This could be cached during up phase because it shouldn't change between up phase and down phase
+                    // TODO - This could be cached during up phase because it shouldn't change between up phase and down phase
                     let mut min_width = node.min_width(store).unwrap_or_default().value_or(
                         parent_width,
                         match layout_type {
@@ -518,7 +522,7 @@ pub fn layout<'a, C, H>(
                             LayoutType::Grid => cache.grid_row_max(node),
                         },
                     );
-                    min_width = min_width.clamp(0.0, std::f32::MAX);
+                    min_width = min_width.clamp(content_width, std::f32::MAX);
 
                     let mut max_width = node
                         .max_width(store)
@@ -535,7 +539,7 @@ pub fn layout<'a, C, H>(
                             LayoutType::Grid => cache.grid_col_max(node),
                         },
                     );
-                    min_height = min_height.clamp(0.0, std::f32::MAX);
+                    min_height = min_height.clamp(content_height, std::f32::MAX);
 
                     let mut max_height = node
                         .max_height(store)
