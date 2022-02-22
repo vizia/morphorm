@@ -55,6 +55,16 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
         Some(Units::Auto)
     }
 
+    /// Get the measured width of the node's content (not children) in pixels
+    fn content_width(&self, store: &'_ Self::Data) -> Option<f32> {
+        Some(0.0)
+    }
+
+    /// Get the measured height of the node's content (not children) in pixels
+    fn content_height(&self, store: &'_ Self::Data) -> Option<f32> {
+        Some(0.0)
+    }
+
     /// Get the desired space to the left of the node in units
     fn left(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
