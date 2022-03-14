@@ -190,4 +190,114 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     fn border_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
     }
+
+    // these are "generic getters"
+    fn width_height(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.width(store),
+            Axis::Y => self.height(store),
+        }
+    }
+    fn min_width_height(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.min_width(store),
+            Axis::Y => self.min_height(store),
+        }
+    }
+    fn max_width_height(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.max_width(store),
+            Axis::Y => self.max_height(store),
+        }
+    }
+    fn content_width_height(&self, store: &'_ Self::Data, axis: Axis) -> Option<f32> {
+        match axis {
+            Axis::X => self.content_width(store),
+            Axis::Y => self.content_height(store),
+        }
+    }
+    fn left_top(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.left(store),
+            Axis::Y => self.top(store),
+        }
+    }
+    fn right_bottom(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.right(store),
+            Axis::Y => self.bottom(store),
+        }
+    }
+    fn min_left_top(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.min_left(store),
+            Axis::Y => self.min_top(store),
+        }
+    }
+    fn max_left_top(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.max_left(store),
+            Axis::Y => self.max_top(store),
+        }
+    }
+    fn min_right_bottom(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.min_right(store),
+            Axis::Y => self.min_bottom(store),
+        }
+    }
+    fn max_right_bottom(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.max_right(store),
+            Axis::Y => self.max_bottom(store),
+        }
+    }
+    fn child_left_top(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.child_left(store),
+            Axis::Y => self.child_top(store),
+        }
+    }
+    fn child_right_bottom(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.child_right(store),
+            Axis::Y => self.child_bottom(store),
+        }
+    }
+    fn row_col_between(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.row_between(store),
+            Axis::Y => self.col_between(store),
+        }
+    }
+    fn grid_rows_cols(&self, store: &'_ Self::Data, axis: Axis) -> Option<Vec<Units>> {
+        match axis {
+            Axis::X => self.grid_rows(store),
+            Axis::Y => self.grid_cols(store),
+        }
+    }
+    fn row_col_index(&self, store: &'_ Self::Data, axis: Axis) -> Option<usize> {
+        match axis {
+            Axis::X => self.row_index(store),
+            Axis::Y => self.col_index(store),
+        }
+    }
+    fn row_col_span(&self, store: &'_ Self::Data, axis: Axis) -> Option<usize> {
+        match axis {
+            Axis::X => self.row_span(store),
+            Axis::Y => self.col_span(store),
+        }
+    }
+    fn border_left_top(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.border_left(store),
+            Axis::Y => self.border_top(store),
+        }
+    }
+    fn border_right_bottom(&self, store: &'_ Self::Data, axis: Axis) -> Option<Units> {
+        match axis {
+            Axis::X => self.border_right(store),
+            Axis::Y => self.border_bottom(store),
+        }
+    }
 }

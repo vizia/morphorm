@@ -1,5 +1,22 @@
 use bitflags::bitflags;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Axis {
+    X,
+    Y,
+}
+
+impl std::ops::Not for Axis {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Axis::X => Axis::Y,
+            Axis::Y => Axis::X,
+        }
+    }
+}
+
 /// The layout type determines how nodes will be positioned when directed by the parent
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -9,6 +26,16 @@ pub enum LayoutType {
     Column,
     /// Position child elements into specified rows and columns
     Grid,
+}
+
+impl LayoutType {
+    pub fn axis(&self) -> Option<Axis> {
+        match self {
+            LayoutType::Row => Some(Axis::X),
+            LayoutType::Column => Some(Axis::Y),
+            LayoutType::Grid => None,
+        }
+    }
 }
 
 impl Default for LayoutType {
