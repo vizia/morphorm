@@ -1,4 +1,4 @@
-use crate::types::{GeometryChanged, Axis};
+use crate::types::{GeometryChanged, Direction};
 use crate::Node;
 
 /// The Cache stores the result of layout as well as intermediate values for each node
@@ -101,100 +101,100 @@ pub trait Cache {
     fn set_stack_last_child(&mut self, node: Self::Item, value: bool);
 
     // generic getters
-    fn width_height(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn width_height(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.width(node),
-            Axis::Y => self.height(node),
+            Direction::X => self.width(node),
+            Direction::Y => self.height(node),
         }
     }
-    fn posx_posy(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn posx_posy(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.posx(node),
-            Axis::Y => self.posy(node),
+            Direction::X => self.posx(node),
+            Direction::Y => self.posy(node),
         }
     }
-    fn left_top(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn left_top(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.left(node),
-            Axis::Y => self.top(node),
+            Direction::X => self.left(node),
+            Direction::Y => self.top(node),
         }
     }
-    fn right_bottom(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn right_bottom(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.right(node),
-            Axis::Y => self.bottom(node),
+            Direction::X => self.right(node),
+            Direction::Y => self.bottom(node),
         }
     }
-    fn new_width_height(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn new_width_height(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.new_width(node),
-            Axis::Y => self.new_height(node),
+            Direction::X => self.new_width(node),
+            Direction::Y => self.new_height(node),
         }
     }
-    fn child_width_height_max(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn child_width_height_max(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.child_width_max(node),
-            Axis::Y => self.child_height_max(node),
+            Direction::X => self.child_width_max(node),
+            Direction::Y => self.child_height_max(node),
         }
     }
-    fn child_width_height_sum(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn child_width_height_sum(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.child_width_sum(node),
-            Axis::Y => self.child_height_sum(node),
+            Direction::X => self.child_width_sum(node),
+            Direction::Y => self.child_height_sum(node),
         }
     }
-    fn grid_row_col_max(&self, node: Self::Item, axis: Axis) -> f32 {
+    fn grid_row_col_max(&self, node: Self::Item, axis: Direction) -> f32 {
         match axis {
-            Axis::X => self.grid_row_max(node),
-            Axis::Y => self.grid_col_max(node),
+            Direction::X => self.grid_row_max(node),
+            Direction::Y => self.grid_col_max(node),
         }
     }
-    fn set_width_height(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_width_height(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_width(node, value),
-            Axis::Y => self.set_height(node, value),
+            Direction::X => self.set_width(node, value),
+            Direction::Y => self.set_height(node, value),
         }
     }
-    fn set_posx_posy(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_posx_posy(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_posx(node, value),
-            Axis::Y => self.set_posy(node, value),
+            Direction::X => self.set_posx(node, value),
+            Direction::Y => self.set_posy(node, value),
         }
     }
-    fn set_left_top(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_left_top(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_left(node, value),
-            Axis::Y => self.set_top(node, value),
+            Direction::X => self.set_left(node, value),
+            Direction::Y => self.set_top(node, value),
         }
     }
-    fn set_right_bottom(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_right_bottom(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_right(node, value),
-            Axis::Y => self.set_bottom(node, value),
+            Direction::X => self.set_right(node, value),
+            Direction::Y => self.set_bottom(node, value),
         }
     }
-    fn set_new_width_height(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_new_width_height(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_new_width(node, value),
-            Axis::Y => self.set_new_height(node, value),
+            Direction::X => self.set_new_width(node, value),
+            Direction::Y => self.set_new_height(node, value),
         }
     }
-    fn set_child_width_height_max(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_child_width_height_max(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_child_width_max(node, value),
-            Axis::Y => self.set_child_height_max(node, value),
+            Direction::X => self.set_child_width_max(node, value),
+            Direction::Y => self.set_child_height_max(node, value),
         }
     }
-    fn set_child_width_height_sum(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_child_width_height_sum(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_child_width_sum(node, value),
-            Axis::Y => self.set_child_height_sum(node, value),
+            Direction::X => self.set_child_width_sum(node, value),
+            Direction::Y => self.set_child_height_sum(node, value),
         }
     }
-    fn set_grid_row_col_max(&mut self, node: Self::Item, value: f32, axis: Axis) {
+    fn set_grid_row_col_max(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
-            Axis::X => self.set_grid_row_max(node, value),
-            Axis::Y => self.set_grid_col_max(node, value),
+            Direction::X => self.set_grid_row_max(node, value),
+            Direction::Y => self.set_grid_col_max(node, value),
         }
     }
 }

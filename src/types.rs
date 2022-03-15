@@ -1,18 +1,18 @@
 use bitflags::bitflags;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Axis {
+pub enum Direction {
     X,
     Y,
 }
 
-impl std::ops::Not for Axis {
+impl std::ops::Not for Direction {
     type Output = Self;
 
     fn not(self) -> Self::Output {
         match self {
-            Axis::X => Axis::Y,
-            Axis::Y => Axis::X,
+            Direction::X => Direction::Y,
+            Direction::Y => Direction::X,
         }
     }
 }
@@ -29,10 +29,10 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
-    pub fn axis(&self) -> Option<Axis> {
+    pub fn axis(&self) -> Option<Direction> {
         match self {
-            LayoutType::Row => Some(Axis::X),
-            LayoutType::Column => Some(Axis::Y),
+            LayoutType::Row => Some(Direction::X),
+            LayoutType::Column => Some(Direction::Y),
             LayoutType::Grid => None,
         }
     }

@@ -1,7 +1,7 @@
 use crate::Cache;
 use crate::Hierarchy;
 use crate::Node;
-use crate::{GeometryChanged, LayoutType, PositionType, Units};
+use crate::{GeometryChanged, LayoutType, PositionType, Units, Direction};
 
 use smallvec::SmallVec;
 
@@ -26,7 +26,7 @@ pub struct ComputedData<N: for<'w> Node<'w>> {
 pub fn layout<'a, C, H>(
     cache: &mut C,
     hierarchy: &'a H,
-    store: &'a <<H as Hierarchy<'a>>::Item as Node>::Data,
+    store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
 ) where
     C: Cache<Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
@@ -99,328 +99,8 @@ pub fn layout<'a, C, H>(
 
         let parent = hierarchy.parent(node);
 
-        let (parent_width, parent_height) = if let Some(parent) = parent {
-            (cache.new_width(parent), cache.new_height(parent))
-        } else {
-            (0.0, 0.0)
-        };
-
-        let parent_layout_type =
-            parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
-
-        let child_left = parent.map_or(None, |parent| parent.child_left(store)).unwrap_or_default();
-        let child_right =
-            parent.map_or(None, |parent| parent.child_right(store)).unwrap_or_default();
-        let child_top = parent.map_or(None, |parent| parent.child_top(store)).unwrap_or_default();
-        let child_bottom =
-            parent.map_or(None, |parent| parent.child_bottom(store)).unwrap_or_default();
-
-        let row_between =
-            parent.map_or(None, |parent| parent.row_between(store)).unwrap_or_default();
-        let col_between =
-            parent.map_or(None, |parent| parent.col_between(store)).unwrap_or_default();
-
-        let layout_type = node.layout_type(store).unwrap_or_default();
-
-        let mut left = node.left(store).unwrap_or_default();
-        let mut right = node.right(store).unwrap_or_default();
-        let mut top = node.top(store).unwrap_or_default();
-        let mut bottom = node.bottom(store).unwrap_or_default();
-
-        let min_left =
-            node.min_left(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_left =
-            node.max_left(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_right =
-            node.min_right(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_right =
-            node.max_right(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_top =
-            node.min_top(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_top = node.max_top(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        let min_bottom =
-            node.min_bottom(store).unwrap_or_default().value_or(parent_width, -std::f32::MAX);
-        let max_bottom =
-            node.max_bottom(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-
-        let width = node.width(store).unwrap_or(Units::Stretch(1.0));
-        let height = node.height(store).unwrap_or(Units::Stretch(1.0));
-
-        // integrate content_width and content_height into the child max and sum
-        // this means that if a node has both content and children (weird!) they should overlap
-        let content_width = node.content_width(store).unwrap_or_default();
-        let content_height = node.content_height(store).unwrap_or_default();
-        cache.set_child_width_max(node, cache.child_width_max(node).max(content_width));
-        cache.set_child_width_sum(node, cache.child_width_sum(node).max(content_width));
-        cache.set_child_height_max(node, cache.child_height_max(node).max(content_height));
-        cache.set_child_height_sum(node, cache.child_height_sum(node).max(content_height));
-
-        // If Auto, then set the minimum width to be at least the width_sum/width_max/row_max of the children (depending on layout type)
-        let mut min_width = node.min_width(store).unwrap_or_default().value_or(
-            parent_width,
-            match layout_type {
-                LayoutType::Column => cache.child_width_max(node),
-                LayoutType::Row => cache.child_width_sum(node),
-                LayoutType::Grid => cache.grid_row_max(node),
-            },
-        );
-        min_width = min_width.clamp(0.0, std::f32::MAX);
-
-        let mut max_width =
-            node.max_width(store).unwrap_or_default().value_or(parent_width, std::f32::MAX);
-        max_width = max_width.max(min_width);
-
-        // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
-        let mut min_height = node.min_height(store).unwrap_or_default().value_or(
-            parent_height,
-            match layout_type {
-                LayoutType::Column => cache.child_height_sum(node),
-                LayoutType::Row => cache.child_height_max(node),
-                LayoutType::Grid => cache.grid_col_max(node),
-            },
-        );
-        min_height = min_height.clamp(0.0, std::f32::MAX);
-
-        let mut max_height =
-            node.max_height(store).unwrap_or_default().value_or(parent_height, std::f32::MAX);
-        max_height = max_height.max(min_height);
-
-        let border_left = node.border_left(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_right = node.border_right(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_top = node.border_top(store).unwrap_or_default().value_or(parent_width, 0.0);
-        let border_bottom =
-            node.border_bottom(store).unwrap_or_default().value_or(parent_width, 0.0);
-
-        // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
-        // The override is also dependent on position in stack (first, last, other) and layout type
-        match parent_layout_type {
-            LayoutType::Column => {
-                if top == Units::Auto {
-                    if cache.stack_first_child(node) {
-                        top = child_top;
-                    } else {
-                        top = row_between;
-                    }
-                }
-
-                if bottom == Units::Auto {
-                    if cache.stack_last_child(node) {
-                        bottom = child_bottom;
-                    }
-                }
-
-                if left == Units::Auto {
-                    left = child_left;
-                }
-
-                if right == Units::Auto {
-                    right = child_right;
-                }
-            }
-
-            LayoutType::Row => {
-                if left == Units::Auto {
-                    if cache.stack_first_child(node) {
-                        left = child_left;
-                    } else {
-                        left = col_between;
-                    }
-                }
-
-                if right == Units::Auto {
-                    if cache.stack_last_child(node) {
-                        right = child_right;
-                    }
-                }
-
-                if top == Units::Auto {
-                    top = child_top;
-                }
-
-                if bottom == Units::Auto {
-                    bottom = child_bottom;
-                }
-            }
-
-            // Should grids have parent overrides? (probably not)
-            _ => {}
-        }
-
-        let mut new_left = 0.0;
-        let mut new_width = 0.0;
-        let mut new_right = 0.0;
-
-        let mut new_top = 0.0;
-        let mut new_height = 0.0;
-        let mut new_bottom = 0.0;
-
-        let mut horizontal_used_space = 0.0;
-        let mut vertical_used_space = 0.0;
-
-        match parent_layout_type {
-            LayoutType::Column | LayoutType::Row => {
-                match left {
-                    Units::Pixels(val) => {
-                        new_left = val.clamp(min_left, max_left);
-                        horizontal_used_space += new_left;
-                    }
-
-                    Units::Stretch(_) => {
-                        horizontal_used_space += min_left.clamp(0.0, std::f32::MAX);
-                    }
-
-                    _ => {}
-                }
-
-                match width {
-                    Units::Pixels(val) => {
-                        new_width = val.clamp(min_width, max_width);
-                        horizontal_used_space += new_width;
-                    }
-
-                    Units::Auto => {
-                        match layout_type {
-                            LayoutType::Column => {
-                                new_width = cache.child_width_max(node);
-                            }
-
-                            LayoutType::Row => {
-                                new_width = cache.child_width_sum(node);
-                            }
-
-                            LayoutType::Grid => {
-                                new_width = cache.grid_row_max(node);
-                            }
-                        }
-
-                        new_width = new_width.clamp(min_width, max_width);
-
-                        new_width += border_left + border_right;
-
-                        horizontal_used_space += new_width;
-                    }
-
-                    Units::Stretch(_) => {
-                        horizontal_used_space += min_width;
-                    }
-
-                    _ => {}
-                }
-
-                match right {
-                    Units::Pixels(val) => {
-                        new_right = val.clamp(min_right, max_right);
-                        horizontal_used_space += new_right;
-                    }
-
-                    Units::Stretch(_) => {
-                        horizontal_used_space += min_right.clamp(0.0, std::f32::MAX);
-                    }
-
-                    _ => {}
-                }
-
-                match top {
-                    Units::Pixels(val) => {
-                        new_top = val.clamp(min_top, max_top);
-                        vertical_used_space += new_top;
-                    }
-
-                    Units::Stretch(_) => {
-                        vertical_used_space += min_top.clamp(0.0, std::f32::MAX);
-                    }
-
-                    _ => {}
-                }
-
-                match height {
-                    Units::Pixels(val) => {
-                        new_height = val.clamp(min_height, max_height);
-                        vertical_used_space += new_height;
-                    }
-
-                    Units::Auto => {
-                        match layout_type {
-                            LayoutType::Column => {
-                                new_height = cache.child_height_sum(node);
-                            }
-
-                            LayoutType::Row => {
-                                new_height = cache.child_height_max(node);
-                            }
-
-                            LayoutType::Grid => {
-                                new_height = cache.grid_col_max(node);
-                            }
-                        }
-
-                        new_height = new_height.clamp(min_height, max_height);
-
-                        new_height += border_top + border_bottom;
-
-                        vertical_used_space += new_height;
-                    }
-
-                    Units::Stretch(_) => {
-                        vertical_used_space += min_height;
-                    }
-
-                    _ => {}
-                }
-
-                match bottom {
-                    Units::Pixels(val) => {
-                        new_bottom = val.clamp(min_bottom, max_bottom);
-                        vertical_used_space += new_bottom;
-                    }
-
-                    Units::Stretch(_) => {
-                        vertical_used_space += min_bottom.clamp(0.0, std::f32::MAX);
-                    }
-
-                    _ => {}
-                }
-
-                let position_type = node.position_type(store).unwrap_or_default();
-
-                cache.set_new_width(node, new_width);
-                cache.set_new_height(node, new_height);
-                cache.set_left(node, new_left);
-                cache.set_right(node, new_right);
-                cache.set_top(node, new_top);
-                cache.set_bottom(node, new_bottom);
-
-                if let Some(parent) = parent {
-                    if position_type == PositionType::ParentDirected {
-                        cache.set_child_height_sum(
-                            parent,
-                            cache.child_height_sum(parent) + vertical_used_space,
-                        );
-
-                        cache.set_child_height_max(
-                            parent,
-                            vertical_used_space.max(cache.child_height_max(parent)),
-                        );
-
-                        cache.set_child_width_sum(
-                            parent,
-                            cache.child_width_sum(parent) + horizontal_used_space,
-                        );
-
-                        cache.set_child_width_max(
-                            parent,
-                            horizontal_used_space.max(cache.child_width_max(parent)),
-                        );
-                    }
-                } else {
-                    break;
-                }
-            }
-
-            LayoutType::Grid => {
-                // TODO
-            }
-        }
+        step2(node, parent, cache, store, Direction::X);
+        step2(node, parent, cache, store, Direction::Y);
     }
 
     // Step 3 - Iterate down the hierarchy
@@ -485,35 +165,35 @@ pub fn layout<'a, C, H>(
                     let min_left = node
                         .min_left(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, -std::f32::MAX);
+                        .value_or(parent_width, -f32::MAX);
                     let max_left = node
                         .max_left(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, std::f32::MAX);
+                        .value_or(parent_width, f32::MAX);
                     let min_right = node
                         .min_right(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, -std::f32::MAX);
+                        .value_or(parent_width, -f32::MAX);
                     let max_right = node
                         .max_right(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, std::f32::MAX);
+                        .value_or(parent_width, f32::MAX);
                     let min_top = node
                         .min_top(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, -std::f32::MAX);
+                        .value_or(parent_width, -f32::MAX);
                     let max_top = node
                         .max_top(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, std::f32::MAX);
+                        .value_or(parent_width, f32::MAX);
                     let min_bottom = node
                         .min_bottom(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, -std::f32::MAX);
+                        .value_or(parent_width, -f32::MAX);
                     let max_bottom = node
                         .max_bottom(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, std::f32::MAX);
+                        .value_or(parent_width, f32::MAX);
 
                     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
                     let height = node.height(store).unwrap_or(Units::Stretch(1.0));
@@ -527,12 +207,12 @@ pub fn layout<'a, C, H>(
                             LayoutType::Grid => cache.grid_row_max(node),
                         },
                     );
-                    min_width = min_width.clamp(0.0, std::f32::MAX);
+                    min_width = min_width.clamp(0.0, f32::MAX);
 
                     let mut max_width = node
                         .max_width(store)
                         .unwrap_or_default()
-                        .value_or(parent_width, std::f32::MAX);
+                        .value_or(parent_width, f32::MAX);
                     max_width = max_width.max(min_width);
 
                     // This could be cached during up phase because it shouldn't change between up phase and down phase
@@ -544,12 +224,12 @@ pub fn layout<'a, C, H>(
                             LayoutType::Grid => cache.grid_col_max(node),
                         },
                     );
-                    min_height = min_height.clamp(0.0, std::f32::MAX);
+                    min_height = min_height.clamp(0.0, f32::MAX);
 
                     let mut max_height = node
                         .max_height(store)
                         .unwrap_or_default()
-                        .value_or(parent_height, std::f32::MAX);
+                        .value_or(parent_height, f32::MAX);
                     max_height = max_height.max(min_height);
 
                     let border_left =
@@ -1410,6 +1090,204 @@ pub fn layout<'a, C, H>(
                     cache.set_new_height(node, cache.height(node));
                 }
             }
+        }
+    }
+}
+
+pub fn step2<'a, C, N>(
+    node: N,
+    parent: Option<N>,
+    cache: &mut C,
+    store: &'a N::Data,
+    dir: Direction,
+) where
+    C: Cache<Item = N>,
+    N: Node<'a>,
+{
+    let (parent_width, parent_height) = if let Some(parent) = parent {
+        (cache.new_width(parent), cache.new_height(parent))
+    } else {
+        (0.0, 0.0)
+    };
+    let parent_width_height = if dir == Direction::X { parent_width } else { parent_height };
+
+    let parent_layout_type =
+        parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
+    let layout_type = node.layout_type(store).unwrap_or_default();
+
+    let child_left_top = parent.map_or(None, |parent| parent.child_left_top(store, dir)).unwrap_or_default();
+    let child_right_bottom =
+        parent.map_or(None, |parent| parent.child_right_bottom(store, dir)).unwrap_or_default();
+    let row_col_between =
+        parent.map_or(None, |parent| parent.row_col_between(store, dir)).unwrap_or_default();
+    let mut left_top = node.left_top(store, dir).unwrap_or_default();
+    let mut right_bottom = node.right_bottom(store, dir).unwrap_or_default();
+    let min_left_top =
+        node.min_left_top(store, dir).unwrap_or_default().value_or(parent_width_height, -f32::MAX);
+    let max_left_top = node.max_left_top(store, dir).unwrap_or_default().value_or(parent_width_height, f32::MAX);
+    let min_right_bottom =
+        node.min_right_bottom(store, dir).unwrap_or_default().value_or(parent_width_height, -f32::MAX);
+    let max_right_bottom =
+        node.max_right_bottom(store, dir).unwrap_or_default().value_or(parent_width_height, f32::MAX);
+    let width_height = node.width_height(store, dir).unwrap_or(Units::Stretch(1.0));
+
+    // integrate content_width and content_height into the child max and sum
+    // this means that if a node has both content and children (weird!) they should overlap
+    let content_width_height = node.content_width_height(store, dir).unwrap_or_default();
+    cache.set_child_width_height_max(node, cache.child_width_height_max(node, dir).max(content_width_height), dir);
+    cache.set_child_width_height_sum(node, cache.child_width_height_sum(node, dir).max(content_width_height), dir);
+
+    // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
+    let mut min_width_height = node.min_width_height(store, dir).unwrap_or_default().value_or(
+        parent_width_height,
+        match layout_type {
+            LayoutType::Column => match dir {
+                Direction::X => cache.child_width_max(node),
+                Direction::Y => cache.child_height_sum(node),
+            },
+            LayoutType::Row => match dir {
+                Direction::X => cache.child_width_sum(node),
+                Direction::Y => cache.child_height_max(node),
+            }
+            LayoutType::Grid => cache.grid_row_col_max(node, dir),
+        },
+    );
+    min_width_height = min_width_height.clamp(0.0, f32::MAX);
+
+    let mut max_width_height =
+        node.max_width_height(store, dir).unwrap_or_default().value_or(parent_width_height, f32::MAX);
+    max_width_height = max_width_height.max(min_width_height);
+
+    let border_left_top = node.border_left_top(store, dir).unwrap_or_default().value_or(parent_width, 0.0);
+    let border_right_bottom =
+        node.border_right_bottom(store, dir).unwrap_or_default().value_or(parent_width, 0.0);
+
+    // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
+    // The override is also dependent on position in stack (first, last, other) and layout type
+    match parent_layout_type {
+        LayoutType::Column => {
+            if left_top == Units::Auto {
+                if cache.stack_first_child(node) {
+                    left_top = child_left_top;
+                } else {
+                    left_top = row_col_between;
+                }
+            }
+
+            if right_bottom == Units::Auto {
+                if cache.stack_last_child(node) {
+                    right_bottom = child_right_bottom;
+                }
+            }
+        }
+
+        LayoutType::Row => {
+            if left_top == Units::Auto {
+                left_top = child_left_top;
+            }
+
+            if right_bottom == Units::Auto {
+                right_bottom = child_right_bottom;
+            }
+        }
+
+        // Should grids have parent overrides? (probably not)
+        _ => {}
+    }
+
+    let mut new_left_top = 0.0;
+    let mut new_width_height = 0.0;
+    let mut new_right_bottom = 0.0;
+    let mut used_space = 0.0;
+
+    match parent_layout_type {
+        LayoutType::Column | LayoutType::Row => {
+            match left_top {
+                Units::Pixels(val) => {
+                    new_left_top = val.clamp(min_left_top, max_left_top);
+                    used_space += new_left_top;
+                }
+
+                Units::Stretch(_) => {
+                    used_space += min_left_top.clamp(0.0, f32::MAX);
+                }
+
+                _ => {}
+            }
+
+            match width_height {
+                Units::Pixels(val) => {
+                    new_width_height = val.clamp(min_width_height, max_width_height);
+                    used_space += new_width_height;
+                }
+
+                Units::Auto => {
+                    match layout_type {
+                        LayoutType::Column => {
+                            new_width_height = match dir { Direction::X => cache.child_width_max(node), Direction::Y => cache.child_height_sum(node), };
+                        }
+
+                        LayoutType::Row => {
+                            new_width_height = match dir { Direction::X => cache.child_width_sum(node), Direction::Y => cache.child_height_max(node), };
+                        }
+
+                        LayoutType::Grid => {
+                            new_width_height = cache.grid_row_col_max(node, dir);
+                        }
+                    }
+
+                    new_width_height = new_width_height.clamp(min_width_height, max_width_height);
+
+                    new_width_height += border_left_top + border_right_bottom;
+
+                    used_space += new_width_height;
+                }
+
+                Units::Stretch(_) => {
+                    used_space += min_width_height;
+                }
+
+                _ => {}
+            }
+
+            match right_bottom {
+                Units::Pixels(val) => {
+                    new_right_bottom = val.clamp(min_right_bottom, max_right_bottom);
+                    used_space += new_right_bottom;
+                }
+
+                Units::Stretch(_) => {
+                    used_space += min_right_bottom.clamp(0.0, f32::MAX);
+                }
+
+                _ => {}
+            }
+
+            let position_type = node.position_type(store).unwrap_or_default();
+
+            cache.set_new_width_height(node, new_width_height, dir);
+            cache.set_left_top(node, new_left_top, dir);
+            cache.set_right_bottom(node, new_right_bottom, dir);
+
+            if let Some(parent) = parent {
+                if position_type == PositionType::ParentDirected {
+                    cache.set_child_width_height_sum(
+                        parent,
+                        cache.child_width_height_sum(parent, dir) + used_space,
+                        dir,
+                    );
+
+                    cache.set_child_width_height_max(
+                        parent,
+                        used_space.max(cache.child_width_height_max(parent, dir)),
+                        dir,
+                    );
+                }
+            }
+        }
+
+        LayoutType::Grid => {
+            // TODO
         }
     }
 }
