@@ -192,73 +192,73 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     }
 
     // these are "generic getters"
-    fn width_height(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.width(store),
             Direction::Y => self.height(store),
         }
     }
-    fn min_width_height(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn min_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.min_width(store),
             Direction::Y => self.min_height(store),
         }
     }
-    fn max_width_height(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn max_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.max_width(store),
             Direction::Y => self.max_height(store),
         }
     }
-    fn content_width_height(&self, store: &'_ Self::Data, axis: Direction) -> Option<f32> {
+    fn content_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<f32> {
         match axis {
             Direction::X => self.content_width(store),
             Direction::Y => self.content_height(store),
         }
     }
-    fn left_top(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.left(store),
             Direction::Y => self.top(store),
         }
     }
-    fn right_bottom(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.right(store),
             Direction::Y => self.bottom(store),
         }
     }
-    fn min_left_top(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn min_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.min_left(store),
             Direction::Y => self.min_top(store),
         }
     }
-    fn max_left_top(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn max_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.max_left(store),
             Direction::Y => self.max_top(store),
         }
     }
-    fn min_right_bottom(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn min_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.min_right(store),
             Direction::Y => self.min_bottom(store),
         }
     }
-    fn max_right_bottom(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn max_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.max_right(store),
             Direction::Y => self.max_bottom(store),
         }
     }
-    fn child_left_top(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn child_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.child_left(store),
             Direction::Y => self.child_top(store),
         }
     }
-    fn child_right_bottom(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn child_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.child_right(store),
             Direction::Y => self.child_bottom(store),
@@ -288,13 +288,13 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
             Direction::Y => self.col_span(store),
         }
     }
-    fn border_left_top(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn border_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.border_left(store),
             Direction::Y => self.border_top(store),
         }
     }
-    fn border_right_bottom(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+    fn border_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
         match axis {
             Direction::X => self.border_right(store),
             Direction::Y => self.border_bottom(store),
