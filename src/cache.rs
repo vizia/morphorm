@@ -1,5 +1,5 @@
 use crate::types::{GeometryChanged, Direction};
-use crate::Node;
+use crate::{LayoutType, Node};
 
 /// The Cache stores the result of layout as well as intermediate values for each node
 pub trait Cache {
@@ -149,6 +149,39 @@ pub trait Cache {
             Direction::Y => self.grid_col_max(node),
         }
     }
+    fn child_width_height_column(&self, node: Self::Item, axis: Direction) -> f32 {
+        match axis {
+            Direction::X => self.child_width_max(node),
+            Direction::Y => self.child_height_sum(node),
+        }
+    }
+    fn child_width_height_row(&self, node: Self::Item, axis: Direction) -> f32 {
+        match axis {
+            Direction::X => self.child_width_sum(node),
+            Direction::Y => self.child_height_max(node),
+        }
+    }
+    fn child_width_height_layout(&self, node: Self::Item, dir: Direction, layout: LayoutType) -> f32 {
+        match layout {
+            LayoutType::Column => self.child_width_height_column(node, dir),
+            LayoutType::Row => self.child_width_height_row(node, dir),
+            LayoutType::Grid => self.grid_row_col_max(node, dir),
+        }
+    }
+    fn h_v_free_space(&self, node: Self::Item, dir: Direction) -> f32 {
+        match dir {
+            Direction::X => self.horizontal_free_space(node),
+            Direction::Y => self.vertical_free_space(node),
+        }
+    }
+    fn h_v_stretch_sum(&self, node: Self::Item, dir: Direction) -> f32 {
+        match dir {
+            Direction::X => self.horizontal_stretch_sum(node),
+            Direction::Y => self.vertical_stretch_sum(node),
+        }
+    }
+
+    // generic setters
     fn set_width_height(&mut self, node: Self::Item, value: f32, axis: Direction) {
         match axis {
             Direction::X => self.set_width(node, value),
@@ -197,4 +230,17 @@ pub trait Cache {
             Direction::Y => self.set_grid_col_max(node, value),
         }
     }
+    fn set_h_v_free_space(&mut self, node: Self::Item, value: f32, dir: Direction) {
+        match dir {
+            Direction::X => self.set_horizontal_free_space(node, value),
+            Direction::Y => self.set_vertical_free_space(node, value),
+        }
+    }
+    fn set_h_v_stretch_sum(&mut self, node: Self::Item, value: f32, dir: Direction) {
+        match dir {
+            Direction::X => self.set_horizontal_stretch_sum(node, value),
+            Direction::Y => self.set_vertical_stretch_sum(node, value),
+        }
+    }
+
 }

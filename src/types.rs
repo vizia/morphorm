@@ -29,7 +29,7 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
-    pub fn axis(&self) -> Option<Direction> {
+    pub fn direction(&self) -> Option<Direction> {
         match self {
             LayoutType::Row => Some(Direction::X),
             LayoutType::Column => Some(Direction::Y),
@@ -142,6 +142,36 @@ bitflags! {
         const WIDTH_CHANGED  = 0b01000000;
         /// The height of the node has changed
         const HEIGHT_CHANGED = 0b10000000;
+    }
+}
+
+impl GeometryChanged {
+    pub fn change_pos(dir: Direction) -> Self {
+        match dir {
+            Direction::X => Self::CHANGE_POSX,
+            Direction::Y => Self::CHANGE_POSY,
+        }
+    }
+
+    pub fn change_size(dir: Direction) -> Self {
+        match dir {
+            Direction::X => Self::CHANGE_WIDTH,
+            Direction::Y => Self::CHANGE_HEIGHT,
+        }
+    }
+
+    pub fn pos_changed(dir: Direction) -> Self {
+        match dir {
+            Direction::X => Self::POSX_CHANGED,
+            Direction::Y => Self::POSY_CHANGED,
+        }
+    }
+
+    pub fn size_changed(dir: Direction) -> Self {
+        match dir {
+            Direction::X => Self::WIDTH_CHANGED,
+            Direction::Y => Self::HEIGHT_CHANGED,
+        }
     }
 }
 
