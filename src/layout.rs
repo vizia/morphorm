@@ -638,7 +638,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_left = (val / 100.0) * parent_width;
+                            new_left = ((val / 100.0) * parent_width).round();
                             new_left = new_left.clamp(min_left, max_left);
                             horizontal_free_space -= new_left;
                         }
@@ -664,7 +664,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_width = (val / 100.0) * parent_width;
+                            new_width = ((val / 100.0) * parent_width).round();
                             new_width = new_width.clamp(min_width, max_width);
                             horizontal_free_space -= new_width;
                         }
@@ -705,7 +705,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_right = (val / 100.0) * parent_width;
+                            new_right = ((val / 100.0) * parent_width).round();
                             new_right = new_right.clamp(min_right, max_right);
                             horizontal_free_space -= new_right;
                         }
@@ -731,7 +731,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_top = (val / 100.0) * parent_height;
+                            new_top = ((val / 100.0) * parent_height).round();
                             new_top = new_top.clamp(min_top, max_top);
                             vertical_free_space -= new_top;
                         }
@@ -757,7 +757,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_height = (val / 100.0) * parent_height;
+                            new_height = ((val / 100.0) * parent_height).round();
                             new_height = new_height.clamp(min_height, max_height);
                             vertical_free_space -= new_height;
                         }
@@ -798,7 +798,7 @@ pub fn layout<'a, C, H>(
                         }
 
                         Units::Percentage(val) => {
-                            new_bottom = (val / 100.0) * parent_height;
+                            new_bottom = ((val / 100.0) * parent_height).round();
                             new_bottom = new_bottom.clamp(min_bottom, max_bottom);
                             vertical_free_space -= new_bottom;
                         }
