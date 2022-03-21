@@ -916,6 +916,9 @@ fn incorperate_axis<N: Clone + for<'w> Node<'w>>(
         }
 
         Units::Percentage(val) => {
+            #[cfg(feature = "rounding")]
+            let new = ((val / 100.0) * parent_size).round();
+            #[cfg(not(feature = "rounding"))]
             let new = (val / 100.0) * parent_size;
             let new = new.clamp(min, max);
             *free_space -= new;
