@@ -1,22 +1,5 @@
 use bitflags::bitflags;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Direction {
-    X,
-    Y,
-}
-
-impl std::ops::Not for Direction {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Direction::X => Direction::Y,
-            Direction::Y => Direction::X,
-        }
-    }
-}
-
 /// The layout type determines how nodes will be positioned when directed by the parent
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -26,16 +9,6 @@ pub enum LayoutType {
     Column,
     /// Position child elements into specified rows and columns
     Grid,
-}
-
-impl LayoutType {
-    pub fn direction(&self) -> Option<Direction> {
-        match self {
-            LayoutType::Row => Some(Direction::X),
-            LayoutType::Column => Some(Direction::Y),
-            LayoutType::Grid => None,
-        }
-    }
 }
 
 impl Default for LayoutType {
@@ -142,36 +115,6 @@ bitflags! {
         const WIDTH_CHANGED  = 0b01000000;
         /// The height of the node has changed
         const HEIGHT_CHANGED = 0b10000000;
-    }
-}
-
-impl GeometryChanged {
-    pub fn change_pos(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::CHANGE_POSX,
-            Direction::Y => Self::CHANGE_POSY,
-        }
-    }
-
-    pub fn change_size(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::CHANGE_WIDTH,
-            Direction::Y => Self::CHANGE_HEIGHT,
-        }
-    }
-
-    pub fn pos_changed(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::POSX_CHANGED,
-            Direction::Y => Self::POSY_CHANGED,
-        }
-    }
-
-    pub fn size_changed(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::WIDTH_CHANGED,
-            Direction::Y => Self::HEIGHT_CHANGED,
-        }
     }
 }
 
