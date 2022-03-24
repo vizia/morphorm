@@ -1266,7 +1266,7 @@ pub fn layout<'a, C, H>(
 
                 match child_top {
                     Units::Stretch(val) => {
-                        row_heights[0].1 = row_free_space * val / row_stretch_sum;
+                        row_heights[0].1 = (row_free_space * val / row_stretch_sum).round();
                     }
 
                     _ => {}
@@ -1274,7 +1274,7 @@ pub fn layout<'a, C, H>(
 
                 match child_bottom {
                     Units::Stretch(val) => {
-                        row_heights[row_heights_len - 1].1 = row_free_space * val / row_stretch_sum;
+                        row_heights[row_heights_len - 1].1 = (row_free_space * val / row_stretch_sum).round();
                     }
 
                     _ => {}
@@ -1282,7 +1282,7 @@ pub fn layout<'a, C, H>(
 
                 match child_left {
                     Units::Stretch(val) => {
-                        col_widths[0].1 = col_free_space * val / col_stretch_sum;
+                        col_widths[0].1 = (col_free_space * val / col_stretch_sum).round();
                     }
 
                     _ => {}
@@ -1290,7 +1290,7 @@ pub fn layout<'a, C, H>(
 
                 match child_right {
                     Units::Stretch(val) => {
-                        col_widths[col_widths_len - 1].1 = col_free_space * val / col_stretch_sum;
+                        col_widths[col_widths_len - 1].1 = (col_free_space * val / col_stretch_sum).round();
                     }
 
                     _ => {}
@@ -1303,7 +1303,7 @@ pub fn layout<'a, C, H>(
                     let row_index = 2 * i + 1;
                     match row {
                         &Units::Stretch(val) => {
-                            row_heights[row_index].1 = row_free_space * val / row_stretch_sum;
+                            row_heights[row_index].1 = (row_free_space * val / row_stretch_sum).round();
                         }
 
                         _ => {}
@@ -1317,7 +1317,7 @@ pub fn layout<'a, C, H>(
                         match row_between {
                             Units::Stretch(val) => {
                                 row_heights[gutter_index].1 =
-                                    row_free_space * val / row_stretch_sum;
+                                (row_free_space * val / row_stretch_sum).round();
                             }
 
                             _ => {}
@@ -1335,7 +1335,7 @@ pub fn layout<'a, C, H>(
 
                     match col {
                         &Units::Stretch(val) => {
-                            col_widths[col_index].1 = col_free_space * val / col_stretch_sum;
+                            col_widths[col_index].1 = (col_free_space * val / col_stretch_sum).round();
                         }
 
                         _ => {}
@@ -1348,7 +1348,7 @@ pub fn layout<'a, C, H>(
                         let gutter_index = 2 * i + 2;
                         match col_between {
                             Units::Stretch(val) => {
-                                col_widths[gutter_index].1 = col_free_space * val / col_stretch_sum;
+                                col_widths[gutter_index].1 = (col_free_space * val / col_stretch_sum).round();
                             }
 
                             _ => {}
