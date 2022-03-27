@@ -226,7 +226,12 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
             Direction::Y => self.content_height(store),
         }
     }
-    fn content_size_secondary(&self, store: &'_ Self::Data, size: f32, axis: Direction) -> Option<f32> {
+    fn content_size_secondary(
+        &self,
+        store: &'_ Self::Data,
+        size: f32,
+        axis: Direction,
+    ) -> Option<f32> {
         match axis {
             Direction::X => self.content_width_secondary(store, size),
             Direction::Y => self.content_height_secondary(store, size),

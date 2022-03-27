@@ -150,10 +150,8 @@ pub fn step2<'a, C, N>(
         parent.map_or(None, |parent| parent.row_col_between(store, dir)).unwrap_or_default();
     let mut before = node.before(store, dir).unwrap_or_default();
     let mut after = node.after(store, dir).unwrap_or_default();
-    let min_before =
-        node.min_before(store, dir).unwrap_or_default().value_or(0.0, -f32::MAX);
-    let max_before =
-        node.max_before(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
+    let min_before = node.min_before(store, dir).unwrap_or_default().value_or(0.0, -f32::MAX);
+    let max_before = node.max_before(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
     let min_after = node.min_after(store, dir).unwrap_or_default().value_or(0.0, -f32::MAX);
     let max_after = node.max_after(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
     let size = node.size(store, dir).unwrap_or(Units::Stretch(1.0));
@@ -171,14 +169,11 @@ pub fn step2<'a, C, N>(
         .value_or(0.0, cache.child_size_layout(node, dir, layout_type));
     min_size = min_size.clamp(0.0, f32::MAX);
 
-    let mut max_size =
-        node.max_size(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
+    let mut max_size = node.max_size(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
     max_size = max_size.max(min_size);
 
-    let border_before =
-        node.border_before(store, dir).unwrap_or_default().value_or(0.0, 0.0);
-    let border_after =
-        node.border_after(store, dir).unwrap_or_default().value_or(0.0, 0.0);
+    let border_before = node.border_before(store, dir).unwrap_or_default().value_or(0.0, 0.0);
+    let border_after = node.border_after(store, dir).unwrap_or_default().value_or(0.0, 0.0);
 
     // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
     // The override is also dependent on position in stack (first, last, other) and layout type
@@ -350,14 +345,14 @@ pub fn step3_row_col<'a, C, H>(
 
         let auto_size = content_size_smart(store, cache, node, parent, dir, layout_type, primary);
 
-        let mut min_size = node
-            .min_size(store, dir)
-            .unwrap_or_default()
-            .value_or(parent_size, auto_size);
+        let mut min_size =
+            node.min_size(store, dir).unwrap_or_default().value_or(parent_size, auto_size);
         min_size = min_size.clamp(0.0, f32::MAX);
 
-        let mut max_size =
-            node.max_size(store, dir).unwrap_or(Units::Pixels(f32::MAX)).value_or(parent_size, auto_size);
+        let mut max_size = node
+            .max_size(store, dir)
+            .unwrap_or(Units::Pixels(f32::MAX))
+            .value_or(parent_size, auto_size);
         max_size = max_size.max(min_size);
 
         let border_before =
@@ -743,9 +738,13 @@ pub fn step3_grid<'a, C, H>(
     match child_top {
         Units::Stretch(val) => {
             #[cfg(feature = "rounding")]
-            { row_heights[0].1 = (row_free_space * val / row_stretch_sum).round(); }
+            {
+                row_heights[0].1 = (row_free_space * val / row_stretch_sum).round();
+            }
             #[cfg(not(feature = "rounding"))]
-            { row_heights[0].1 = row_free_space * val / row_stretch_sum; }
+            {
+                row_heights[0].1 = row_free_space * val / row_stretch_sum;
+            }
         }
 
         _ => {}
@@ -754,9 +753,14 @@ pub fn step3_grid<'a, C, H>(
     match child_bottom {
         Units::Stretch(val) => {
             #[cfg(feature = "rounding")]
-            { row_heights[row_heights_len - 1].1 = (row_free_space * val / row_stretch_sum).round(); }
+            {
+                row_heights[row_heights_len - 1].1 =
+                    (row_free_space * val / row_stretch_sum).round();
+            }
             #[cfg(not(feature = "rounding"))]
-            { row_heights[row_heights_len - 1].1 = row_free_space * val / row_stretch_sum; }
+            {
+                row_heights[row_heights_len - 1].1 = row_free_space * val / row_stretch_sum;
+            }
         }
 
         _ => {}
@@ -765,9 +769,13 @@ pub fn step3_grid<'a, C, H>(
     match child_left {
         Units::Stretch(val) => {
             #[cfg(feature = "rounding")]
-            { col_widths[0].1 = (col_free_space * val / col_stretch_sum).round(); }
+            {
+                col_widths[0].1 = (col_free_space * val / col_stretch_sum).round();
+            }
             #[cfg(not(feature = "rounding"))]
-            { col_widths[0].1 = col_free_space * val / col_stretch_sum; }
+            {
+                col_widths[0].1 = col_free_space * val / col_stretch_sum;
+            }
         }
 
         _ => {}
@@ -776,9 +784,13 @@ pub fn step3_grid<'a, C, H>(
     match child_right {
         Units::Stretch(val) => {
             #[cfg(feature = "rounding")]
-            { col_widths[col_widths_len - 1].1 = (col_free_space * val / col_stretch_sum).round(); }
+            {
+                col_widths[col_widths_len - 1].1 = (col_free_space * val / col_stretch_sum).round();
+            }
             #[cfg(not(feature = "rounding"))]
-            { col_widths[col_widths_len - 1].1 = col_free_space * val / col_stretch_sum; }
+            {
+                col_widths[col_widths_len - 1].1 = col_free_space * val / col_stretch_sum;
+            }
         }
 
         _ => {}
@@ -792,9 +804,13 @@ pub fn step3_grid<'a, C, H>(
         match row {
             &Units::Stretch(val) => {
                 #[cfg(feature = "rounding")]
-                { row_heights[row_index].1 = (row_free_space * val / row_stretch_sum).round(); }
+                {
+                    row_heights[row_index].1 = (row_free_space * val / row_stretch_sum).round();
+                }
                 #[cfg(not(feature = "rounding"))]
-                { row_heights[row_index].1 = row_free_space * val / row_stretch_sum; }
+                {
+                    row_heights[row_index].1 = row_free_space * val / row_stretch_sum;
+                }
             }
 
             _ => {}
@@ -808,9 +824,14 @@ pub fn step3_grid<'a, C, H>(
             match row_between {
                 Units::Stretch(val) => {
                     #[cfg(feature = "rounding")]
-                    { row_heights[gutter_index].1 = (row_free_space * val / row_stretch_sum).round(); }
+                    {
+                        row_heights[gutter_index].1 =
+                            (row_free_space * val / row_stretch_sum).round();
+                    }
                     #[cfg(not(feature = "rounding"))]
-                    { row_heights[gutter_index].1 = row_free_space * val / row_stretch_sum; }
+                    {
+                        row_heights[gutter_index].1 = row_free_space * val / row_stretch_sum;
+                    }
                 }
 
                 _ => {}
@@ -829,9 +850,13 @@ pub fn step3_grid<'a, C, H>(
         match col {
             &Units::Stretch(val) => {
                 #[cfg(feature = "rounding")]
-                { col_widths[col_index].1 = (col_free_space * val / col_stretch_sum).round(); }
+                {
+                    col_widths[col_index].1 = (col_free_space * val / col_stretch_sum).round();
+                }
                 #[cfg(not(feature = "rounding"))]
-                { col_widths[col_index].1 = col_free_space * val / col_stretch_sum; }
+                {
+                    col_widths[col_index].1 = col_free_space * val / col_stretch_sum;
+                }
             }
 
             _ => {}
@@ -845,9 +870,14 @@ pub fn step3_grid<'a, C, H>(
             match col_between {
                 Units::Stretch(val) => {
                     #[cfg(feature = "rounding")]
-                    { col_widths[gutter_index].1 = (col_free_space * val / col_stretch_sum).round(); }
+                    {
+                        col_widths[gutter_index].1 =
+                            (col_free_space * val / col_stretch_sum).round();
+                    }
                     #[cfg(not(feature = "rounding"))]
-                    { col_widths[gutter_index].1 = col_free_space * val / col_stretch_sum; }
+                    {
+                        col_widths[gutter_index].1 = col_free_space * val / col_stretch_sum;
+                    }
                 }
 
                 _ => {}
@@ -1016,19 +1046,22 @@ where
                 Units::Percentage(p) => p / 100.0 * parent_size,
                 Units::Stretch(su) => width_remaining * su / stretch_sum,
                 Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }.clamp(0.0, f32::MAX);
+            }
+            .clamp(0.0, f32::MAX);
             let other_max = match node.max_size(store, !dir).unwrap_or_default() {
                 Units::Pixels(px) => px,
                 Units::Percentage(p) => p / 100.0 * parent_size,
                 Units::Stretch(su) => width_remaining * su / stretch_sum,
                 Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }.clamp(other_min, f32::MAX);
+            }
+            .clamp(other_min, f32::MAX);
             let other_size = match node.size(store, !dir).unwrap_or_default() {
                 Units::Pixels(v) => v,
                 Units::Percentage(p) => p / 100.0 * parent_size,
                 Units::Stretch(su) => width_remaining * su / stretch_sum,
                 Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }.clamp(other_min, other_max);
+            }
+            .clamp(other_min, other_max);
 
             other_size
         };
