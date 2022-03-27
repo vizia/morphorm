@@ -65,6 +65,16 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
         Some(0.0)
     }
 
+    /// Get the content width which may be dependent on the height
+    fn content_width_secondary(&self, store: &'_ Self::Data, height: f32) -> Option<f32> {
+        Some(0.0)
+    }
+
+    /// Get the content height which may be dependent on the width
+    fn content_height_secondary(&self, store: &'_ Self::Data, width: f32) -> Option<f32> {
+        Some(0.0)
+    }
+
     /// Get the desired space to the left of the node in units
     fn left(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
@@ -189,5 +199,121 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     }
     fn border_bottom(&self, store: &'_ Self::Data) -> Option<Units> {
         Some(Units::Auto)
+    }
+
+    // these are "generic getters"
+    fn size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.width(store),
+            Direction::Y => self.height(store),
+        }
+    }
+    fn min_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.min_width(store),
+            Direction::Y => self.min_height(store),
+        }
+    }
+    fn max_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.max_width(store),
+            Direction::Y => self.max_height(store),
+        }
+    }
+    fn content_size(&self, store: &'_ Self::Data, axis: Direction) -> Option<f32> {
+        match axis {
+            Direction::X => self.content_width(store),
+            Direction::Y => self.content_height(store),
+        }
+    }
+    fn content_size_secondary(&self, store: &'_ Self::Data, size: f32, axis: Direction) -> Option<f32> {
+        match axis {
+            Direction::X => self.content_width_secondary(store, size),
+            Direction::Y => self.content_height_secondary(store, size),
+        }
+    }
+    fn before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.left(store),
+            Direction::Y => self.top(store),
+        }
+    }
+    fn after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.right(store),
+            Direction::Y => self.bottom(store),
+        }
+    }
+    fn min_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.min_left(store),
+            Direction::Y => self.min_top(store),
+        }
+    }
+    fn max_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.max_left(store),
+            Direction::Y => self.max_top(store),
+        }
+    }
+    fn min_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.min_right(store),
+            Direction::Y => self.min_bottom(store),
+        }
+    }
+    fn max_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.max_right(store),
+            Direction::Y => self.max_bottom(store),
+        }
+    }
+    fn child_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.child_left(store),
+            Direction::Y => self.child_top(store),
+        }
+    }
+    fn child_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.child_right(store),
+            Direction::Y => self.child_bottom(store),
+        }
+    }
+    fn row_col_between(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.col_between(store),
+            Direction::Y => self.row_between(store),
+        }
+    }
+    fn grid_rows_cols(&self, store: &'_ Self::Data, axis: Direction) -> Option<Vec<Units>> {
+        match axis {
+            Direction::X => self.grid_rows(store),
+            Direction::Y => self.grid_cols(store),
+        }
+    }
+    fn row_col_index(&self, store: &'_ Self::Data, axis: Direction) -> Option<usize> {
+        match axis {
+            Direction::X => self.row_index(store),
+            Direction::Y => self.col_index(store),
+        }
+    }
+    fn row_col_span(&self, store: &'_ Self::Data, axis: Direction) -> Option<usize> {
+        match axis {
+            Direction::X => self.row_span(store),
+            Direction::Y => self.col_span(store),
+        }
+    }
+    fn border_before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.border_left(store),
+            Direction::Y => self.border_top(store),
+        }
+    }
+    fn border_after(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
+        match axis {
+            Direction::X => self.border_right(store),
+            Direction::Y => self.border_bottom(store),
+        }
     }
 }
