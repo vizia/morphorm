@@ -22,6 +22,7 @@ morphorm-ecs = {path = "ecs"}
 winit = { version = "0.25", default-features = false }
 femtovg = {version = "0.2.2", default-features = false}
 glutin = "0.27.0"
+rand = "0.8.4"
 
 [lib]
 doctest = false

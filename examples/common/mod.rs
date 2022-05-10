@@ -43,8 +43,8 @@ pub fn render(mut world: World, root: Entity) {
     let font =
         canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
-    world.cache.set_width(root, 1000.0);
-    world.cache.set_height(root, 600.0);
+    //world.cache.set_width(root, 1000.0);
+    //world.cache.set_height(root, 600.0);
 
     el.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
@@ -59,10 +59,10 @@ pub fn render(mut world: World, root: Entity) {
                     windowed_context.resize(*physical_size);
                     world.set_width(root, Units::Pixels(physical_size.width as f32));
                     world.set_height(root, Units::Pixels(physical_size.height as f32));
-                    world.cache.set_width(root, physical_size.width as f32);
-                    world.cache.set_height(root, physical_size.height as f32);
+                    //world.cache.set_width(root, physical_size.width as f32);
+                    //world.cache.set_height(root, physical_size.height as f32);
 
-                    layout(&mut world.cache, &world.tree, &world.store);
+                    layout(&root, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
