@@ -79,6 +79,13 @@ impl Tree {
     pub fn get_prev_sibling(&self, entity: Entity) -> Option<Entity> {
         self.prev_sibling.get(entity.index()).map_or(None, |next_sibling| *next_sibling)
     }
+
+    pub fn down_iter<'a>(&'a self) -> DownwardIterator<'a> {
+        DownwardIterator { 
+            tree: self, 
+            current_node: Some(Entity(0)),
+        }
+    }
 }
 
 pub struct DownwardIterator<'a> {
