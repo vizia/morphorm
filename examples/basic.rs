@@ -11,9 +11,18 @@ fn main() {
 
     // world.set_layout_type(root, LayoutType::Row);
 
-    let parent = world.add(Some(root));
-    world.set_width(parent, Units::Pixels(40.0));
-    world.set_height(parent, Units::Pixels(40.0));
+    let node0 = world.add(Some(root));
+    world.set_width(node0, Units::Auto);
+    world.set_height(node0, Units::Pixels(100.0));
+
+    let node1 = world.add(Some(node0));
+    world.set_width(node1, Units::Pixels(20.0));
+    world.set_height(node1, Units::Pixels(40.0));
+
+
+    let node2 = world.add(Some(node0));
+    world.set_width(node2, Units::Pixels(50.0));
+    world.set_height(node2, Units::Pixels(40.0));
     // world.set_child_space(parent, Units::Pixels(10.0));
 
     // world.set_layout_type(parent, LayoutType::Row);
@@ -32,7 +41,12 @@ fn main() {
     // world.set_width(child3, Units::Stretch(1.0));
     // world.set_height(child3, Units::Pixels(100.0));
 
-    layout(&root, &mut world.cache, &world.tree, &world.store);
+    let root_bc = BoxConstraints {
+        min: (100.0, 100.0),
+        max: (100.0, 100.0),
+    };
+
+    layout(&root, &root_bc, &mut world.cache, &world.tree, &world.store);
 
     render(world, root);
 }

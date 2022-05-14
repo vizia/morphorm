@@ -62,7 +62,12 @@ pub fn render(mut world: World, root: Entity) {
                     //world.cache.set_width(root, physical_size.width as f32);
                     //world.cache.set_height(root, physical_size.height as f32);
 
-                    layout(&root, &mut world.cache, &world.tree, &world.store);
+                    let root_bc = BoxConstraints {
+                        min: (physical_size.width as f32, physical_size.height as f32),
+                        max: (physical_size.width as f32, physical_size.height as f32),
+                    };
+
+                    layout(&root, &root_bc, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
