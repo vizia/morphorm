@@ -40,7 +40,7 @@ impl LayoutType {
 
 impl Default for LayoutType {
     fn default() -> Self {
-        LayoutType::Column
+        LayoutType::Row
     }
 }
 

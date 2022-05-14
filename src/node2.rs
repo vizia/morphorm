@@ -10,7 +10,7 @@ where Self: 't,
     type Tree;
     type ChildIter: Iterator<Item = Self>;
 
-    type CacheKey;
+    type CacheKey: std::fmt::Debug;
 
     fn key(&self) -> Self::CacheKey;
 
