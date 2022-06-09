@@ -96,7 +96,7 @@ pub fn render(mut world: World, root: Entity) {
                     Color::rgbf(0.3, 0.3, 0.32),
                 );
 
-                for node in world.tree.down_iter() {
+                world.tree.down_iter(|node| {
                     let posx = world.cache.posx(node);
                     let posy = world.cache.posy(node);
                     let width = world.cache.width(node);
@@ -116,13 +116,9 @@ pub fn render(mut world: World, root: Entity) {
                     paint.set_text_align(Align::Center);
                     paint.set_text_baseline(Baseline::Middle);
                     paint.set_font(&vec![font]);
-                    let _ = canvas.fill_text(
-                        posx + width / 2.0,
-                        posy + height / 2.0,
-                        &node.0.to_string(),
-                        paint,
-                    );
-                }
+                    let _ = canvas.fill_text(posx + width/2.0, posy + height/2.0, &node.0.to_string(), paint);
+
+                });
 
                 canvas.flush();
                 windowed_context.swap_buffers().unwrap();
