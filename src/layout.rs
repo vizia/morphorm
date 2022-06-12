@@ -33,11 +33,11 @@ pub fn layout<'a, C, H>(
 {
     // Step 1 - Determine fist and last parent-directed child of each node and cache it
     // This needs to be done at least once before the rest of layout and when the position_type of a node changes
-    for parent in hierarchy.down_iter() {
+    hierarchy.down_iter(|parent| {
         // Skip non-visible nodes
         let visible = cache.visible(parent);
         if !visible {
-            continue;
+            return;
         }
 
         // Reset the sum and max for the parent
@@ -54,11 +54,11 @@ pub fn layout<'a, C, H>(
         let mut found_first = false;
         let mut last_child = None;
 
-        for node in hierarchy.child_iter(parent) {
+        hierarchy.child_iter(parent, |node| {
             // Skip non-visible nodes
             let visible = cache.visible(node);
             if !visible {
-                continue;
+                return;
             }
 
             cache.set_stack_first_child(node, false);
@@ -80,34 +80,34 @@ pub fn layout<'a, C, H>(
                     cache.set_stack_last_child(node, true);
                 }
             }
-        }
+        });
 
         if let Some(last_child) = last_child {
             cache.set_stack_last_child(last_child, true);
         }
-    }
+    });
 
     // Step 2 - Iterate up the hierarchy
     // This step is required to determine the sum and max width/height of child nodes
     // to determine the width/height of parent nodes when set to Auto
-    for node in hierarchy.up_iter() {
+    hierarchy.up_iter(|node| {
         // Skip non-visible nodes
         let visible = cache.visible(node);
         if !visible {
-            continue;
+            return;
         }
 
         let parent = hierarchy.parent(node);
 
         step2(node, parent, cache, store, Direction::X);
         step2(node, parent, cache, store, Direction::Y);
-    }
+    });
 
     // Step 3 - Iterate down the hierarchy
-    for parent in hierarchy.down_iter() {
+    hierarchy.down_iter(|parent| {
         let visible = cache.visible(parent);
         if !visible {
-            continue;
+            return;
         }
 
         let parent_layout_type = parent.layout_type(store).unwrap_or_default();
@@ -125,7 +125,7 @@ pub fn layout<'a, C, H>(
 
             LayoutType::Grid => step3_grid(parent, cache, hierarchy, store),
         }
-    }
+    });
 }
 
 pub fn step2<'a, C, N>(
@@ -321,10 +321,10 @@ pub fn step3_row_col<'a, C, H>(
     // ////////////////////////////////
     // Calculate inflexible children //
     ///////////////////////////////////
-    for node in hierarchy.child_iter(parent) {
+    hierarchy.child_iter(parent, |node| {
         let visible = cache.visible(node);
         if !visible {
-            continue;
+            return;
         }
 
         let layout_type = node.layout_type(store).unwrap_or_default();
@@ -441,7 +441,7 @@ pub fn step3_row_col<'a, C, H>(
 
         cache.set_free_space(node, free_space, dir);
         cache.set_stretch_sum(node, stretch_sum, dir);
-    }
+    });
 
     if parent_stretch_sum == 0.0 {
         parent_stretch_sum = 1.0;
@@ -527,10 +527,10 @@ pub fn step3_row_col<'a, C, H>(
     ///////////////////////
     // Position Children //
     ///////////////////////
-    for node in hierarchy.child_iter(parent) {
+    hierarchy.child_iter(parent, |node| {
         let visible = cache.visible(node);
         if !visible {
-            continue;
+            return;
         }
 
         let before = cache.before(node, dir);
@@ -566,7 +566,7 @@ pub fn step3_row_col<'a, C, H>(
 
         cache.set_pos(node, new_pos, dir);
         cache.set_size(node, new_size, dir);
-    }
+    });
 }
 
 pub fn step3_grid<'a, C, H>(
@@ -894,10 +894,10 @@ pub fn step3_grid<'a, C, H>(
     ///////////////////////////////////////////////////
     // Position and Size child nodes within the grid //
     ///////////////////////////////////////////////////
-    for node in hierarchy.child_iter(parent) {
+    hierarchy.child_iter(parent, |node| {
         let visible = cache.visible(node);
         if !visible {
-            continue;
+            return;
         }
 
         let row_start = 2 * node.row_index(store).unwrap_or_default() + 1;
@@ -937,7 +937,7 @@ pub fn step3_grid<'a, C, H>(
 
         cache.set_new_width(node, cache.width(node));
         cache.set_new_height(node, cache.height(node));
-    }
+    });
 }
 
 fn incorperate_axis<N: Clone + for<'w> Node<'w>>(
