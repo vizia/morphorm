@@ -5,24 +5,29 @@ fn main() {
     let mut world = World::default();
 
     let root = world.add(None);
-    world.set_width(root, Units::Pixels(100.0));
-    world.set_height(root, Units::Pixels(100.0));
+    world.set_width(root, Units::Pixels(200.0));
+    world.set_height(root, Units::Pixels(200.0));
+    world.set_layout_type(root, LayoutType::Row);
     //world.set_child_space(root, Units::Stretch(1.0));
 
     // world.set_layout_type(root, LayoutType::Row);
 
     let node0 = world.add(Some(root));
-    world.set_width(node0, Units::Auto);
-    world.set_height(node0, Units::Pixels(100.0));
+    world.set_width(node0, Units::Stretch(1.0));
+    world.set_height(node0, Units::Pixels(50.0));
+    
+    // let node1 = world.add(Some(node0));
+    // world.set_width(node1, Units::Percentage(50.0));
+    // world.set_height(node1, Units::Auto);
+    // world.set_layout_type(node1, LayoutType::Row);
+    // world.set_content_size(node1, |cross_size|{
+    //     40000.0 / cross_size
+    // });
+    
 
-    let node1 = world.add(Some(node0));
-    world.set_width(node1, Units::Pixels(20.0));
-    world.set_height(node1, Units::Pixels(40.0));
-
-
-    let node2 = world.add(Some(node0));
-    world.set_width(node2, Units::Pixels(50.0));
-    world.set_height(node2, Units::Pixels(40.0));
+    // let node2 = world.add(Some(node0));
+    // world.set_width(node2, Units::Pixels(50.0));
+    // world.set_height(node2, Units::Pixels(40.0));
     // world.set_child_space(parent, Units::Pixels(10.0));
 
     // world.set_layout_type(parent, LayoutType::Row);

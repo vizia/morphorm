@@ -49,6 +49,8 @@ pub struct Store {
 
     pub border: HashMap<Entity, Units>,
 
+    pub content_size: HashMap<Entity, Box<dyn Fn(f32) -> f32>>,
+
 
     pub red: HashMap<Entity, u8>,
     pub green: HashMap<Entity, u8>,

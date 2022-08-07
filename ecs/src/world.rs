@@ -1,6 +1,6 @@
 use morphorm::{Units, LayoutType, PositionType};
 
-use crate::entity::{Entity, EntityManager};
+use crate::entity::{Entity, EntityManager, self};
 use crate::implementations::NodeCache;
 use crate::store::Store;
 use crate::tree::Tree;
@@ -140,6 +140,10 @@ impl World {
 
     pub fn set_min_height(&mut self, entity: Entity, value: Units) {
         self.store.min_height.insert(entity, value);
+    }
+
+    pub fn set_content_size(&mut self, entity: Entity, content: impl Fn(f32) -> f32 + 'static) {
+        self.store.content_size.insert(entity, Box::new(content));
     }
     
 }
