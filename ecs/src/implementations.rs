@@ -37,6 +37,14 @@ impl<'t> Node<'t> for Entity {
     fn height(&self, store: &Self::Store) -> Option<Units> {
         store.height.get(self).cloned()
     }
+
+    fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
+        if let Some(t) = store.content_size.get(self) {
+            Some((t)(cross_size))
+        } else {
+            None
+        }
+    }
 }
 
 // impl<'a,'w> Node<'w> for &'a Entity
