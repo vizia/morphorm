@@ -1,10 +1,8 @@
-use crate::{Units, LayoutType};
+use crate::{LayoutType, Units};
 
-
-
-
-pub trait Node<'t>: Sized 
-where Self: 't,
+pub trait Node<'t>: Sized + Clone
+where
+    Self: 't,
 {
     type Store;
     type Tree;
@@ -27,5 +25,4 @@ where Self: 't,
 
     // fn next_sibling<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
     // fn prev_sibling<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
-
 }

@@ -17,13 +17,9 @@ use femtovg::{
     Path,
 };
 
-
 use std::collections::HashMap;
 
-use morphorm::{Units, Node, LayoutType, layout, Cache, Units::*};
-
-
-
+use morphorm::{layout, Cache, LayoutType, Node, Units, Units::*};
 
 #[derive(Default)]
 pub struct Widget {
@@ -37,7 +33,6 @@ pub struct Widget {
 
 impl Widget {
     pub fn new(id: u32, width: Units, height: Units) -> Self {
-
         let random_red: u8 = rand::thread_rng().gen();
         let random_green: u8 = rand::thread_rng().gen();
         let random_blue: u8 = rand::thread_rng().gen();
@@ -55,7 +50,7 @@ impl Widget {
 impl<'t> Node<'t> for &'t Widget {
     type Store = ();
     type Tree = ();
-    type ChildIter = std::slice::Iter<'t,Widget>;
+    type ChildIter = std::slice::Iter<'t, Widget>;
     type CacheKey = u32;
 
     fn children(&self, tree: &'t Self::Tree) -> Self::ChildIter {
@@ -91,7 +86,7 @@ impl Cache for LayoutCache {
         if let Some(rect) = self.rect.get(&node) {
             return rect.0;
         }
-        
+
         0.0
     }
 
@@ -99,7 +94,7 @@ impl Cache for LayoutCache {
         if let Some(rect) = self.rect.get(&node) {
             return rect.1;
         }
-        
+
         0.0
     }
 
@@ -107,7 +102,7 @@ impl Cache for LayoutCache {
         if let Some(rect) = self.rect.get(&node) {
             return rect.2;
         }
-        
+
         0.0
     }
 
@@ -115,7 +110,7 @@ impl Cache for LayoutCache {
         if let Some(rect) = self.rect.get(&node) {
             return rect.3;
         }
-        
+
         0.0
     }
 
@@ -150,10 +145,7 @@ impl Cache for LayoutCache {
             self.rect.insert(node, (0.0, 0.0, 0.0, posy));
         }
     }
-
-    
 }
-
 
 fn main() {
     let mut cache = LayoutCache::default();
@@ -162,8 +154,6 @@ fn main() {
     layout(&&root, &mut cache, &(), &());
     render(cache, root);
 }
-
-
 
 pub fn render(mut cache: LayoutCache, root: Widget) {
     let el = EventLoop::new();
@@ -245,8 +235,6 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
 
                 draw_node(&root, &cache, &mut canvas, font);
 
-                
-
                 canvas.flush();
                 windowed_context.swap_buffers().unwrap();
             }
@@ -276,16 +264,10 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
     paint.set_text_align(Align::Center);
     paint.set_text_baseline(Baseline::Middle);
     paint.set_font(&vec![font]);
-    let _ = canvas.fill_text(
-        posx + width / 2.0,
-        posy + height / 2.0,
-        &node.key().to_string(),
-        paint,
-    );
+    let _ =
+        canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), paint);
 
     for child in (&node).children(&()) {
-        draw_node(child, cache, canvas, font);          
+        draw_node(child, cache, canvas, font);
     }
 }
-
-
