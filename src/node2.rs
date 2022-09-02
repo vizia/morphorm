@@ -17,9 +17,15 @@ where
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType>;
 
     fn main(&self, store: &Self::Store) -> Option<Units>;
+
     fn cross(&self, store: &Self::Store) -> Option<Units>;
 
+    fn main_before(&self, store: &Self::Store) -> Option<Units>;
+
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32>;
+
+
+
 
     // fn first_child<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
 

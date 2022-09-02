@@ -50,11 +50,24 @@ where
     //println!("layout: {:?} bc: {:?}", node.key(), bc);
     let layout_type = node.layout_type(store).unwrap_or_default();
 
+    let main_before = node.main_before(store).unwrap_or(Units::Auto);
     let main = node.main(store).unwrap_or(Units::Stretch(1.0));
     let cross = node.cross(store).unwrap_or(Units::Stretch(1.0));
 
+    let mut computed_main_before = 0.0;
     let mut computed_main = 0.0;
     let mut computed_cross = 0.0;
+
+
+    match main_before {
+        Pixels(val) => {
+            computed_main_before = val;
+        }
+
+        _=> {}
+    }
+
+    println!("computed main before: {:?} {}", node.key(), computed_main_before);
 
     // Compute fixed-size main size
     match main {
@@ -117,7 +130,7 @@ where
                 computed_cross = content_size;
             }
         }
-        
+
         _=> {}
     }
 
@@ -136,14 +149,20 @@ where
 
     // Compute non-flexible children
     for child in node.children(tree) {
+        let child_main_before = child.main_before(store).unwrap_or(Units::Auto);
         let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
 
-        match child_main {
-            Stretch(factor) => {
-                main_flex_sum += factor;
-                flex_line.push(child);
-            },
 
+        match child_main_before {
+            Pixels(val) => {
+                main_sum += val;
+                main_non_flex += val;
+            }
+
+            _=> {}
+        }
+
+        match child_main {
             Pixels(val) => {
                 // Compute child box constraints
                 let child_bc = BoxConstraints {
@@ -167,6 +186,11 @@ where
 
                 flex_line.push(child);
             }
+
+            Stretch(factor) => {
+                main_flex_sum += factor;
+                flex_line.push(child);
+            },
 
             Auto => {
 
@@ -192,7 +216,8 @@ where
     flex_lines.push((flex_line.clone(), main_non_flex));
 
     // Calculate free space
-    let free_main_space = (bc.max.0 - main_non_flex).max(0.0);
+    // TODO: This needs to be done for each flex line and then each flex line needs to be computed separately
+    let free_main_space = (computed_main - main_non_flex).max(0.0);
     let mut remainder: f32 = 0.0;
 
     let mut main_flex: f32 = 0.0;
@@ -261,6 +286,7 @@ where
     // Constrain the computed size to the sum/max of the children.
     // This is also how content-size gets propagated up the tree.
     // TODO: Constrain to min/max size when added
+    // TODO: This won't work if the nodes have wrapped. In that case the sum of the longest flex line should be used.
     computed_main = computed_main.max(main_sum);
     computed_cross = computed_cross.max(cross_max);
 
