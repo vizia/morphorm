@@ -1,4 +1,6 @@
+use femtovg::FontId;
 use glutin::event::VirtualKeyCode;
+use morphorm_ecs::tree::Tree;
 pub use morphorm_ecs::{Entity, World};
 
 pub use morphorm::*;
@@ -57,17 +59,35 @@ pub fn render(mut world: World, root: Entity) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    world.set_width(root, Units::Pixels(physical_size.width as f32));
-                    world.set_height(root, Units::Pixels(physical_size.height as f32));
-                    //world.cache.set_width(root, physical_size.width as f32);
-                    //world.cache.set_height(root, physical_size.height as f32);
+                    let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
+                    let mut root_bc = BoxConstraints::default();
+                    match layout_type {
+                        LayoutType::Row => {
+                            world.set_main(root, Units::Pixels(physical_size.width as f32));
+                            world.set_cross(root, Units::Pixels(physical_size.height as f32));
 
-                    let root_bc = BoxConstraints {
-                        min: (physical_size.width as f32, physical_size.height as f32),
-                        max: (physical_size.width as f32, physical_size.height as f32),
-                    };
+                            root_bc = BoxConstraints {
+                                min: (physical_size.width as f32, physical_size.height as f32),
+                                max: (physical_size.width as f32, physical_size.height as f32),
+                            };
+        
+                        }
+                        
+                        LayoutType::Column => {
+                            world.set_main(root, Units::Pixels(physical_size.height as f32));
+                            world.set_cross(root, Units::Pixels(physical_size.width as f32));
 
-                    layout(&root, &root_bc, &mut world.cache, &world.tree, &world.store);
+                            root_bc = BoxConstraints {
+                                min: (physical_size.height as f32, physical_size.width as f32),
+                                max: (physical_size.height as f32, physical_size.width as f32),
+                            };
+                        }
+                        
+                        _=> {}
+                    }
+                    
+                    layout(&root, layout_type, &root_bc, &mut world.cache, &world.tree, &world.store);
+
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -101,33 +121,40 @@ pub fn render(mut world: World, root: Entity) {
                     Color::rgbf(0.3, 0.3, 0.32),
                 );
 
-                for node in world.tree.down_iter() {
-                    let posx = world.cache.posx(node);
-                    let posy = world.cache.posy(node);
-                    let width = world.cache.width(node);
-                    let height = world.cache.height(node);
+                draw_node(&root, &world, 0.0, 0.0, font, &mut canvas);
 
-                    let red = world.store.red.get(&node).unwrap_or(&0u8);
-                    let green = world.store.green.get(&node).unwrap_or(&0u8);
-                    let blue = world.store.blue.get(&node).unwrap_or(&0u8);
+                // let mut global_posx = 0.0;
+                // let mut global_posy = 0.0;
+                // for node in world.tree.down_iter() {
+                //     let posx = world.cache.posx(node);
+                //     let posy = world.cache.posy(node);
+                //     let width = world.cache.width(node);
+                //     let height = world.cache.height(node);
 
-                    let mut path = Path::new();
-                    path.rect(posx, posy, width, height);
-                    let paint = Paint::color(Color::rgb(*red, *green, *blue));
-                    canvas.fill_path(&mut path, paint);
+                //     let red = world.store.red.get(&node).unwrap_or(&0u8);
+                //     let green = world.store.green.get(&node).unwrap_or(&0u8);
+                //     let blue = world.store.blue.get(&node).unwrap_or(&0u8);
 
-                    let mut paint = Paint::color(Color::black());
-                    paint.set_font_size(24.0);
-                    paint.set_text_align(Align::Center);
-                    paint.set_text_baseline(Baseline::Middle);
-                    paint.set_font(&vec![font]);
-                    let _ = canvas.fill_text(
-                        posx + width / 2.0,
-                        posy + height / 2.0,
-                        &node.0.to_string(),
-                        paint,
-                    );
-                }
+                //     let mut path = Path::new();
+                //     path.rect(global_posx + posx, global_posy + posy, width, height);
+                //     let paint = Paint::color(Color::rgb(*red, *green, *blue));
+                //     canvas.fill_path(&mut path, paint);
+
+                //     let mut paint = Paint::color(Color::black());
+                //     paint.set_font_size(24.0);
+                //     paint.set_text_align(Align::Center);
+                //     paint.set_text_baseline(Baseline::Middle);
+                //     paint.set_font(&vec![font]);
+                //     let _ = canvas.fill_text(
+                //         global_posx + posx + width / 2.0,
+                //         global_posy + posy + height / 2.0,
+                //         &node.0.to_string(),
+                //         paint,
+                //     );
+
+                //     global_posx += posx;
+                //     global_posy += posy; 
+                // }
 
                 canvas.flush();
                 windowed_context.swap_buffers().unwrap();
@@ -136,4 +163,40 @@ pub fn render(mut world: World, root: Entity) {
             _ => (),
         }
     });
+}
+
+fn draw_node<'a, N: Node<'a, Tree = Tree, CacheKey = Entity>>(node: &N, world: &'a World, parent_posx: f32, parent_posy: f32, font: FontId, canvas: &mut Canvas<OpenGl>) {
+    let posx = world.cache.posx(node.key());
+    let posy = world.cache.posy(node.key());
+    let width = world.cache.width(node.key());
+    let height = world.cache.height(node.key());
+
+    //println!("Draw node: {:?} {} {}", node.key(), posx, posy);
+
+    //println!("Draw Node: {:?} at position: {} {}", node.key(), posx + parent_posx, posy+parent_posy);
+
+    let red = world.store.red.get(&node.key()).unwrap_or(&0u8);
+    let green = world.store.green.get(&node.key()).unwrap_or(&0u8);
+    let blue = world.store.blue.get(&node.key()).unwrap_or(&0u8);
+
+    let mut path = Path::new();
+    path.rect(parent_posx + posx, parent_posy + posy, width, height);
+    let paint = Paint::color(Color::rgb(*red, *green, *blue));
+    canvas.fill_path(&mut path, paint);
+
+    let mut paint = Paint::color(Color::black());
+    paint.set_font_size(24.0);
+    paint.set_text_align(Align::Center);
+    paint.set_text_baseline(Baseline::Middle);
+    paint.set_font(&vec![font]);
+    let _ = canvas.fill_text(
+        parent_posx + posx + width / 2.0,
+        parent_posy + posy + height / 2.0,
+        &node.key().0.to_string(),
+        paint,
+    );
+
+    for child in node.children(&world.tree) {
+        draw_node(&child, world, posx + parent_posx, posy + parent_posy, font, canvas);
+    }
 }

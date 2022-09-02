@@ -16,8 +16,8 @@ where
 
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType>;
 
-    fn width(&self, store: &Self::Store) -> Option<Units>;
-    fn height(&self, store: &Self::Store) -> Option<Units>;
+    fn main(&self, store: &Self::Store) -> Option<Units>;
+    fn cross(&self, store: &Self::Store) -> Option<Units>;
 
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32>;
 
