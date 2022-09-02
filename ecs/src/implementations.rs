@@ -19,7 +19,7 @@ impl<'t> Node<'t> for Entity {
     }
 
     fn children(&self, tree: &'t Self::Tree) -> Self::ChildIter {
-        let current_node = tree.get_first_child(*self);
+        let current_node = tree.get_first_child(self);
         ChildIterator {
             tree,
             current_node,
@@ -130,10 +130,10 @@ pub struct Rect {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Space {
-    pub left: f32,
-    pub right: f32,
-    pub top: f32,
-    pub bottom: f32,
+    pub main_before: f32,
+    pub main_after: f32,
+    pub cross_before: f32,
+    pub cross_after: f32,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -149,60 +149,12 @@ pub struct NodeCache {
 
     // Intermediate Values
     space: HashMap<Entity, Space>,
-    size: HashMap<Entity, Size>,
-
-    child_width_max: HashMap<Entity, f32>,
-    child_height_max: HashMap<Entity, f32>,
-    child_width_sum: HashMap<Entity, f32>,
-    child_height_sum: HashMap<Entity, f32>,
-
-    grid_row_max: HashMap<Entity, f32>,
-    grid_col_max: HashMap<Entity, f32>,
-
-    horizontal_free_space: HashMap<Entity, f32>,
-    horizontal_stretch_sum: HashMap<Entity, f32>,
-
-    vertical_free_space: HashMap<Entity, f32>,
-    vertical_stretch_sum: HashMap<Entity, f32>,
-
-    stack_first_child: HashMap<Entity, bool>,
-    stack_last_child: HashMap<Entity, bool>,
-
-    geometry_changed: HashMap<Entity, GeometryChanged>,
-
-    visible: HashMap<Entity, bool>,
 }
 
 impl NodeCache {
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
-
         self.space.insert(entity, Default::default());
-
-        self.child_width_max.insert(entity, Default::default());
-        self.child_height_max.insert(entity, Default::default());
-        self.child_width_sum.insert(entity, Default::default());
-        self.child_height_sum.insert(entity, Default::default());
-
-        self.grid_row_max.insert(entity, Default::default());
-        self.grid_col_max.insert(entity, Default::default());
-
-        self.horizontal_free_space
-            .insert(entity, Default::default());
-        self.horizontal_stretch_sum
-            .insert(entity, Default::default());
-
-        self.vertical_free_space.insert(entity, Default::default());
-        self.vertical_stretch_sum.insert(entity, Default::default());
-
-        self.stack_first_child.insert(entity, Default::default());
-        self.stack_last_child.insert(entity, Default::default());
-
-        self.size.insert(entity, Default::default());
-
-        self.geometry_changed.insert(entity, Default::default());
-
-        self.visible.insert(entity, true);
     }
 }
 
@@ -241,6 +193,38 @@ impl Cache for NodeCache {
         0.0
     }
 
+    fn main_before(&self, node: Self::Node) -> f32 {
+        if let Some(space) = self.space.get(&node) {
+            return space.main_before
+        }
+
+        0.0
+    }
+
+    fn main_after(&self, node: Self::Node) -> f32 {
+        if let Some(space) = self.space.get(&node) {
+            return space.main_after
+        }
+
+        0.0
+    }
+
+    fn cross_before(&self, node: Self::Node) -> f32 {
+        if let Some(space) = self.space.get(&node) {
+            return space.cross_before
+        }
+
+        0.0
+    }
+
+    fn cross_after(&self, node: Self::Node) -> f32 {
+        if let Some(space) = self.space.get(&node) {
+            return space.cross_after
+        }
+
+        0.0
+    }
+
     fn set_width(&mut self, node: Self::Node, width: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.width = width;
@@ -264,4 +248,30 @@ impl Cache for NodeCache {
             rect.posy = posy;
         }
     }
+
+    fn set_main_before(&mut self, node: Self::Node, value: f32) {
+        if let Some(space) = self.space.get_mut(&node) {
+            space.main_before = value;
+        }
+    }
+
+    fn set_main_after(&mut self, node: Self::Node, value: f32) {
+        if let Some(space) = self.space.get_mut(&node) {
+            space.main_after = value;
+        }
+    }
+
+    fn set_cross_before(&mut self, node: Self::Node, value: f32) {
+        if let Some(space) = self.space.get_mut(&node) {
+            space.cross_before = value;
+        }
+    }
+
+    fn set_cross_after(&mut self, node: Self::Node, value: f32) {
+        if let Some(space) = self.space.get_mut(&node) {
+            space.cross_after = value;
+        }
+    }
+
+    
 }

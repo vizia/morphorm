@@ -54,58 +54,58 @@ impl Tree {
     pub fn flatten(&self) -> Vec<Entity> {
         let iterator = DownwardIterator {
             tree: &self,
-            current_node: Some(Entity(0)),
+            current_node: Some(&Entity(0)),
         };
 
-        iterator.collect::<Vec<_>>()
+        iterator.map(|item| *item).collect::<Vec<_>>()
     }
 
-    pub fn get_parent(&self, entity: Entity) -> Option<Entity> {
-        self.parent.get(entity.index()).map_or(None, |parent| *parent)
+    pub fn get_parent(&self, entity: Entity) -> Option<&Entity> {
+        self.parent.get(entity.index()).map_or(None, |parent| parent.as_ref())
     }
 
-    pub fn get_first_child(&self, entity: Entity) -> Option<Entity> {
-        self.first_child.get(entity.index()).map_or(None, |first_child| *first_child)
+    pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
+        self.first_child.get(entity.index()).map_or(None, |first_child| first_child.as_ref())
     }
 
     pub fn get_last_child(&self, _entity: Entity) -> Option<Entity> {
         todo!()
     }
 
-    pub fn get_next_sibling(&self, entity: Entity) -> Option<Entity> {
-        self.next_sibling.get(entity.index()).map_or(None, |prev_sibling| *prev_sibling)
+    pub fn get_next_sibling(&self, entity: &Entity) -> Option<&Entity> {
+        self.next_sibling.get(entity.index()).map_or(None, |prev_sibling| prev_sibling.as_ref())
     }
 
     pub fn get_prev_sibling(&self, entity: Entity) -> Option<Entity> {
         self.prev_sibling.get(entity.index()).map_or(None, |next_sibling| *next_sibling)
     }
 
-    pub fn down_iter<'a>(&'a self) -> DownwardIterator<'a> {
-        DownwardIterator { 
-            tree: self, 
-            current_node: Some(Entity(0)),
-        }
-    }
+    // pub fn down_iter<'a>(&'a self) -> DownwardIterator<'a> {
+    //     DownwardIterator { 
+    //         tree: self, 
+    //         current_node: Some(Entity(0)),
+    //     }
+    // }
 }
 
 pub struct DownwardIterator<'a> {
     tree: &'a Tree,
-    current_node: Option<Entity>,
+    current_node: Option<&'a Entity>,
 }
 
 impl<'a> DownwardIterator<'a> {
     /// Skip to next branch
-    pub fn next_branch(&mut self) -> Option<Entity> {
+    pub fn next_branch(&mut self) -> Option<&'a Entity> {
         let r = self.current_node;
         if let Some(current) = self.current_node {
             let mut temp = Some(current);
             while temp.is_some() {
-                if let Some(sibling) = self.tree.next_sibling[temp.unwrap().index()]
+                if let Some(sibling) = &self.tree.next_sibling[temp.unwrap().index()]
                 {
                     self.current_node = Some(sibling);
                     return r;
                 } else {
-                    temp = self.tree.parent[temp.unwrap().index()];
+                    temp = self.tree.parent[temp.unwrap().index()].as_ref();
                 }
             }
         } else {
@@ -117,22 +117,22 @@ impl<'a> DownwardIterator<'a> {
 }
 
 impl<'a> Iterator for DownwardIterator<'a> {
-    type Item = Entity;
-    fn next(&mut self) -> Option<Entity> {
+    type Item = &'a Entity;
+    fn next(&mut self) -> Option<&'a Entity> {
 
         let r = self.current_node;
 
         if let Some(current) = self.current_node {
-            if let Some(child) = self.tree.first_child[current.index()] {
+            if let Some(child) = &self.tree.first_child[current.index()] {
                 self.current_node = Some(child);
             } else {
                 let mut temp = Some(current);
                 while temp.is_some() {
-                    if let Some(sibling) = self.tree.next_sibling[temp.unwrap().index()] {
+                    if let Some(sibling) = &self.tree.next_sibling[temp.unwrap().index()] {
                         self.current_node = Some(sibling);
                         return r;
                     } else {
-                        temp = self.tree.parent[temp.unwrap().index()];
+                        temp = self.tree.parent[temp.unwrap().index()].as_ref();
                     }
                 }
 
@@ -144,47 +144,47 @@ impl<'a> Iterator for DownwardIterator<'a> {
     }
 }
 
-pub struct UpwardIterator<'a> {
-    tree: &'a Tree,
-    current_node: Option<Entity>,
-}
+// pub struct UpwardIterator<'a> {
+//     tree: &'a Tree,
+//     current_node: Option<Entity>,
+// }
 
-impl<'a> Iterator for UpwardIterator<'a> {
-    type Item = Entity;
+// impl<'a> Iterator for UpwardIterator<'a> {
+//     type Item = Entity;
 
-    // TODO - Needs Testing
-    fn next(&mut self) -> Option<Entity> {
+//     // TODO - Needs Testing
+//     fn next(&mut self) -> Option<Entity> {
 
-        let r = self.current_node;
+//         let r = self.current_node;
 
-        if let Some(current) = self.current_node {
+//         if let Some(current) = self.current_node {
 
-            if let Some(prev_sibling) = self.tree.prev_sibling[current.index()] {
-                let mut temp = Some(prev_sibling);
-                while temp.is_some() {
-                    if let Some(last_child) = self.tree.get_last_child(temp.unwrap()) {
-                        temp = Some(last_child);
-                    } else {
-                        self.current_node = Some(prev_sibling);
-                        return r;
-                    }
-                }
-            } else {
-                self.current_node = self.tree.get_parent(current);
-            }
-        }
+//             if let Some(prev_sibling) = self.tree.prev_sibling[current.index()] {
+//                 let mut temp = Some(prev_sibling);
+//                 while temp.is_some() {
+//                     if let Some(last_child) = self.tree.get_last_child(temp.unwrap()) {
+//                         temp = Some(last_child);
+//                     } else {
+//                         self.current_node = Some(prev_sibling);
+//                         return r;
+//                     }
+//                 }
+//             } else {
+//                 self.current_node = self.tree.get_parent(current);
+//             }
+//         }
 
-        return r;
-    }
-}
+//         return r;
+//     }
+// }
 
 pub struct ChildIterator<'a> {
     pub tree: &'a Tree,
-    pub current_node: Option<Entity>,
+    pub current_node: Option<&'a Entity>,
 }
 
 impl<'a> Iterator for ChildIterator<'a> {
-    type Item = Entity;
+    type Item = &'a Entity;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(entity) = self.current_node {
             //self.current_node = self.tree.next_sibling[entity.index()].as_ref();

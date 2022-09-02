@@ -21,18 +21,22 @@ use std::collections::HashMap;
 
 use morphorm::{layout, Cache, LayoutType, Node, Units, Units::*};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Widget {
     child: Vec<Widget>,
-    width: Units,
-    height: Units,
+    main: Units,
+    cross: Units,
+    main_before: Units,
+    main_after: Units,
+    cross_before: Units,
+    cross_after: Units,
     layout_type: LayoutType,
     color: femtovg::Color,
     id: u32,
 }
 
 impl Widget {
-    pub fn new(id: u32, width: Units, height: Units) -> Self {
+    pub fn new(id: u32, main: Units, cross: Units) -> Self {
         let random_red: u8 = rand::thread_rng().gen();
         let random_green: u8 = rand::thread_rng().gen();
         let random_blue: u8 = rand::thread_rng().gen();
@@ -40,8 +44,12 @@ impl Widget {
         Self {
             id,
             color: femtovg::Color::rgb(random_red, random_green, random_blue),
-            width,
-            height,
+            main,
+            cross,
+            main_before: Units::Auto,
+            main_after: Units::Auto,
+            cross_before: Units::Auto,
+            cross_after: Units::Auto,
             ..Default::default()
         }
     }
@@ -61,8 +69,8 @@ impl<'t> Node<'t> for &'t Widget {
         self.id
     }
 
-    fn width(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.width)
+    fn main(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.main)
     }
 
     fn height(&self, store: &Self::Store) -> Option<Units> {
