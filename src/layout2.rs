@@ -7,15 +7,22 @@ pub struct BoxConstraints {
     pub max: (f32, f32),
 }
 
+impl Default for BoxConstraints {
+    fn default() -> Self {
+        BoxConstraints { min: (0.0, 0.0), max: (0.0, 0.0) }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Size {
-    pub width: f32,
-    pub height: f32,
+    pub main: f32,
+    pub cross: f32,
 }
 
 // Perform layout on a node
 pub fn layout<'a, N, C>(
     node: &N,
+    parent_layout_type: LayoutType,
     bc: &BoxConstraints,
     cache: &mut C,
     tree: &'a <N as Node<'a>>::Tree,
@@ -25,116 +32,121 @@ where
     N: Node<'a>,
     C: Cache<Node = N::CacheKey>,
 {
+    //println!("layout: {:?} bc: {:?}", node.key(), bc);
     let layout_type = node.layout_type(store).unwrap_or_default();
 
-    let width = node.width(store).unwrap_or(Units::Stretch(1.0));
-    let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+    let main = node.main(store).unwrap_or(Units::Stretch(1.0));
+    let cross = node.cross(store).unwrap_or(Units::Stretch(1.0));
 
-    let mut computed_width = 0.0;
-    let mut computed_height = 0.0;
+    let mut computed_main = 0.0;
+    let mut computed_cross = 0.0;
 
-    match width {
-        Pixels(width) => {
-            computed_width = width;
+
+
+    match main {
+        Pixels(val) => {
+            computed_main = val;
         }
 
         Percentage(val) => {
-            computed_width = (bc.max.0 * (val / 100.0)).round();
+            computed_main = (bc.max.0 * (val / 100.0)).round();
         }
 
         Stretch(_) => {
-            computed_width = bc.max.0;
+            computed_main = bc.max.0;
         }
 
-        Auto => match layout_type {
-            LayoutType::Row => {
-                println!("E: {:?}  PBC: {:?}", node.key(), bc);
-
-                let cross_size = match height {
-                    Units::Pixels(px) => Some(px),
-                    Units::Percentage(pc) => Some((bc.max.1 * (pc / 100.0)).round()),
-                    _ => Some(bc.min.0),
-                };
-
-                computed_width = if let Some(content_size) =
-                    cross_size.and_then(|cross_size| node.content_size(store, cross_size))
-                {
-                    content_size
-                } else {
-                    bc.min.1
-                };
-            }
-
-            _ => {}
-        },
+        _=> {}
     }
 
-    match height {
-        Pixels(height) => {
-            computed_height = height;
+    match cross {
+        Pixels(val) => {
+            computed_cross = val;
         }
 
-        Auto => {
-            match layout_type {
-                LayoutType::Row => {
-                    // let cross_size = match height {
-                    //     Units::Pixels(px) => Some(px),
-                    //     Units::Percentage(pc) => Some((bc.max.1 * (pc / 100.0)).round()),
-                    //     _=> Some(bc.min.0),
-                    // };
-
-                    computed_height =
-                        if let Some(content_size) = node.content_size(store, computed_width) {
-                            content_size
-                        } else {
-                            bc.min.1
-                        };
-                }
-
-                _ => {}
+        Stretch(_) => {
+            if bc.max.1.is_finite() {
+                computed_cross = bc.max.1;
             }
         }
 
         _ => {}
     }
 
+    match layout_type {
+        LayoutType::Row => {
+            if parent_layout_type == LayoutType::Column && main == Units::Auto {
+                if let Some(content_size) = node.content_size(store, computed_cross) {
+                    computed_main = content_size
+                }
+            }
+        }
+
+        LayoutType::Column => {
+            if parent_layout_type == LayoutType::Row && main == Units::Auto {
+                if let Some(content_size) = node.content_size(store, computed_cross) {
+                    computed_main = content_size;
+                }
+            }
+        }
+
+        _=> {}
+    }
+
     //println!("Entity: {:?}  Computed Width: {}", node.key(), computed_width);
     let mut flex_lines = Vec::new();
 
-    let mut main_sum = 0.0;
-    let mut cross_sum = 0.0;
-    match layout_type {
-        LayoutType::Row => {
+    let mut main_sum = 0.0f32;
+    let mut cross_max = 0.0f32;
+
+    //match layout_type {
+        //LayoutType::Row => {
             // Measure non-flex children on main axis
             let mut main_non_flex = 0.0;
             let mut main_flex_sum = 0.0;
             let mut flex_line = Vec::new();
+
             for child in node.children(tree) {
-                let child_width = child.width(store).unwrap_or(Units::Stretch(1.0));
+                let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
+                let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
 
-                match child_width {
-                    Stretch(factor) => main_flex_sum += factor,
+                match child_main {
+                    Stretch(factor) => {
+                        main_flex_sum += factor;
+                        flex_line.push(child);
+                    },
 
-                    Pixels(child_width) => {
+                    Pixels(val) => {
                         // Compute child box constraints
-                        let child_bc = BoxConstraints {
+                        let mut child_bc = BoxConstraints {
                             min: (0.0, 0.0),
-                            max: (child_width, std::f32::INFINITY),
+                            max: (val, computed_cross),
                         };
 
-                        let child_size = layout(&child, &child_bc, cache, tree, store);
+                        // match child_cross {
+                        //     Pixels(cross) => {
+                        //         child_bc.max.1 = cross;
+                        //     }
+
+                        //     _=> {}
+                        // }
+
+                        //println!("Layout child: {:?} with {:?}", child.key(), child_bc);
+
+                        let child_size = layout(&child, layout_type, &child_bc, cache, tree, store);
                         //println!("child size: {:?}", child_size);
 
                         // If the main_sum exceeds the parent width then add the node to the next flex line
-                        if main_non_flex + child_size.width > computed_width {
-                            println!("push line: {:?}", child.key());
+                        if main_non_flex + child_size.main > computed_main {
+                            //println!("push line: {:?}", child.key());
                             flex_lines.push((flex_line.clone(), main_non_flex));
                             flex_line.clear();
                             main_non_flex = 0.0;
                         }
 
-                        main_sum += child_size.width;
-                        main_non_flex += child_size.width;
+                        main_sum += child_size.main;
+                        cross_max = cross_max.max(child_size.cross);
+                        main_non_flex += child_size.main;
 
                         flex_line.push(child);
                     }
@@ -148,15 +160,28 @@ where
                         //     }
                         // }
 
-                        let child_bc = BoxConstraints {
+                        let mut child_bc = BoxConstraints {
                             min: (0.0, 0.0),
-                            max: (std::f32::INFINITY, std::f32::INFINITY),
+                            max: (computed_main, computed_cross),
                         };
 
-                        let child_size = layout(&child, &child_bc, cache, tree, store);
-                        println!("child size: {:?}", child_size);
+                        // match child_cross {
+                        //     Pixels(cross) => {
+                        //         child_bc.max.1 = cross;
+                        //     }
 
-                        main_non_flex += child_size.width;
+                        //     _=> {}
+                        // }
+
+                        let child_size = layout(&child, layout_type, &child_bc, cache, tree, store);
+                        //println!("child size: {:?}", child_size);
+
+                        main_non_flex += child_size.main;
+
+                        main_sum += child_size.main;
+                        cross_max = cross_max.max(child_size.cross);
+
+                        flex_line.push(child);
                     }
 
                     _ => {}
@@ -174,9 +199,9 @@ where
 
             // Compute flexible children
             for child in node.children(tree) {
-                let child_width = child.width(store).unwrap_or(Units::Stretch(1.0));
+                let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
 
-                match child_width {
+                match child_main {
                     Stretch(factor) => {
                         let desired_main = factor * main_px_per_flex + remainder;
                         let actual_main = desired_main.round();
@@ -185,10 +210,11 @@ where
                         let child_bc =
                             BoxConstraints { min: (actual_main, 0.0), max: (actual_main, 0.0) };
 
-                        let child_size = layout(&child, &child_bc, cache, tree, store);
+                        let child_size = layout(&child, layout_type, &child_bc, cache, tree, store);
 
-                        if child_size.width.is_finite() {
-                            main_sum += child_size.width;
+                        if child_size.main.is_finite() {
+                            main_sum += child_size.main;
+                            cross_max = cross_max.max(child_size.cross);
                         } else {
                             println!("WARNING: Flex child in Auto parent");
                         }
@@ -212,36 +238,57 @@ where
             //     posx += child_width;
             // }
 
-            let mut posy = 0.0;
+            let parent_posx = cache.posx(node.key());
+            let parent_posy = cache.posx(node.key());
+
+            // println!("{:?} {} {}", node.key(), parent_posx, parent_posy);
+
+
+            let mut cross_pos = 0.0;
             for (line, size) in flex_lines.iter() {
-                let mut posx = 0.0;
+                let mut main_pos = 0.0;
                 for child in line.iter() {
-                    let child_width = cache.width(child.key());
-                    cache.set_posx(child.key(), posx);
-                    cache.set_posy(child.key(), posy);
-                    posx += child_width;
+                    match layout_type {
+                        LayoutType::Row => {
+                            cache.set_posx(child.key(), parent_posx + main_pos);
+                            cache.set_posy(child.key(), parent_posy + cross_pos);
+                            let child_width = cache.width(child.key());
+                            main_pos += child_width;
+                        }
+
+                        LayoutType::Column => {
+                            //println!("position: {:?}", child.key());
+                            cache.set_posy(child.key(), parent_posy + main_pos);
+                            cache.set_posx(child.key(), parent_posx + cross_pos);
+                            let child_height = cache.height(child.key());
+                            main_pos += child_height;
+                        }
+
+                        _=> {}
+                    }
                 }
-                posy += 100.0;
-                posx = 0.0;
+                //let child_height = cache.height(child.key());
+                cross_pos += 0.0;
+                main_pos = 0.0;
             }
-        }
+        //}
 
-        LayoutType::Column => {}
+        //LayoutType::Column => {}
 
-        _ => {}
-    }
+        //_ => {}
+    //}
 
     //println!("main sum {:?} {}", node.key(), main_sum);
 
-    match width {
-        Auto => {
-            if node.content_size(store, 0.0).is_none() {
-                computed_width = main_sum;
-            }
-        }
+    // match main {
+    //     Auto => {
+    //         if node.content_size(store, 0.0).is_none() {
+    //             computed_main = main_sum;
+    //         }
+    //     }
 
-        _ => {}
-    }
+    //     _ => {}
+    // }
 
     // Determine any fixed sizes
     // Compute the constraints
@@ -258,56 +305,70 @@ where
     //     }
     // }
 
-    //println!("node: {:?}  bc: {:?}  computed_width: {}  computed_height: {}", node.key(), bc, computed_width, computed_height);
+    //println!("node: {:?}  computed_main: {}  computed_cross: {}  main_sum: {}  cross_max: {}", node.key(), computed_main, computed_cross, main_sum, cross_max);
 
-    cache.set_width(node.key(), computed_width);
-    cache.set_height(node.key(), computed_height);
+    computed_main = computed_main.max(main_sum);
+    computed_cross = computed_cross.max(cross_max);
 
-    Size { width: computed_width, height: computed_height }
+    match parent_layout_type {
+        LayoutType::Row => {
+            cache.set_width(node.key(), computed_main);
+            cache.set_height(node.key(), computed_cross);
+        }
+
+        LayoutType::Column => {
+            cache.set_height(node.key(), computed_main);
+            cache.set_width(node.key(), computed_cross);
+        }
+
+        _=> {}
+    }
+
+    Size { main: computed_main, cross: computed_cross }
 }
 
 // Given a node and its parent box constraints, compute the main size of the node
-fn compute_main_size<'a, N, C>(
-    node: &N,
-    bc: &BoxConstraints,
-    cache: &mut C,
-    store: &'a <N as Node<'a>>::Store,
-) -> f32
-where
-    N: Node<'a>,
-    C: Cache<Node = N::CacheKey>,
-{
-    let width = node.width(store).unwrap_or(Units::Stretch(1.0));
-    let height = node.height(store).unwrap_or(Units::Stretch(1.0));
+// fn compute_main_size<'a, N, C>(
+//     node: &N,
+//     bc: &BoxConstraints,
+//     cache: &mut C,
+//     store: &'a <N as Node<'a>>::Store,
+// ) -> f32
+// where
+//     N: Node<'a>,
+//     C: Cache<Node = N::CacheKey>,
+// {
+//     let width = node.width(store).unwrap_or(Units::Stretch(1.0));
+//     let height = node.height(store).unwrap_or(Units::Stretch(1.0));
 
-    let (main_size, cross_size) = match node.layout_type(store).unwrap_or_default() {
-        LayoutType::Row => (width, height),
+//     let (main_size, cross_size) = match node.layout_type(store).unwrap_or_default() {
+//         LayoutType::Row => (width, height),
 
-        LayoutType::Column => (height, width),
+//         LayoutType::Column => (height, width),
 
-        _ => unreachable!(),
-    };
+//         _ => unreachable!(),
+//     };
 
-    //let width = node.width(store).unwrap_or(Units::Stretch(1.0));
+//     //let width = node.width(store).unwrap_or(Units::Stretch(1.0));
 
-    match main_size {
-        Units::Pixels(px) => px,
-        Units::Percentage(pc) => (bc.max.0 * (pc / 100.0)).round(),
-        Units::Stretch(_) => bc.max.0,
-        Units::Auto => {
-            let cross_size = match cross_size {
-                Units::Pixels(px) => Some(px),
-                Units::Percentage(pc) => Some((bc.max.1 * (pc / 100.0)).round()),
-                _ => None,
-            };
+//     match main_size {
+//         Units::Pixels(px) => px,
+//         Units::Percentage(pc) => (bc.max.0 * (pc / 100.0)).round(),
+//         Units::Stretch(_) => bc.max.0,
+//         Units::Auto => {
+//             let cross_size = match cross_size {
+//                 Units::Pixels(px) => Some(px),
+//                 Units::Percentage(pc) => Some((bc.max.1 * (pc / 100.0)).round()),
+//                 _ => None,
+//             };
 
-            if let Some(content_size) =
-                cross_size.and_then(|cross_size| node.content_size(store, cross_size))
-            {
-                content_size
-            } else {
-                bc.min.1
-            }
-        }
-    }
-}
+//             if let Some(content_size) =
+//                 cross_size.and_then(|cross_size| node.content_size(store, cross_size))
+//             {
+//                 content_size
+//             } else {
+//                 bc.min.1
+//             }
+//         }
+//     }
+// }

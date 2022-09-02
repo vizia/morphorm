@@ -30,12 +30,12 @@ impl<'t> Node<'t> for Entity {
         store.layout_type.get(self).cloned()
     }
 
-    fn width(&self, store: &Self::Store) -> Option<Units> {
-        store.width.get(self).cloned()
+    fn main(&self, store: &Self::Store) -> Option<Units> {
+        store.main.get(self).cloned()
     }
 
-    fn height(&self, store: &Self::Store) -> Option<Units> {
-        store.height.get(self).cloned()
+    fn cross(&self, store: &Self::Store) -> Option<Units> {
+        store.cross.get(self).cloned()
     }
 
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
