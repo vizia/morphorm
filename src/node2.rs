@@ -6,7 +6,7 @@ where
 {
     type Store;
     type Tree;
-    type ChildIter: Iterator<Item = Self>;
+    type ChildIter: Iterator<Item = &'t Self>;
 
     type CacheKey: std::fmt::Debug;
 

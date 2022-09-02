@@ -197,6 +197,6 @@ fn draw_node<'a, N: Node<'a, Tree = Tree, CacheKey = Entity>>(node: &N, world: &
     );
 
     for child in node.children(&world.tree) {
-        draw_node(&child, world, posx + parent_posx, posy + parent_posy, font, canvas);
+        draw_node(child, world, posx + parent_posx, posy + parent_posy, font, canvas);
     }
 }
