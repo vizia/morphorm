@@ -138,6 +138,7 @@ where
     let mut main_flex_sum = 0.0;
     let mut flex_line = Vec::new();
 
+    // Compute non-flexible children
     for child in node.children(tree) {
         let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
 
@@ -229,7 +230,6 @@ where
     }
 
     // Position children
-
     let parent_posx = cache.posx(node.key());
     let parent_posy = cache.posx(node.key());
 
