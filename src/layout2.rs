@@ -221,7 +221,7 @@ where
                         remainder = desired_main - actual_main;
 
                         let child_bc =
-                            BoxConstraints { min: (actual_main, 0.0), max: (actual_main, 0.0) };
+                            BoxConstraints { min: (actual_main, computed_cross), max: (actual_main, computed_cross) };
 
                         let child_size = layout(&child, layout_type, &child_bc, cache, tree, store);
 
