@@ -93,35 +93,31 @@ where
     }
 
     // Apply content-size
-    match layout_type {
-        LayoutType::Row => {
-            if parent_layout_type == LayoutType::Column && main == Units::Auto {
-                if let Some(content_size) = node.content_size(store, computed_cross) {
-                    computed_main = content_size
-                }
-            }
-
-            if parent_layout_type == LayoutType::Row && cross == Units::Auto {
-                if let Some(content_size) = node.content_size(store, computed_main) {
-                    computed_cross = content_size
-                }
+    match (parent_layout_type, layout_type) {
+        (LayoutType::Row, LayoutType::Column) if main == Units::Auto => {
+            if let Some(content_size) = node.content_size(store, computed_cross) {
+                computed_main = content_size;
             }
         }
 
-        LayoutType::Column => {
-            if parent_layout_type == LayoutType::Row && main == Units::Auto {
-                if let Some(content_size) = node.content_size(store, computed_cross) {
-                    computed_main = content_size;
-                }
-            }
+        (LayoutType::Row, LayoutType::Row) if cross == Units::Auto => {
+            if let Some(content_size) = node.content_size(store, computed_main) {
+                computed_cross = content_size
+            }   
+        }
 
-            if parent_layout_type == LayoutType::Column && cross == Units::Auto {
-                if let Some(content_size) = node.content_size(store, computed_main) {
-                    computed_cross = content_size;
-                }
+        (LayoutType::Column, LayoutType::Row) if main == Units::Auto => {
+            if let Some(content_size) = node.content_size(store, computed_cross) {
+                computed_main = content_size
             }
         }
 
+        (LayoutType::Column, LayoutType::Column) if cross == Units::Auto => {
+            if let Some(content_size) = node.content_size(store, computed_main) {
+                computed_cross = content_size;
+            }
+        }
+        
         _=> {}
     }
 
