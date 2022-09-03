@@ -16,9 +16,7 @@ fn content_size() {
     let node = world.add(Some(root));
     world.set_main(node, Units::Pixels(400.0));
     world.set_cross(node, Units::Auto);
-    world.set_content_size(node, |main|{
-        100.0 * (400.0 / main)
-    });
+    world.set_content_size(node, |main| 100.0 * (400.0 / main));
 
     let root_bc = BoxConstraints { min: (200.0, 200.0), max: (200.0, 200.0) };
 
