@@ -120,7 +120,7 @@ impl<'a> Hierarchy<'a> for Tree {
 }
 */
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Rect {
     pub posx: f32,
     pub posy: f32,
@@ -155,6 +155,10 @@ impl NodeCache {
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
         self.space.insert(entity, Default::default());
+    }
+
+    pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
+        self.rect.get(&entity)
     }
 }
 

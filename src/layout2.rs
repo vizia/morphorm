@@ -1,4 +1,3 @@
-use core::num;
 use std::marker::PhantomData;
 
 use smallvec::SmallVec;
@@ -71,27 +70,15 @@ where
     // Unclear whether morphorm should provide that or whether the user should do that. At the moment it's on the user. 
     // See draw_node() in 'examples/common/mod.rs'.
 
-    //println!("layout: {:?} bc: {:?}", node.key(), bc);
+    // FIXME: The main_sum and cross_sum values don't take into account the flex lines.
+
     let layout_type = node.layout_type(store).unwrap_or_default();
 
-    let main_before = node.main_before(store).unwrap_or(Units::Auto);
     let main = node.main(store).unwrap_or(Units::Stretch(1.0));
     let cross = node.cross(store).unwrap_or(Units::Stretch(1.0));
 
-    let mut computed_main_before = 0.0;
     let mut computed_main = 0.0;
     let mut computed_cross = 0.0;
-
-
-    match main_before {
-        Pixels(val) => {
-            computed_main_before = val;
-        }
-
-        _=> {}
-    }
-
-    //println!("computed main before: {:?} {}", node.key(), computed_main_before);
 
     // Compute fixed-size main size
     match main {
@@ -158,9 +145,6 @@ where
         _=> {}
     }
 
-    //println!("Entity: {:?}  Computed Width: {}", node.key(), computed_width);
-
-
     let mut flex_lines = Vec::new();
 
     let mut main_sum = 0.0f32;
@@ -181,13 +165,14 @@ where
     // A stretch node is any flexible space/size. e.g. main_before, main, and main_after are separate stretch nodes
     let mut stretch_nodes = SmallVec::<[StretchNode<N>; 3]>::new();
 
-    // Current free space for the flex line
-    let mut cross_free_space = computed_cross;
-
     // Sum of all non-flexible space/size on the cross axis
     let mut cross_sum = 0.0;
 
     let mut cross_flex_sum = 0.0f32;
+
+    // Keeps track of whether there is a node with stretch cross size somewhere in the flex line.
+    // This is then added to the cross_sum when the line wraps
+    let mut cross_flex = 0.0;
 
     // Compute non-flexible children
     for child in node.children(tree) {
@@ -200,16 +185,6 @@ where
                 main_sum += val;
                 main_non_flex += val;
                 cache.set_main_before(child.key(), val);
-
-                // // If the main_sum exceeds the parent width then add the node to the next flex line
-                // if main_non_flex + val > computed_main {
-                //     //println!("push line: {:?}", child.key());
-                //     flex_lines.push((flex_line.clone(), main_non_flex + val, cross_non_flex));
-                //     flex_line.clear();
-                //     main_non_flex = 0.0;
-                //     cross_non_flex = 0.0;
-                // }
-
             }
 
             Stretch(factor) => {
@@ -229,6 +204,8 @@ where
             _=> {}
         }
 
+        let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
+
         match child_main {
             Pixels(val) => {
 
@@ -238,15 +215,13 @@ where
                     flex_lines.push((children.clone(), stretch_nodes.clone(), main_non_flex, main_flex_sum, cross_non_flex));
                     children.clear();
                     stretch_nodes.clear();
-                    cross_free_space -= cross_non_flex;
-                    //println!("{:?} {:?} do this: {} {}", node.key(), child.key(), cross_sum, cross_non_flex);
-                    cross_sum += cross_non_flex;
 
-                    let child_cross = child.cross(store).unwrap_or(Stretch(1.0));
-                    if let Stretch(_) = child_cross {
-                        println!("{:?} Do this {:?}", node.key(), child.key());
-                        cross_flex_sum += 1.0;
-                    }
+                    cross_sum += cross_non_flex;
+                    cross_flex_sum += cross_flex;
+
+                    // Reset cross flex for next line
+                    cross_flex = 0.0;
+
                     main_non_flex = 0.0;
                     cross_non_flex = 0.0;
                     main_flex_sum = 0.0;
@@ -265,14 +240,7 @@ where
                 main_non_flex += child_size.main;
                 cross_non_flex = cross_non_flex.max(child_size.cross);
 
-                
-
-
-                
                 children.push(child);
-                
-                //println!("{:?} {:?} cross_size {}", node.key(), child.key(), child_size.cross);
-
             }
 
             Stretch(factor) => {
@@ -293,6 +261,8 @@ where
 
             Auto => {
 
+                
+
                 let child_bc = BoxConstraints {
                     min: (0.0, 0.0),
                     max: (computed_main, computed_cross),
@@ -308,7 +278,7 @@ where
 
                 children.push(child);
 
-                // TODO: Move this up to correct place
+                // TODO: Is this in the correct place?
                 // If the main_sum exceeds the parent width then add the node to the next flex line
                 if main_non_flex > computed_main {
                     flex_lines.push((children.clone(), stretch_nodes.clone(), main_non_flex, main_flex_sum, cross_non_flex));
@@ -323,86 +293,43 @@ where
 
             _ => {}
         }
+
+        match child_cross {
+            Stretch(_) => {
+                cross_flex = 1.0;
+            }
+
+            _=> {}
+        }
     }
 
-    // if cross_non_flex == 0.0 {
-    //     //println!("{:?} Also do this", node.key());
-    //     cross_flex_sum += 1.0;
-    // }
 
-    println!("{:?} cross flex sum {}", node.key(), cross_flex_sum);
+    // Increment the cross_flx_sum if there's a flex cross node on the last line
+    cross_flex_sum += cross_flex;
+    cross_sum += cross_non_flex;
 
+    // Finished iterating children so push the last line onto the stack
     flex_lines.push((children.clone(), stretch_nodes.clone(), main_non_flex, main_flex_sum, cross_non_flex));
 
-    //let space_per_line = (computed_cross / flex_lines.len() as f32);
     let mut free_cross_space = (computed_cross - cross_sum).max(0.0);
-    //println!("{:?} free cross space {} {} {}", node.key(), free_cross_space, computed_cross, cross_sum);
-    // let cross_px_per_flex = free_cross_space / flex_lines.len() as f32;
-    // let mut cross_remainder = 0.0;
-    // let mut num_of_rows = flex_lines.len();
-    let num_of_lines = flex_lines.len();
 
     let mut cross_used_space = 0.0;
     let num_of_flex_lines = flex_lines.len();
     // Compute flexible space/size
-    for (i, (children, axis, main_non_flex, main_flex_sum, cross_non_flex)) in flex_lines.iter_mut().enumerate() {
+    for (_, axis, main_non_flex, main_flex_sum, cross_non_flex) in flex_lines.iter_mut() {
         // Calculate free space for the current flex line
         let free_main_space = (computed_main - *main_non_flex).max(0.0);
-        
         let mut remainder: f32 = 0.0;
-    
-        let mut main_flex: f32 = 0.0;
         let main_px_per_flex = free_main_space / *main_flex_sum;
-        //println!("{:?} line {} free_cross_space {}", node.key(), i, free_cross_space);
-
-        //cross_non_flex = cross_non_flex.min(computed_cross / flex_lines.len() as f32);
-        // free_cross_space = (free_cross_space - cross_non_flex).max(0.0);
-
-        // let flex_line_cross_space = space_per_line.max(*cross_non_flex);
-
-        // If the cross_non_flex is 0 then this means that there are no nodes with non-stretch cross size
-        // In that case we distribute the stretch cross nodes on the remaining lines  
-
-        // let desired_cross = 1.0 * cross_px_per_flex + cross_remainder;
-        // let actual_cross = desired_cross.round();
-        // cross_remainder = desired_cross - actual_cross;
-
-        // let flex_line_cross_space = if num_of_flex_lines == (i + 1) {
-        //     // No wrapping so flex line cross is just the computed cross
-        //     //println!("A");
-        //     (computed_cross - cross_used_space).max(0.0)
-        // } else {
-        //     if *cross_non_flex == 0.0 {
-        //         // No non-stretch cross nodes so use distribution of free space
-        //         //println!("THIS: {}", cross_flex_sum.max(1.0));
-        //         //println!("B: {} {}", free_cross_space, cross_flex_sum.max(1.0));
-        //         free_cross_space / cross_flex_sum.max(1.0)
-        //     } else {
-        //         //println!("C");
-        //         *cross_non_flex
-        //     }
-        // };
-
-        // let flex_line_cross_space = if *cross_non_flex != 0.0 {
-        //     *cross_non_flex
-        // } else {
-        //     free_cross_space / num_of_rows as f32
-        // };
-        //println!("{:?} {} flex_line_cross_space {}", node.key(), i, flex_line_cross_space);
-
-        //*cross_non_flex = flex_line_cross_space;
 
         for item in axis.iter() {
             let factor = item.value;
             let desired_main = factor * main_px_per_flex + remainder;
             let actual_main = desired_main.round();
             remainder = desired_main - actual_main;
-
-            //println!("{:?} actual main {}", item.node.key(), actual_main);
             
             match item.axis {
                 Axis::MainBefore => {
-                    //println!("{:?} set before: {}", item.node.key(), actual_main);
                     cache.set_main_before(item.node.key(), actual_main);
                 }
 
@@ -423,57 +350,35 @@ where
                         println!("WARNING: Flex child in Auto parent");
                     }
 
-                    // The layout computation for stretch main (above) may cause content-size to change the cross-non-flex of the flex line.
-                    // This will mess up the free_cross_space calculation unless we split the child iter out :(
-                    //*cross_non_flex = cross_non_flex.max(child_size.cross);
-                    
                     // If the content-size produces a higher cross_non_flex than it was before then the free_cross_space needs to be adjusted
                     if child_size.cross > *cross_non_flex {
                         let diff = child_size.cross - *cross_non_flex;
                         free_cross_space -= diff;
                         *cross_non_flex = child_size.cross;
                     }
-
-
                 }
                 
                 _=> {}
             }
         }
-        
-        println!("{:?} {} cross size {}", node.key(), i, cross_non_flex);
-        // free_cross_space = (free_cross_space - *cross_non_flex).max(0.0);
-        // free_cross_space -= flex_line_cross_space;
-        // num_of_rows -= 1;
-        //*cross_non_flex = flex_line_cross_space;
-        //if num_of_flex_lines == (i + 1) {
-        //    cross_used_space += (computed_cross - cross_used_space).max(0.0);
-        //} else {
-            //cross_used_space += *cross_non_flex;
-        //}
     }
-
-    println!("{:?} free cross space: {}", node.key(), free_cross_space);    
-
+    
+    // The layout computation for stretch main (above) may cause content-size to change the cross-non-flex of the flex line.                    
+    // Which affects the free_cross_space, therefore the iteration on stretch cross size needs to be done after all the stretch main calculations.
     for (i, (children, _, _, _, cross_non_flex)) in flex_lines.iter_mut().enumerate() {
-        // Oh No... Calculating stretch main (above) may cause content-size to change the cross-non-flex of the flex line
+
         let flex_line_cross_space = if num_of_flex_lines == (i + 1) {
-            // No wrapping so flex line cross is just the computed cross
-            //println!("A");
+            // Last flex line so use the space left for the line height
             (computed_cross - cross_used_space).max(0.0)
         } else {
             if *cross_non_flex == 0.0 {
                 // No non-stretch cross nodes so use distribution of free space
-                //println!("THIS: {}", cross_flex_sum.max(1.0));
-                println!("B: {} {}", free_cross_space, cross_flex_sum.max(1.0));
                 free_cross_space / cross_flex_sum.max(1.0)
             } else {
-                //println!("C");
+                // There's a non-stretch node in the line so use its cross size
                 *cross_non_flex
             }
         };
-
-
 
         // Need to iterate on children with stretch cross space here because the flex line height needs to be calculated
         // first, which is done above.
@@ -484,8 +389,7 @@ where
                 Stretch(_) => {
                     // This is probably a bad idea but the thought is that stretch nodes on the cross axis
                     // can only be the full height of the flex line at this point. So instead of calling `layout`
-                    // again we just set the node height in cache directly.
-                    //println!("Set child {:?} to cross: {}", child.key(), flex_line_cross_space);
+                    // again we just set the node cross in cache directly.
                     match layout_type {
                         LayoutType::Row => {
                             cache.set_height(child.key(),  flex_line_cross_space);
@@ -506,112 +410,13 @@ where
         *cross_non_flex = flex_line_cross_space;
         cross_used_space += *cross_non_flex;
     }
-    
-
-
-
-    // let mut free_cross_space = computed_cross;
-    // // Compute flexible space/size
-    // for (i, (children, _, main_non_flex, main_flex_sum, cross_non_flex)) in flex_lines.iter().enumerate() {
-        
-    //     // Calculate free space for the current flex line
-    //     let free_main_space = (computed_main - main_non_flex).max(0.0);
-        
-    //     let mut remainder: f32 = 0.0;
-    
-    //     let mut main_flex: f32 = 0.0;
-    //     let main_px_per_flex = free_main_space / main_flex_sum;
-    //     println!("{:?} line {} free_cross_space {}", node.key(), i, free_cross_space);
-
-    //     //cross_non_flex = cross_non_flex.min(computed_cross / flex_lines.len() as f32);
-    //     //free_cross_space = (free_cross_space - cross_non_flex).max(0.0);
-
-    //     for child in children.iter() {
-
-    //         let child_main = child.main(store).unwrap_or(Stretch(1.0));
-
-    //         match child_main {
-    //             Stretch(factor) => {
-    //                 let factor = item.value;
-    //                 let desired_main = factor * main_px_per_flex + remainder;
-    //                 let actual_main = desired_main.round();
-    //                 remainder = desired_main - actual_main;
-
-    //             }
-
-    //             _=> {}
-    //         }
-
-
-    //         //println!("{:?} actual main {}", item.node.key(), actual_main);
-            
-    //         match item.axis {
-    //             Axis::MainBefore => {
-    //                 //println!("{:?} set before: {}", item.node.key(), actual_main);
-    //                 cache.set_main_before(item.node.key(), actual_main);
-    //             }
-
-    //             Axis::MainAfter => {
-    //                 cache.set_main_after(item.node.key(), actual_main);
-    //             }
-
-    //             Axis::Main => {
-    //                 let child_bc =
-    //                 BoxConstraints { min: (actual_main, free_cross_space), max: (actual_main, free_cross_space) };
-    
-    //                 let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
-        
-    //                 if child_size.main.is_finite() {
-    //                     main_sum += child_size.main;
-    //                     cross_max = cross_max.max(child_size.cross);
-    //                 } else {
-    //                     println!("WARNING: Flex child in Auto parent");
-    //                 }
-
-    //                 println!("{:?} cross size {}", item.node.key(), child_size.cross);
-    //             }
-
-    //             _=> {}
-    //         }
-    //     }
-
-    //     free_cross_space = (free_cross_space - cross_non_flex).max(0.0);
-
-    // }
-
-
-    // for child in node.children(tree) {
-    //     let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
-
-    //     match child_main {
-    //         Stretch(factor) => {
-    //             let desired_main = factor * main_px_per_flex + remainder;
-    //             let actual_main = desired_main.round();
-    //             remainder = desired_main - actual_main;
-
-    //             let child_bc =
-    //                 BoxConstraints { min: (actual_main, computed_cross), max: (actual_main, computed_cross) };
-
-    //             let child_size = layout(&child, layout_type, &child_bc, cache, tree, store);
-
-    //             if child_size.main.is_finite() {
-    //                 main_sum += child_size.main;
-    //                 cross_max = cross_max.max(child_size.cross);
-    //             } else {
-    //                 println!("WARNING: Flex child in Auto parent");
-    //             }
-    //         }
-
-    //         _ => {}
-    //     }
-    // }
 
     // Position children
     let parent_posx = cache.posx(node.key());
     let parent_posy = cache.posx(node.key());
 
     let mut cross_pos = 0.0;
-    for (i, (children, _, _, _, cross_size)) in flex_lines.iter().enumerate() {
+    for (children, _, _, _, cross_size) in flex_lines.iter() {
         let mut main_pos = 0.0;
         for child in children.iter() {
             let main_before = cache.main_before(child.key());
@@ -636,12 +441,8 @@ where
                 _=> {}
             }
         }
-        // TODO - add the height of the flex line
         cross_pos += cross_size;
-        //main_pos = 0.0; // I can't remember why this is here or what it does. Probably something to do with wrapping.
     }
-
-    //println!("node: {:?}  computed_main: {}  computed_cross: {}  main_sum: {}  cross_max: {}", node.key(), computed_main, computed_cross, main_sum, cross_max);
 
     // Constrain the computed size to the sum/max of the children.
     // This is also how content-size gets propagated up the tree.
