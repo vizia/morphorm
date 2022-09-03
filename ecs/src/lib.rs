@@ -9,4 +9,6 @@ pub mod tree;
 pub mod world;
 pub use world::World;
 
+pub use implementations::Rect;
+
 mod implementations;
