@@ -34,8 +34,14 @@ fn stretch_stretch_wrap() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 400.0, height: 300.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 0.0, posy: 300.0, width: 400.0, height: 300.0 }));
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 300.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 0.0, posy: 300.0, width: 400.0, height: 300.0 })
+    );
 
     world.set_layout_type(root, LayoutType::Column);
 
@@ -43,9 +49,14 @@ fn stretch_stretch_wrap() {
 
     layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 300.0, height: 400.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 300.0, posy: 0.0, width: 300.0, height: 400.0 }));
-
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 300.0, posy: 0.0, width: 300.0, height: 400.0 })
+    );
 }
 
 // # Parent
@@ -81,8 +92,14 @@ fn stretch_pixels_wrap() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 400.0, height: 400.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 0.0, posy: 400.0, width: 400.0, height: 200.0 }));
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 0.0, posy: 400.0, width: 400.0, height: 200.0 })
+    );
 
     world.set_layout_type(root, LayoutType::Column);
 
@@ -90,10 +107,15 @@ fn stretch_pixels_wrap() {
 
     layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 400.0, height: 400.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 400.0, posy: 0.0, width: 200.0, height: 400.0 }));
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 400.0, posy: 0.0, width: 200.0, height: 400.0 })
+    );
 }
-
 
 // # Parent
 // root: pixels(600.0) main, pixels(600.0) cross
@@ -128,8 +150,14 @@ fn pixels_stretch_wrap() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 400.0, height: 200.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 0.0, posy: 200.0, width: 400.0, height: 400.0 }));
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 200.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 0.0, posy: 200.0, width: 400.0, height: 400.0 })
+    );
 
     world.set_layout_type(root, LayoutType::Column);
 
@@ -137,6 +165,12 @@ fn pixels_stretch_wrap() {
 
     layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect{ posx: 0.0, posy: 0.0, width: 200.0, height: 400.0 }));
-    assert_eq!(world.cache.bounds(node2), Some(&Rect{ posx: 200.0, posy: 0.0, width: 400.0, height: 400.0 }));
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 200.0, posy: 0.0, width: 400.0, height: 400.0 })
+    );
 }

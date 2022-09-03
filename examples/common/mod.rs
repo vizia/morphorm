@@ -59,7 +59,8 @@ pub fn render(mut world: World, root: Entity) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
+                    let layout_type =
+                        world.store.layout_type.get(&root).cloned().unwrap_or_default();
                     let mut root_bc = BoxConstraints::default();
                     match layout_type {
                         LayoutType::Row => {
@@ -70,9 +71,8 @@ pub fn render(mut world: World, root: Entity) {
                                 min: (physical_size.width as f32, physical_size.height as f32),
                                 max: (physical_size.width as f32, physical_size.height as f32),
                             };
-        
                         }
-                        
+
                         LayoutType::Column => {
                             world.set_main(root, Units::Pixels(physical_size.height as f32));
                             world.set_cross(root, Units::Pixels(physical_size.width as f32));
@@ -82,12 +82,18 @@ pub fn render(mut world: World, root: Entity) {
                                 max: (physical_size.height as f32, physical_size.width as f32),
                             };
                         }
-                        
-                        _=> {}
-                    }
-                    
-                    layout(&root, layout_type, &root_bc, &mut world.cache, &world.tree, &world.store);
 
+                        _ => {}
+                    }
+
+                    layout(
+                        &root,
+                        layout_type,
+                        &root_bc,
+                        &mut world.cache,
+                        &world.tree,
+                        &world.store,
+                    );
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -153,7 +159,7 @@ pub fn render(mut world: World, root: Entity) {
                 //     );
 
                 //     global_posx += posx;
-                //     global_posy += posy; 
+                //     global_posy += posy;
                 // }
 
                 canvas.flush();
@@ -165,7 +171,14 @@ pub fn render(mut world: World, root: Entity) {
     });
 }
 
-fn draw_node<'a, N: Node<'a, Tree = Tree, CacheKey = Entity>>(node: &N, world: &'a World, parent_posx: f32, parent_posy: f32, font: FontId, canvas: &mut Canvas<OpenGl>) {
+fn draw_node<'a, N: Node<'a, Tree = Tree, CacheKey = Entity>>(
+    node: &N,
+    world: &'a World,
+    parent_posx: f32,
+    parent_posy: f32,
+    font: FontId,
+    canvas: &mut Canvas<OpenGl>,
+) {
     let posx = world.cache.posx(node.key());
     let posy = world.cache.posy(node.key());
     let width = world.cache.width(node.key());
