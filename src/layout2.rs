@@ -69,6 +69,12 @@ where
     // See draw_node() in 'examples/common/mod.rs'.
 
     // FIXME: The main_sum and cross_sum values don't take into account the flex lines.
+    // TODO: Percentage size for non-flex children
+    // TODO: Finish main_before, add main_after, cross_before, cross_after
+    // TODO: Add parent space overrides
+    // TODO: Absolute positioning
+    // TODO: Min/Max constraints for space and size
+    // TODO: ADD TESTS FOR EVERYTHING!
 
     let layout_type = node.layout_type(store).unwrap_or_default();
 
