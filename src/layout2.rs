@@ -181,6 +181,7 @@ where
     for child in node.children(tree) {
         let child_main_before = child.main_before(store).unwrap_or(Units::Auto);
         let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
+        let child_main_after = child.main_after(store).unwrap_or(Units::Auto);
 
         match child_main_before {
             Pixels(val) => {
@@ -212,7 +213,35 @@ where
             _ => {}
         }
 
-        let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
+        match child_main_after {
+            Pixels(val) => {
+                main_sum += val;
+                main_non_flex += val;
+                cache.set_main_after(child.key(), val);
+            }
+
+            Percentage(val) => {
+                let computed_main_after = (computed_main * (val / 100.0)).round();
+                main_non_flex += computed_main_after;
+                cache.set_main_after(child.key(), computed_main_after);
+            }
+
+            Stretch(factor) => {
+                main_flex_sum += factor;
+
+                // Add node to list of stretch nodes for the line
+                stretch_nodes.push(StretchNode {
+                    node: child,
+                    value: factor,
+                    min: 0.0,
+                    max: std::f32::INFINITY,
+                    axis: Axis::MainAfter,
+                    p: PhantomData::default(),
+                });
+            }
+
+            _ => {}
+        }
 
         match child_main {
             Pixels(val) => {
@@ -343,6 +372,8 @@ where
 
             _ => {}
         }
+
+        let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
 
         match child_cross {
             Stretch(_) => {
@@ -476,6 +507,7 @@ where
         let mut main_pos = 0.0;
         for child in children.iter() {
             let main_before = cache.main_before(child.key());
+            let main_after = cache.main_after(child.key());
 
             main_pos += main_before;
 
@@ -496,6 +528,8 @@ where
 
                 _ => {}
             }
+
+            main_pos += main_after;
         }
         cross_pos += cross_size;
     }
