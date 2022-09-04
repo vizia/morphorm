@@ -1,3 +1,7 @@
+// FIXME:
+
+fn main() {}
+/*
 use femtovg::FontId;
 use glutin::event::VirtualKeyCode;
 use winit::event::{Event, WindowEvent};
@@ -279,3 +283,4 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
         draw_node(child, cache, canvas, font);
     }
 }
+*/

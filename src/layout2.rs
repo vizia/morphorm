@@ -189,6 +189,12 @@ where
                 cache.set_main_before(child.key(), val);
             }
 
+            Percentage(val) => {
+                let computed_main_before = (computed_main * (val / 100.0)).round();
+                main_non_flex += computed_main_before;
+                cache.set_main_before(child.key(), computed_main_before);
+            }
+
             Stretch(factor) => {
                 main_flex_sum += factor;
 
@@ -234,7 +240,47 @@ where
                 }
 
                 // Compute child box constraints
-                let child_bc = BoxConstraints { min: (0.0, 0.0), max: (val, 0.0) };
+                let child_bc = BoxConstraints { min: (0.0, 0.0), max: (computed_main, 0.0) };
+
+                let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
+
+                main_sum += child_size.main;
+                cross_max = cross_max.max(child_size.cross);
+                main_non_flex += child_size.main;
+                cross_non_flex = cross_non_flex.max(child_size.cross);
+
+                children.push(child);
+            }
+
+            Percentage(v) => {
+                let val = (computed_main * (v / 100.0)).round();
+                println!("{:?} computed_main: {}  val: {}", node.key(), computed_main, val);
+
+                // If the main_sum exceeds the parent width then add the node to the next flex line
+                if main_non_flex + val > computed_main && !children.is_empty() {
+                    flex_lines.push((
+                        children.clone(),
+                        stretch_nodes.clone(),
+                        main_non_flex,
+                        main_flex_sum,
+                        cross_non_flex,
+                    ));
+                    children.clear();
+                    stretch_nodes.clear();
+
+                    cross_sum += cross_non_flex;
+                    cross_flex_sum += cross_flex;
+
+                    // Reset cross flex for next line
+                    cross_flex = 0.0;
+
+                    main_non_flex = 0.0;
+                    cross_non_flex = 0.0;
+                    main_flex_sum = 0.0;
+                }
+
+                // Compute child box constraints
+                let child_bc = BoxConstraints { min: (0.0, 0.0), max: (computed_main, 0.0) };
 
                 let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
 
