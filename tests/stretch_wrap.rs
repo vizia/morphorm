@@ -174,3 +174,73 @@ fn pixels_stretch_wrap() {
         Some(&Rect { posx: 200.0, posy: 0.0, width: 400.0, height: 400.0 })
     );
 }
+
+
+#[test]
+fn pixels_stretch_alternating_wrap() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_main(root, Units::Pixels(300.0));
+    world.set_cross(root, Units::Pixels(300.0));
+
+    let node1 = world.add(Some(root));
+    world.set_main(node1, Units::Pixels(400.0));
+    world.set_cross(node1, Units::Pixels(100.0));
+
+    let node2 = world.add(Some(root));
+    world.set_main(node2, Units::Pixels(400.0));
+    world.set_cross(node2, Units::Stretch(1.0));
+
+    let node3 = world.add(Some(root));
+    world.set_main(node3, Units::Pixels(400.0));
+    world.set_cross(node3, Units::Pixels(100.0));
+
+    let node4 = world.add(Some(root));
+    world.set_main(node4, Units::Pixels(400.0));
+    world.set_cross(node4, Units::Stretch(1.0));
+
+    let root_bc = BoxConstraints { min: (300.0, 300.0), max: (300.0, 300.0) };
+
+    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 0.0, posy: 100.0, width: 400.0, height: 50.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node3),
+        Some(&Rect { posx: 0.0, posy: 150.0, width: 400.0, height: 100.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node4),
+        Some(&Rect { posx: 0.0, posy: 250.0, width: 400.0, height: 50.0 })
+    );
+
+    world.set_layout_type(root, LayoutType::Column);
+
+    let root_bc = BoxConstraints { min: (300.0, 300.0), max: (300.0, 300.0) };
+
+    layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
+
+    assert_eq!(
+        world.cache.bounds(node1),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node2),
+        Some(&Rect { posx: 100.0, posy: 0.0, width: 50.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node3),
+        Some(&Rect { posx: 150.0, posy: 0.0, width: 100.0, height: 400.0 })
+    );
+    assert_eq!(
+        world.cache.bounds(node4),
+        Some(&Rect { posx: 250.0, posy: 0.0, width: 50.0, height: 400.0 })
+    );
+}

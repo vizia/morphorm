@@ -46,6 +46,14 @@ impl<'t> Node<'t> for Entity {
         store.main_after.get(self).cloned()
     }
 
+    fn cross_before(&self, store: &Self::Store) -> Option<Units> {
+        store.cross_before.get(self).cloned()
+    }
+
+    fn cross_after(&self, store: &Self::Store) -> Option<Units> {
+        store.cross_after.get(self).cloned()
+    }
+
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
         if let Some(t) = store.content_size.get(self) {
             Some((t)(cross_size))
