@@ -24,6 +24,10 @@ where
 
     fn main_after(&self, store: &Self::Store) -> Option<Units>;
 
+    fn cross_before(&self, store: &Self::Store) -> Option<Units>;
+
+    fn cross_after(&self, store: &Self::Store) -> Option<Units>;
+
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32>;
 
     // fn first_child<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
