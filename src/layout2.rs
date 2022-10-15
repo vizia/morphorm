@@ -492,7 +492,7 @@ where
 
             let free_cross_space = flex_line_cross_space - child_cross_non_flex;
             let mut remainder: f32 = 0.0;
-            let cross_px_per_flex = free_cross_space / (*child_cross_flex_sum).max(1.0);
+            let cross_px_per_flex = free_cross_space / *child_cross_flex_sum;
 
             let child_cross_before = child.cross_before(store).unwrap_or(Auto);
 
