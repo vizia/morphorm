@@ -1,7 +1,6 @@
 use morphorm::*;
 use morphorm_ecs::*;
 
-/*
 #[test]
 fn percentage_main_percentage_cross() {
     let mut world = World::default();
@@ -44,4 +43,3 @@ fn percentage_main_percentage_cross() {
         Some(&Rect { posx: 0.0, posy: 0.0, width: 50.0, height: 100.0 })
     );
 }
-*/
