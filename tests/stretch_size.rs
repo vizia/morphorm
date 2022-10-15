@@ -1,7 +1,3 @@
-use std::alloc::Layout;
-use std::ops::Add;
-
-use morphorm::Cache;
 use morphorm::*;
 use morphorm_ecs::*;
 
@@ -21,27 +17,29 @@ fn stretch_main_stretch_cross() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.width(root), 200.0);
-    assert_eq!(world.cache.height(root), 200.0);
-    assert_eq!(world.cache.posx(root), 0.0);
-    assert_eq!(world.cache.posy(root), 0.0);
-    assert_eq!(world.cache.width(node), 200.0);
-    assert_eq!(world.cache.height(node), 200.0);
-    assert_eq!(world.cache.posx(node), 0.0);
-    assert_eq!(world.cache.posy(node), 0.0);
+    assert_eq!(
+        world.cache.bounds(root),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
+    );
 
-    world.set_layout_type(root, LayoutType::Column);
+    assert_eq!(
+        world.cache.bounds(node),
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
+    );
 
-    let root_bc = BoxConstraints { min: (200.0, 200.0), max: (200.0, 200.0) };
+    // world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+    // let root_bc = BoxConstraints { min: (200.0, 200.0), max: (200.0, 200.0) };
 
-    assert_eq!(world.cache.width(root), 200.0);
-    assert_eq!(world.cache.height(root), 200.0);
-    assert_eq!(world.cache.posx(root), 0.0);
-    assert_eq!(world.cache.posy(root), 0.0);
-    assert_eq!(world.cache.width(node), 200.0);
-    assert_eq!(world.cache.height(node), 200.0);
-    assert_eq!(world.cache.posx(node), 0.0);
-    assert_eq!(world.cache.posy(node), 0.0);
+    // layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+
+    // assert_eq!(
+    //     world.cache.bounds(root),
+    //     Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
+    // );
+
+    // assert_eq!(
+    //     world.cache.bounds(node),
+    //     Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
+    // );
 }

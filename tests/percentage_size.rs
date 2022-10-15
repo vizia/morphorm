@@ -1,8 +1,9 @@
 use morphorm::*;
 use morphorm_ecs::*;
 
+/*
 #[test]
-fn pixels_main_pixels_cross() {
+fn percentage_main_percentage_cross() {
     let mut world = World::default();
 
     let root = world.add(None);
@@ -10,8 +11,8 @@ fn pixels_main_pixels_cross() {
     world.set_cross(root, Units::Pixels(200.0));
 
     let node = world.add(Some(root));
-    world.set_main(node, Units::Pixels(100.0));
-    world.set_cross(node, Units::Pixels(150.0));
+    world.set_main(node, Units::Percentage(50.0));
+    world.set_cross(node, Units::Percentage(25.0));
 
     let root_bc = BoxConstraints { min: (200.0, 200.0), max: (200.0, 200.0) };
 
@@ -24,7 +25,7 @@ fn pixels_main_pixels_cross() {
 
     assert_eq!(
         world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 })
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 50.0 })
     );
 
     world.set_layout_type(root, LayoutType::Column);
@@ -40,6 +41,7 @@ fn pixels_main_pixels_cross() {
 
     assert_eq!(
         world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 150.0, height: 100.0 })
+        Some(&Rect { posx: 0.0, posy: 0.0, width: 50.0, height: 100.0 })
     );
 }
+*/
