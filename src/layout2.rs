@@ -67,9 +67,6 @@ where
     // Unclear whether morphorm should provide that or whether the user should do that. At the moment it's on the user.
     // See draw_node() in 'examples/common/mod.rs'.
 
-    // FIXME: The main_sum and cross_sum values don't take into account the flex lines.
-    // TODO: Percentage size for non-flex children
-    // TODO: Finish main_before, add main_after, cross_before, cross_after
     // TODO: Add parent space overrides
     // TODO: Absolute positioning
     // TODO: Min/Max constraints for space and size
@@ -378,24 +375,24 @@ where
         main_max = main_max.max(main_non_flex);
         
         
-        children.push((child, child_cross_flex_sum, child_cross_sum));
-
+        
         cache.set_main_before(child.key(), computed_child_main_before);
         cache.set_main_after(child.key(), computed_child_main_after);
         cache.set_cross_before(child.key(), computed_child_cross_before);
         cache.set_cross_after(child.key(), computed_child_cross_after);
-
-        // This needs to go here (after computing if the line should wrap) because the line wrapping resets the cross_flex value.
         
-
+        // This needs to go here (after computing if the line should wrap) because the line wrapping resets the cross_flex value.
         match child_cross {
             Stretch(factor) => {
                 cross_flex = 1.0;
                 child_cross_flex_sum += factor;
             }
-
+            
             _ => {}
         }
+        
+        children.push((child, child_cross_flex_sum, child_cross_sum));
+
     }
 
     // Increment the cross_flex_sum if there's a flex cross node on the last line
