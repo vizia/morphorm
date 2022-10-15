@@ -134,7 +134,8 @@ fn auto_cross_pixels_child_wrap() {
     );
 
     world.set_layout_type(root, LayoutType::Column);
-
+    world.set_layout_type(node1, LayoutType::Column);
+    
     layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(
