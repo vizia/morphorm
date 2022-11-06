@@ -1,6 +1,6 @@
 use morphorm::{Units, LayoutType, PositionType};
 
-use crate::entity::{Entity, EntityManager, self};
+use crate::entity::{Entity, EntityManager};
 use crate::implementations::NodeCache;
 use crate::store::Store;
 use crate::tree::Tree;
@@ -78,6 +78,22 @@ impl World {
         self.store.child_main_before.insert(entity, value);
         self.store.child_main_after.insert(entity, value);
         self.store.child_cross_before.insert(entity, value);
+        self.store.child_cross_after.insert(entity, value);
+    }
+
+    pub fn set_child_main_before(&mut self, entity: Entity, value: Units) {
+        self.store.child_main_before.insert(entity, value);
+    }
+
+    pub fn set_child_main_after(&mut self, entity: Entity, value: Units) {
+        self.store.child_main_after.insert(entity, value);
+    }
+
+    pub fn set_child_cross_before(&mut self, entity: Entity, value: Units) {
+        self.store.child_cross_before.insert(entity, value);
+    }
+
+    pub fn set_child_cross_after(&mut self, entity: Entity, value: Units) {
         self.store.child_cross_after.insert(entity, value);
     }
 

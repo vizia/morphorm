@@ -27,31 +27,35 @@ impl<'t> Node<'t> for Entity {
     }
 
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType> {
-        store.layout_type.get(self).cloned()
+        store.layout_type.get(self).copied()
+    }
+
+    fn position_type(&self, store: &Self::Store) -> Option<PositionType> {
+        store.position_type.get(self).copied()
     }
 
     fn main(&self, store: &Self::Store) -> Option<Units> {
-        store.main.get(self).cloned()
+        store.main.get(self).copied()
     }
 
     fn cross(&self, store: &Self::Store) -> Option<Units> {
-        store.cross.get(self).cloned()
+        store.cross.get(self).copied()
     }
 
     fn main_before(&self, store: &Self::Store) -> Option<Units> {
-        store.main_before.get(self).cloned()
+        store.main_before.get(self).copied()
     }
 
     fn main_after(&self, store: &Self::Store) -> Option<Units> {
-        store.main_after.get(self).cloned()
+        store.main_after.get(self).copied()
     }
 
     fn cross_before(&self, store: &Self::Store) -> Option<Units> {
-        store.cross_before.get(self).cloned()
+        store.cross_before.get(self).copied()
     }
 
     fn cross_after(&self, store: &Self::Store) -> Option<Units> {
-        store.cross_after.get(self).cloned()
+        store.cross_after.get(self).copied()
     }
 
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
@@ -60,6 +64,22 @@ impl<'t> Node<'t> for Entity {
         } else {
             None
         }
+    }
+
+    fn child_main_before(&self, store: &Self::Store) -> Option<Units> {
+        store.child_main_before.get(self).copied()
+    }
+
+    fn child_main_after(&self, store: &Self::Store) -> Option<Units> {
+        store.child_main_after.get(self).copied()
+    }
+
+    fn child_cross_before(&self, store: &Self::Store) -> Option<Units> {
+        store.child_cross_before.get(self).copied()
+    }
+
+    fn child_cross_after(&self, store: &Self::Store) -> Option<Units> {
+        store.child_cross_after.get(self).copied()
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{LayoutType, Units};
+use crate::{LayoutType, Units, PositionType};
 
 pub trait Node<'t>: Sized + Clone
 where
@@ -12,12 +12,18 @@ where
 
     fn key(&self) -> Self::CacheKey;
 
+    /// Returns an iterator over the children of a node.
     fn children(&self, tree: &'t Self::Tree) -> Self::ChildIter;
 
+    /// Returns the layout type of a node.
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType>;
 
+    fn position_type(&self, store: &Self::Store) -> Option<PositionType>;
+
+    /// Returns the size of the node on the main axis, as determined by the parent's layout type.
     fn main(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns the size of the node on the cross axis, as determined by the parent's layout type.
     fn cross(&self, store: &Self::Store) -> Option<Units>;
 
     fn main_before(&self, store: &Self::Store) -> Option<Units>;
@@ -30,8 +36,8 @@ where
 
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32>;
 
-    // fn first_child<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
-
-    // fn next_sibling<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
-    // fn prev_sibling<N: Node>(&self, store: &Self::Store, tree: &Self::Tree) -> Option<N>;
+    fn child_main_before(&self, store: &Self::Store) -> Option<Units>;
+    fn child_main_after(&self, store: &Self::Store) -> Option<Units>;
+    fn child_cross_before(&self, store: &Self::Store) -> Option<Units>;
+    fn child_cross_after(&self, store: &Self::Store) -> Option<Units>;
 }
