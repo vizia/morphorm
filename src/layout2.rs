@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use smallvec::SmallVec;
 
-use crate::Units::*;
+use crate::{Units::*, PositionType};
 use crate::{Cache, LayoutType, Node, Units};
 
 #[derive(Debug, Copy, Clone)]
@@ -70,6 +70,7 @@ where
     // TODO: Add parent space overrides
     // TODO: Absolute positioning
     // TODO: Min/Max constraints for space and size
+    // TODO: Grid layout
     // TODO: ADD TESTS FOR EVERYTHING!
 
     let layout_type = node.layout_type(store).unwrap_or_default();
@@ -183,10 +184,21 @@ where
 
     let mut has_children = false;
 
+    let node_child_main_before = node.child_main_before(store).unwrap_or(Units::Auto);
+    let node_child_main_after = node.child_main_after(store).unwrap_or(Units::Auto);
+    let node_child_cross_before = node.child_cross_before(store).unwrap_or(Units::Auto);
+    let node_child_cross_after = node.child_cross_after(store).unwrap_or(Units::Auto);
+
+    // Because self-directed children are ignored by child_space, the first and last child need to be determined first
+    let mut iter = node.children(tree).enumerate().filter(|(_, child)| child.position_type(store).unwrap_or_default() != PositionType::SelfDirected);
+    let (first, last) = (iter.next().map(|(index, _)| index), iter.last().map(|(index, _)| index));
+
     // Compute non-flexible children
-    for child in node.children(tree) {
+    for (index, child) in node.children(tree).enumerate() {
         
         has_children = true;
+
+        let child_position_type = child.position_type(store).unwrap_or(PositionType::ParentDirected);
 
         // Sum of flex factors for stretch cross_before, cross, and cross_after
         let mut child_cross_flex_sum = 0.0;
@@ -194,10 +206,36 @@ where
         // Sum of non-flex cross_before, cross, and cross_after
         let mut child_cross_non_flex = 0.0;
 
-        let child_main_before = child.main_before(store).unwrap_or(Units::Auto);
+        let mut child_main_before = child.main_before(store).unwrap_or(Units::Auto);
         let child_main = child.main(store).unwrap_or(Units::Stretch(1.0));
-        let child_main_after = child.main_after(store).unwrap_or(Units::Auto);
+        let mut child_main_after = child.main_after(store).unwrap_or(Units::Auto);
 
+        let mut child_cross_before = child.cross_before(store).unwrap_or(Units::Auto);
+        let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
+        let mut child_cross_after = child.cross_after(store).unwrap_or(Units::Auto);
+
+        if child_main_before == Units::Auto {
+            if children.is_empty() && child_position_type != PositionType::SelfDirected {
+                child_main_before = node_child_main_before;
+            }
+        }
+
+        if child_main_after == Units::Auto {
+            if last == Some(index) {
+                child_main_after = node_child_main_after;
+            }
+        }
+
+        // TODO: This needs to account for flex lines somehow
+        if child_cross_before == Units::Auto {
+            child_cross_before = node_child_cross_before;
+        }
+
+        if child_cross_after == Units::Auto {
+            child_cross_after = node_child_cross_after;
+        }
+        
+        
         let mut computed_child_main_before = 0.0;
         let mut computed_child_main = 0.0;
         let mut computed_child_main_after = 0.0;
@@ -206,9 +244,6 @@ where
         let mut computed_child_cross = 0.0;
         let mut computed_child_cross_after = 0.0;
 
-        let child_cross_before = child.cross_before(store).unwrap_or(Units::Auto);
-        let child_cross = child.cross(store).unwrap_or(Units::Stretch(1.0));
-        let child_cross_after = child.cross_after(store).unwrap_or(Units::Auto);
 
         match child_cross_before {
             Pixels(val) => {
