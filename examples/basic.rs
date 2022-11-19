@@ -20,12 +20,12 @@ fn main() {
         world.set_cross(node1, Units::Stretch(1.0));
     
         let node2 = world.add(Some(root));
-        world.set_main(node2, Units::Pixels(200.0));
+        world.set_main(node2, Units::Pixels(400.0));
         world.set_cross(node2, Units::Stretch(1.0));
     
-        let node3 = world.add(Some(root));
-        world.set_main(node3, Units::Pixels(200.0));
-        world.set_cross(node3, Units::Stretch(1.0));
+        // let node3 = world.add(Some(root));
+        // world.set_main(node3, Units::Pixels(200.0));
+        // world.set_cross(node3, Units::Stretch(1.0));
     
         let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
     

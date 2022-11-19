@@ -400,6 +400,16 @@ where
             main_non_flex = 0.0;
             cross_non_flex = 0.0;
             main_flex_sum = 0.0;
+
+            // Child has wrapped to next line so it's now the first on its line
+            // Problem:
+            //  - main_before + main + main_after is used to determine if a node should wrap
+            //  - A wrapping node may become the first on its line, which can affect the value of main_before
+            //    if it's auto.
+            // Solution:
+            //  - If main_before is auto, then only the main (+ main_after) can affect whether it wraps
+            //  - So compute main, determine wrap, then compute main_before (if main_before is auto)
+            //  - Else compute main + main_before and then determine wrap      
             
         }
         
