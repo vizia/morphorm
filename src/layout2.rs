@@ -32,7 +32,7 @@ enum Axis {
 }
 
 #[derive(Copy, Clone)]
-pub struct StretchNode<'a, 'b, N: Node<'b>> {
+pub struct StretchNode<'a, N: Node> {
     node: &'a N,
 
     index: usize,
@@ -41,11 +41,10 @@ pub struct StretchNode<'a, 'b, N: Node<'b>> {
     min: f32,
     max: f32,
     axis: Axis,
-    p: PhantomData<&'b N>,
 }
 
 #[derive(Copy, Clone)]
-pub struct ChildNode<'a, 'b, N: Node<'b>> {
+pub struct ChildNode<'a, N: Node> {
     node: &'a N,
 
     // Sum of the flex factors on the main axis of the node.
@@ -74,21 +73,19 @@ pub struct ChildNode<'a, 'b, N: Node<'b>> {
     cross_before: f32,
     // Computed cross-after space of the node.
     cross_after: f32,
-
-    p: PhantomData<&'b N>,
 }
 
 // Perform layout on a node
-pub fn layout<'a, N, C>(
+pub fn layout<N, C>(
     node: &N,
     parent_layout_type: LayoutType,
     bc: &BoxConstraints,
     cache: &mut C,
-    tree: &'a <N as Node<'a>>::Tree,
-    store: &'a <N as Node<'a>>::Store,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
 ) -> Size
 where
-    N: Node<'a>,
+    N: Node,
     C: Cache<Node = N::CacheKey>,
 {
     // TODO: Investigate whether a box constraints struct is needed. So far only the parent main/cross is needed,
@@ -394,7 +391,6 @@ where
                     min: 0.0,
                     max: std::f32::INFINITY,
                     axis: Axis::MainBefore,
-                    p: PhantomData::default(),
                 });
             }
 
@@ -421,7 +417,6 @@ where
                     min: 0.0,
                     max: std::f32::INFINITY,
                     axis: Axis::MainAfter,
-                    p: PhantomData::default(),
                 });
             }
 
@@ -467,7 +462,6 @@ where
                     min: 0.0,
                     max: std::f32::INFINITY,
                     axis: Axis::Main,
-                    p: PhantomData::default(),
                 });
             }
 
@@ -515,7 +509,6 @@ where
             main_after: computed_child_main_after,
             cross_before: computed_child_cross_before,
             cross_after: computed_child_cross_after,
-            p: PhantomData,
         });
     }
 
