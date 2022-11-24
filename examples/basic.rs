@@ -18,7 +18,7 @@ fn main() {
     let a = world.add(Some(root));
     world.set_main(a, Units::Stretch(1.0));
     world.set_cross(a, Units::Stretch(1.0));
-    // world.set_child_space(a, Units::Pixels(50.0));
+    world.set_child_space(a, Units::Pixels(30.0));
     // world.set_content_size(a, |main| main);
     world.set_layout_type(a, LayoutType::Column);
     // world.set_position_type(a, PositionType::SelfDirected);
@@ -35,9 +35,10 @@ fn main() {
 
     let node2 = world.add(Some(a));
     world.set_main(node2, Units::Stretch(1.0));
-    world.set_cross(node2, Units::Stretch(1.0));
+    world.set_cross(node2, Units::Pixels(200.0));
     // world.set_position_type(node2, PositionType::SelfDirected);
-    // world.set_main_before(node2, Units::Pixels(450.0));
+    world.set_cross_before(node2, Units::Stretch(1.0));
+    world.set_cross_after(node2, Units::Stretch(1.0));
 
     let node3 = world.add(Some(a));
     world.set_main(node3, Units::Stretch(1.0));
