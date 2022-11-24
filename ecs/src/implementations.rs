@@ -7,10 +7,10 @@ use crate::entity::Entity;
 use crate::store::Store;
 use crate::tree::{ChildIterator, Tree};
 
-impl<'t> Node<'t> for Entity {
+impl Node for Entity {
     type Store = Store;
     type Tree = Tree;
-    type ChildIter = ChildIterator<'t>;
+    type ChildIter<'t> = ChildIterator<'t>;
 
     type CacheKey = Entity;
 
@@ -18,7 +18,7 @@ impl<'t> Node<'t> for Entity {
         *self
     }
 
-    fn children(&self, tree: &'t Self::Tree) -> Self::ChildIter {
+    fn children<'t>(&self, tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         let current_node = tree.get_first_child(self);
         ChildIterator {
             tree,

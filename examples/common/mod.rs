@@ -171,9 +171,9 @@ pub fn render(mut world: World, root: Entity) {
     });
 }
 
-fn draw_node<'a, N: Node<'a, Tree = Tree, CacheKey = Entity>>(
+fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
     node: &N,
-    world: &'a World,
+    world: &World,
     parent_posx: f32,
     parent_posy: f32,
     font: FontId,
