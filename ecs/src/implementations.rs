@@ -161,14 +161,6 @@ pub struct Rect {
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub struct Space {
-    pub main_before: f32,
-    pub main_after: f32,
-    pub cross_before: f32,
-    pub cross_after: f32,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
 pub struct Size {
     pub width: f32,
     pub height: f32,
@@ -178,15 +170,11 @@ pub struct Size {
 pub struct NodeCache {
     // Computed Outputs
     pub rect: HashMap<Entity, Rect>,
-
-    // Intermediate Values
-    space: HashMap<Entity, Space>,
 }
 
 impl NodeCache {
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
-        self.space.insert(entity, Default::default());
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
@@ -229,38 +217,6 @@ impl Cache for NodeCache {
         0.0
     }
 
-    fn main_before(&self, node: Self::Node) -> f32 {
-        if let Some(space) = self.space.get(&node) {
-            return space.main_before
-        }
-
-        0.0
-    }
-
-    fn main_after(&self, node: Self::Node) -> f32 {
-        if let Some(space) = self.space.get(&node) {
-            return space.main_after
-        }
-
-        0.0
-    }
-
-    fn cross_before(&self, node: Self::Node) -> f32 {
-        if let Some(space) = self.space.get(&node) {
-            return space.cross_before
-        }
-
-        0.0
-    }
-
-    fn cross_after(&self, node: Self::Node) -> f32 {
-        if let Some(space) = self.space.get(&node) {
-            return space.cross_after
-        }
-
-        0.0
-    }
-
     fn set_width(&mut self, node: Self::Node, width: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.width = width;
@@ -284,30 +240,4 @@ impl Cache for NodeCache {
             rect.posy = posy;
         }
     }
-
-    fn set_main_before(&mut self, node: Self::Node, value: f32) {
-        if let Some(space) = self.space.get_mut(&node) {
-            space.main_before = value;
-        }
-    }
-
-    fn set_main_after(&mut self, node: Self::Node, value: f32) {
-        if let Some(space) = self.space.get_mut(&node) {
-            space.main_after = value;
-        }
-    }
-
-    fn set_cross_before(&mut self, node: Self::Node, value: f32) {
-        if let Some(space) = self.space.get_mut(&node) {
-            space.cross_before = value;
-        }
-    }
-
-    fn set_cross_after(&mut self, node: Self::Node, value: f32) {
-        if let Some(space) = self.space.get_mut(&node) {
-            space.cross_after = value;
-        }
-    }
-
-    
 }

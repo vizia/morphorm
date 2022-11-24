@@ -1,4 +1,4 @@
-use crate::{LayoutType, Units, PositionType};
+use crate::{LayoutType, PositionType, Units};
 
 pub trait Node<'t>: Sized + Clone
 where
