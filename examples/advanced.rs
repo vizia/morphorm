@@ -1,7 +1,3 @@
-// FIXME:
-
-fn main() {}
-/*
 use femtovg::FontId;
 use glutin::event::VirtualKeyCode;
 use winit::event::{Event, WindowEvent};
@@ -23,7 +19,7 @@ use femtovg::{
 
 use std::collections::HashMap;
 
-use morphorm::{layout, Cache, LayoutType, Node, Units, Units::*};
+use morphorm::{layout, BoxConstraints, Cache, LayoutType, Node, PositionType, Units, Units::*};
 
 #[derive(Default, Clone)]
 pub struct Widget {
@@ -34,7 +30,12 @@ pub struct Widget {
     main_after: Units,
     cross_before: Units,
     cross_after: Units,
+    child_main_before: Units,
+    child_main_after: Units,
+    child_cross_before: Units,
+    child_cross_after: Units,
     layout_type: LayoutType,
+    position_type: PositionType,
     color: femtovg::Color,
     id: u32,
 }
@@ -59,13 +60,13 @@ impl Widget {
     }
 }
 
-impl<'t> Node<'t> for &'t Widget {
+impl Node for Widget {
     type Store = ();
     type Tree = ();
-    type ChildIter = std::slice::Iter<'t, Widget>;
+    type ChildIter<'t> = std::slice::Iter<'t, Widget>;
     type CacheKey = u32;
 
-    fn children(&self, tree: &'t Self::Tree) -> Self::ChildIter {
+    fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         self.child.iter()
     }
 
@@ -77,12 +78,52 @@ impl<'t> Node<'t> for &'t Widget {
         Some(self.main)
     }
 
-    fn height(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.height)
+    fn cross(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.cross)
     }
 
     fn layout_type(&self, store: &Self::Store) -> Option<morphorm::LayoutType> {
         Some(self.layout_type)
+    }
+
+    fn position_type(&self, store: &Self::Store) -> Option<morphorm::PositionType> {
+        Some(self.position_type)
+    }
+
+    fn main_before(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.main_before)
+    }
+
+    fn main_after(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.main_after)
+    }
+
+    fn cross_before(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.cross_before)
+    }
+
+    fn cross_after(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.cross_after)
+    }
+
+    fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
+        None
+    }
+
+    fn child_main_before(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.child_main_before)
+    }
+
+    fn child_main_after(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.child_main_after)
+    }
+
+    fn child_cross_before(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.child_cross_before)
+    }
+
+    fn child_cross_after(&self, store: &Self::Store) -> Option<Units> {
+        Some(self.child_cross_after)
     }
 }
 
@@ -161,9 +202,16 @@ impl Cache for LayoutCache {
 
 fn main() {
     let mut cache = LayoutCache::default();
-    let mut root = Widget::new(0, Pixels(100.0), Pixels(100.0));
+    let mut root = Widget::new(0, Stretch(1.0), Stretch(1.0));
     root.child.push(Widget::new(1, Pixels(40.0), Pixels(40.0)));
-    layout(&&root, &mut cache, &(), &());
+    layout(
+        &root,
+        LayoutType::Row,
+        &BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) },
+        &mut cache,
+        &(),
+        &(),
+    );
     render(cache, root);
 }
 
@@ -211,7 +259,17 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
                     //world.cache.set_width(root, physical_size.width as f32);
                     //world.cache.set_height(root, physical_size.height as f32);
 
-                    layout(&&root, &mut cache, &(), &());
+                    layout(
+                        &root,
+                        LayoutType::Row,
+                        &BoxConstraints {
+                            min: (physical_size.width as f32, physical_size.height as f32),
+                            max: (physical_size.width as f32, physical_size.height as f32),
+                        },
+                        &mut cache,
+                        &(),
+                        &(),
+                    );
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -262,8 +320,6 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
     let width = cache.width(node.key());
     let height = cache.height(node.key());
 
-    println!("{} {} {} {} {}", node.id, width, height, posx, posy);
-
     let color = node.color;
 
     let mut path = Path::new();
@@ -283,4 +339,3 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
         draw_node(child, cache, canvas, font);
     }
 }
-*/
