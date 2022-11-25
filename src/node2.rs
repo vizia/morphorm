@@ -1,17 +1,18 @@
 use crate::{LayoutType, PositionType, Units};
 
-pub trait Node: Sized + Clone
-{
+pub trait Node: Sized + Clone {
     type Store;
     type Tree;
-    type ChildIter<'t>: Iterator<Item = &'t Self> where Self: 't;
+    type ChildIter<'t>: Iterator<Item = &'t Self>
+    where
+        Self: 't;
 
     type CacheKey: std::fmt::Debug;
 
     fn key(&self) -> Self::CacheKey;
 
     /// Returns an iterator over the children of a node.
-    fn children<'t>(&self, tree: &'t Self::Tree) -> Self::ChildIter<'t>;
+    fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t>;
 
     /// Returns the layout type of a node.
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType>;
