@@ -114,11 +114,6 @@ where
     // The desired cross-axis size of the node.
     let cross = node.cross(store).unwrap_or(Units::Stretch(1.0));
 
-    // // The computed main-axis size.
-    // let mut computed_main = 0.0;
-    // // The computed cross-axis size.
-    // let mut computed_cross = 0.0;
-
     // Compute main-axis size.
     let mut computed_main = match main {
         Pixels(val) => val,
@@ -133,6 +128,7 @@ where
         }
     };
 
+    // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
 
     // // Compute cross-axis size.
@@ -152,44 +148,56 @@ where
     //     _ => 0.0
     // };
 
-    match (parent_layout_type, layout_type) {
-        (LayoutType::Row, LayoutType::Column) if main == Units::Auto => {
-            if let Some(content_size) = node.content_size(store, computed_cross) {
-                computed_main = content_size;
-                println!("Row Column main - {}", content_size);
-            }
+    if main == Units::Auto && cross != Units::Auto {
+        if let Some(content_size) = node.content_size(store, computed_cross) {
+            computed_main = content_size;
         }
-
-        (LayoutType::Column, LayoutType::Column) if main == Units::Auto => {
-            if let Some(content_size) = node.content_size(store, computed_cross) {
-                computed_main = content_size;
-                println!("Column Column main - {}", content_size);
-            }
-        }
-
-        (LayoutType::Row, LayoutType::Row) if cross == Units::Auto => {
-            if let Some(content_size) = node.content_size(store, computed_main) {
-                computed_cross = content_size;
-                println!("Row Row - {}", content_size);
-            }
-        }
-
-        (LayoutType::Column, LayoutType::Row) if main == Units::Auto => {
-            if let Some(content_size) = node.content_size(store, computed_cross) {
-                computed_main = content_size;
-                println!("Column Row - {}", content_size);
-            }
-        }
-
-        (LayoutType::Column, LayoutType::Column) if cross == Units::Auto => {
-            if let Some(content_size) = node.content_size(store, computed_main) {
-                computed_cross = content_size;
-                println!("Column Column - {}", content_size);
-            }
-        }
-
-        _ => {}
     }
+
+    if cross == Units::Auto && main != Units::Auto {
+        if let Some(content_size) = node.content_size(store, computed_main) {
+            computed_cross = content_size;
+        }
+    }
+
+    // match (parent_layout_type, layout_type) {
+    //     (LayoutType::Row, LayoutType::Column) if main == Units::Auto => {
+    //         if let Some(content_size) = node.content_size(store, computed_cross) {
+    //             computed_main = content_size;
+    //             println!("Row Column main - {}", content_size);
+    //         }
+    //     }
+
+    //     (LayoutType::Column, LayoutType::Column) if main == Units::Auto => {
+    //         if let Some(content_size) = node.content_size(store, computed_cross) {
+    //             computed_main = content_size;
+    //             println!("Column Column main - {}", content_size);
+    //         }
+    //     }
+
+    //     (LayoutType::Row, LayoutType::Row) if cross == Units::Auto => {
+    //         if let Some(content_size) = node.content_size(store, computed_main) {
+    //             computed_cross = content_size;
+    //             println!("Row Row - {}", content_size);
+    //         }
+    //     }
+
+    //     (LayoutType::Column, LayoutType::Row) if main == Units::Auto => {
+    //         if let Some(content_size) = node.content_size(store, computed_cross) {
+    //             computed_main = content_size;
+    //             println!("Column Row - {}", content_size);
+    //         }
+    //     }
+
+    //     (LayoutType::Column, LayoutType::Column) if cross == Units::Auto => {
+    //         if let Some(content_size) = node.content_size(store, computed_main) {
+    //             computed_cross = content_size;
+    //             println!("Column Column - {}", content_size);
+    //         }
+    //     }
+
+    //     _ => {}
+    // }
 
     // Determine the main/cross size for the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross
@@ -354,11 +362,11 @@ where
 
         match child_cross {
             Pixels(val) => {
-                computed_child_cross_after = val;
+                computed_child_cross = val;
             }
 
             Percentage(val) => {
-                computed_child_cross_after = (parent_cross * (val / 100.0)).round();
+                computed_child_cross = (parent_cross * (val / 100.0)).round();
             }
 
             Stretch(factor) => {
