@@ -28,10 +28,10 @@ fn main() {
     world.set_child_cross_after(root, Units::Pixels(50.0));
 
     let a = world.add(Some(root));
-    world.set_main(a, Units::Auto);
-    world.set_cross(a, Units::Stretch(1.0));
+    world.set_cross(a, Units::Auto);
+    world.set_main(a, Units::Stretch(1.0));
     world.set_child_space(a, Units::Pixels(30.0));
-    // world.set_content_size(a, |main| main);
+    world.set_content_size(a, |main| main);
     world.set_layout_type(a, LayoutType::Column);
     // world.set_position_type(a, PositionType::SelfDirected);
     // world.set_cross_before(a, Units::Stretch(1.0));
@@ -45,10 +45,10 @@ fn main() {
     // // world.set_main_before(node1, Units::Stretch(1.0));
     // world.set_layout_type(node1, LayoutType::Column);
 
-    let node2 = world.add(Some(a));
-    world.set_main(node2, Units::Auto);
-    world.set_cross(node2, Units::Stretch(1.0));
-    world.set_content_size(node2, |main| main);
+    // let node2 = world.add(Some(a));
+    // world.set_main(node2, Units::Auto);
+    // world.set_cross(node2, Units::Stretch(1.0));
+    // world.set_content_size(node2, |main| main);
     // world.set_position_type(node2, PositionType::SelfDirected);
     // world.set_cross_before(node2, Units::Stretch(1.0));
     // world.set_cross_after(node2, Units::Stretch(1.0));

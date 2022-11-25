@@ -14,7 +14,7 @@ fn content_size() {
     world.set_cross(node, Units::Auto);
     world.set_content_size(node, |main| 100.0 * (400.0 / main));
 
-    let root_bc = BoxConstraints { min: (200.0, 200.0), max: (200.0, 200.0) };
+    let root_bc = BoxConstraints { min: (400.0, 400.0), max: (400.0, 400.0) };
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
