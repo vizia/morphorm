@@ -131,6 +131,8 @@ where
     // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
 
+    println!("DOWN {:?} computed_main: {}  computed_cross: {}", node.key(), computed_main, computed_cross);
+
     // // Compute cross-axis size.
     // let mut computed_cross = match cross {
     //     Pixels(val) => {
@@ -435,30 +437,30 @@ where
         // Here we can compute stretch cross_before, stretch cross, and stretch cross_after
         // This should be done in a loop to apply min/max constraints
         let mut child_cross_free_space = parent_cross - child_cross_non_flex;
-        if let Stretch(factor) = child_cross_before {
-            // let desired_cross = factor * cross_px_per_flex + remainder;
-            // let actual_cross = desired_cross.round();
-            // remainder = desired_cross - actual_cross;
-            let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-            // println!("cross before is flex: {:?} {} {} {} {}", child.key(), factor, child_cross_free_space, child_cross_flex_sum, actual_cross);
-            child_cross_free_space -= actual_cross;
-            child_cross_flex_sum -= factor;
-            computed_child_cross_before = actual_cross;
-        }
+        // if let Stretch(factor) = child_cross_before {
+        //     // let desired_cross = factor * cross_px_per_flex + remainder;
+        //     // let actual_cross = desired_cross.round();
+        //     // remainder = desired_cross - actual_cross;
+        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
+        //     // println!("cross before is flex: {:?} {} {} {} {}", child.key(), factor, child_cross_free_space, child_cross_flex_sum, actual_cross);
+        //     child_cross_free_space -= actual_cross;
+        //     child_cross_flex_sum -= factor;
+        //     computed_child_cross_before = actual_cross;
+        // }
 
-        if let Stretch(factor) = child_cross_after {
-            let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-            child_cross_free_space -= actual_cross;
-            child_cross_flex_sum -= factor;
-            computed_child_cross_after = actual_cross;
-        }
+        // if let Stretch(factor) = child_cross_after {
+        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
+        //     child_cross_free_space -= actual_cross;
+        //     child_cross_flex_sum -= factor;
+        //     computed_child_cross_after = actual_cross;
+        // }
 
-        if let Stretch(factor) = child_cross {
-            let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-            child_cross_free_space -= actual_cross;
-            child_cross_flex_sum -= factor;
-            computed_child_cross = actual_cross;
-        }
+        // if let Stretch(factor) = child_cross {
+        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
+        //     child_cross_free_space -= actual_cross;
+        //     child_cross_flex_sum -= factor;
+        //     computed_child_cross = actual_cross;
+        // }
 
         // println!("{:?} {:?} cross_free_space {}", node.key(), child.key(), child_cross_free_space);
 
@@ -479,7 +481,7 @@ where
 
             _ => {
                 let child_bc =
-                    BoxConstraints { min: (0.0, 0.0), max: (parent_main, computed_child_cross) };
+                    BoxConstraints { min: (0.0, 0.0), max: (parent_main, child_cross_free_space) };
 
                 let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
 
@@ -607,63 +609,73 @@ where
     // This needs to be done after computing the main-axis because layout computation for stretch children may cause
     // the cross space to change due to content size.
     // Hmmm, but surely this only applies to auto cross size?
-    // for child in children.iter_mut() {
+    for child in children.iter_mut() {
 
-    //     let child_cross_free_space = parent_cross.max(cross_max) - child.cross_non_flex;
-    //     // println!("{:?} {:?} child_cross_free_space: {} {} {}", node.key(), child.node.key(), parent_cross, cross_max, child.cross_non_flex);
-    //     let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
+        let child_cross_free_space = parent_cross.max(cross_max) - child.cross_non_flex;
+        // println!("{:?} {:?} child_cross_free_space: {} {} {}", node.key(), child.node.key(), parent_cross, cross_max, child.cross_non_flex);
+        let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
 
-    //     let child_cross_before = child.node.cross_before(store).unwrap_or(Auto);
-    //     let child_cross = child.node.cross(store).unwrap_or(Stretch(1.0));
-    //     let child_cross_after = child.node.cross_after(store).unwrap_or(Auto);
+        let child_cross_before = child.node.cross_before(store).unwrap_or(Auto);
+        let child_cross = child.node.cross(store).unwrap_or(Stretch(1.0));
+        let child_cross_after = child.node.cross_after(store).unwrap_or(Auto);
 
-    //     match child_cross_before {
-    //         Stretch(factor) => {
-    //             let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-    //             let actual_cross = desired_cross.round();
-    //             child.cross_remainder = desired_cross - actual_cross;
-    //             child.cross_before = actual_cross;
-    //         }
+        match child_cross_before {
+            Stretch(factor) => {
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
+                child.cross_before = actual_cross;
+            }
 
-    //         _ => {}
-    //     }
+            _ => {}
+        }
 
-    //     match child_cross {
-    //         Stretch(factor) => {
-    //             // TODO: remove duplication
-    //             let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-    //             let actual_cross = desired_cross.round();
-    //             child.cross_remainder = desired_cross - actual_cross;
+        match child_cross {
+            Stretch(factor) => {
+                // TODO: remove duplication
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
 
-    //             // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
-    //             // in the cache without needing to call layout again.
-    //             // match layout_type {
-    //             //     LayoutType::Row => {
-    //             //         cache.set_height(child.node.key(), actual_cross);
-    //             //     }
 
-    //             //     LayoutType::Column => {
-    //             //         cache.set_width(child.node.key(), actual_cross);
-    //             //     }
 
-    //             //     _ => {}
-    //             // }
-    //         }
+                // let child_bc = BoxConstraints {
+                //     min: (actual_main, computed_child_cross),
+                //     max: (actual_main, computed_child_cross),
+                // };
 
-    //         _ => {}
-    //     }
+                // let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
+                println!("CHILD {:?} actual_cross: {}", child.node.key(), actual_cross);
 
-    //     match child_cross_after {
-    //         Stretch(factor) => {
-    //             let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-    //             let actual_cross = desired_cross.round();
-    //             child.cross_remainder = desired_cross - actual_cross;
-    //             child.cross_after = actual_cross;
-    //         }
+                // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
+                // in the cache without needing to call layout again.
+                match layout_type {
+                    LayoutType::Row => {
+                        cache.set_height(child.node.key(), actual_cross);
+                    }
 
-    //         _ => {}
-    //     }
-    // }
+                    LayoutType::Column => {
+                        cache.set_width(child.node.key(), actual_cross);
+                    }
+
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+
+        match child_cross_after {
+            Stretch(factor) => {
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
+                child.cross_after = actual_cross;
+            }
+
+            _ => {}
+        }
+    }
 
     // Position children.
     let mut main_pos = 0.0;
@@ -735,12 +747,10 @@ where
     }
 
     println!(
-        "{:?} : computed_main {} {}  computed_cross: {} {}",
+        "UP {:?} computed_main {}  computed_cross: {}",
         node.key(),
         computed_main,
-        parent_main,
         computed_cross,
-        parent_cross
     );
 
     // Set the computed size of the node in the cache.
