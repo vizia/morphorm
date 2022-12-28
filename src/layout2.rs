@@ -131,25 +131,27 @@ where
     // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
 
-    println!("DOWN {:?} computed_main: {}  computed_cross: {}", node.key(), computed_main, computed_cross);
-
+    
     // // Compute cross-axis size.
     // let mut computed_cross = match cross {
     //     Pixels(val) => {
     //         val
     //     }
-
+        
     //     Percentage(val) => {
+    //         // println!("Do this: {} {}", bc.max.1, val);
     //         (bc.max.1 * (val / 100.0)).round()
     //     }
-
+        
     //     Stretch(_) => {
     //         bc.max.1
     //     }
-
+        
     //     _ => 0.0
     // };
 
+    println!("DOWN {:?} computed_main: {}  computed_cross: {}", node.key(), computed_main, computed_cross);
+    
     if main == Units::Auto && cross != Units::Auto {
         if let Some(content_size) = node.content_size(store, computed_cross) {
             computed_main = content_size;
@@ -436,7 +438,7 @@ where
 
         // Here we can compute stretch cross_before, stretch cross, and stretch cross_after
         // This should be done in a loop to apply min/max constraints
-        let mut child_cross_free_space = parent_cross - child_cross_non_flex;
+        // let mut child_cross_free_space = parent_cross - child_cross_non_flex;
         // if let Stretch(factor) = child_cross_before {
         //     // let desired_cross = factor * cross_px_per_flex + remainder;
         //     // let actual_cross = desired_cross.round();
@@ -480,13 +482,14 @@ where
             }
 
             _ => {
+                // println!("{:?} child_cross_free_space: {}")
                 let child_bc =
-                    BoxConstraints { min: (0.0, 0.0), max: (parent_main, child_cross_free_space) };
+                    BoxConstraints { min: (0.0, 0.0), max: (parent_main, computed_child_cross) };
 
                 let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
 
                 computed_child_main = child_size.main;
-                // computed_child_cross = child_size.cross;
+                computed_child_cross = child_size.cross;
             }
         }
 
