@@ -23,10 +23,11 @@ pub struct ComputedData<N: for<'w> Node<'w>> {
 }
 
 /// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
-pub fn layout<'a, C, H>(
+pub fn layout<'a, 'b, C, H>(
     cache: &mut C,
     hierarchy: &'a H,
     store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
+    sublayout: &'b mut <<H as Hierarchy<'a>>::Item as Node<'a>>::Sublayout,
 ) where
     C: Cache<Item = <H as Hierarchy<'a>>::Item>,
     H: Hierarchy<'a>,
@@ -114,13 +115,13 @@ pub fn layout<'a, C, H>(
 
         match parent_layout_type {
             LayoutType::Row => {
-                step3_row_col(parent, cache, hierarchy, store, Direction::X, true);
-                step3_row_col(parent, cache, hierarchy, store, Direction::Y, false);
+                step3_row_col(parent, cache, hierarchy, store, sublayout, Direction::X, true);
+                step3_row_col(parent, cache, hierarchy, store, sublayout, Direction::Y, false);
             }
 
             LayoutType::Column => {
-                step3_row_col(parent, cache, hierarchy, store, Direction::Y, true);
-                step3_row_col(parent, cache, hierarchy, store, Direction::X, false);
+                step3_row_col(parent, cache, hierarchy, store, sublayout, Direction::Y, true);
+                step3_row_col(parent, cache, hierarchy, store, sublayout, Direction::X, false);
             }
 
             LayoutType::Grid => step3_grid(parent, cache, hierarchy, store),
@@ -286,11 +287,12 @@ pub fn step2<'a, C, N>(
     }
 }
 
-pub fn step3_row_col<'a, C, H>(
+pub fn step3_row_col<'a, 'b, C, H>(
     parent: <H as Hierarchy<'a>>::Item,
     cache: &mut C,
     hierarchy: &'a H,
     store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
+    sublayout: &'b mut <<H as Hierarchy<'a>>::Item as Node<'a>>::Sublayout,
     dir: Direction,
     primary: bool,
 ) where
@@ -343,7 +345,7 @@ pub fn step3_row_col<'a, C, H>(
 
         let size = node.size(store, dir).unwrap_or(Units::Stretch(1.0));
 
-        let auto_size = content_size_smart(store, cache, node, parent, dir, layout_type, primary);
+        let auto_size = content_size_smart(store, sublayout, cache, node, parent, dir, layout_type, primary);
 
         let mut min_size =
             node.min_size(store, dir).unwrap_or_default().value_or(parent_size, auto_size);
@@ -983,8 +985,9 @@ fn incorperate_axis<N: Clone + for<'w> Node<'w>>(
 }
 
 // this function is called to retrieve the auto size of a child
-fn content_size_smart<'a, C, N>(
+fn content_size_smart<'a, 'b, C, N>(
     store: &'a N::Data,
+    sublayout: &'b mut N::Sublayout,
     cache: &mut C,
     node: N,
     parent: N,
@@ -1066,7 +1069,7 @@ where
             other_size
         };
 
-        let computed = node.content_size_secondary(store, other_dim, dir).unwrap_or_default();
+        let computed = node.content_size_secondary(store, sublayout, other_dim, dir).unwrap_or_default();
         computed.clamp(basic_answer, f32::MAX)
     }
 }

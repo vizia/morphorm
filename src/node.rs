@@ -6,6 +6,9 @@ use crate::types::*;
 pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     /// A type representing an external store in case the position and size data is not be owned by the node itself (e.g. ECS)
     type Data;
+    /// A type representing any sub-layout engine (e.g. text layout) that needs to be passed into
+    /// secondary content size by mutable reference.
+    type Sublayout;
 
     /// Get the layout type of the node
     ///
@@ -66,12 +69,12 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     }
 
     /// Get the content width which may be dependent on the height
-    fn content_width_secondary(&self, store: &'_ Self::Data, height: f32) -> Option<f32> {
+    fn content_width_secondary(&self, store: &'_ Self::Data, sublayout: &'_ mut Self::Sublayout, height: f32) -> Option<f32> {
         Some(0.0)
     }
 
     /// Get the content height which may be dependent on the width
-    fn content_height_secondary(&self, store: &'_ Self::Data, width: f32) -> Option<f32> {
+    fn content_height_secondary(&self, store: &'_ Self::Data, sublayout: &'_ mut Self::Sublayout, width: f32) -> Option<f32> {
         Some(0.0)
     }
 
@@ -229,12 +232,13 @@ pub trait Node<'w>: Clone + Copy + std::fmt::Debug {
     fn content_size_secondary(
         &self,
         store: &'_ Self::Data,
+        sublayout: &'_ mut Self::Sublayout,
         size: f32,
         axis: Direction,
     ) -> Option<f32> {
         match axis {
-            Direction::X => self.content_width_secondary(store, size),
-            Direction::Y => self.content_height_secondary(store, size),
+            Direction::X => self.content_width_secondary(store, sublayout, size),
+            Direction::Y => self.content_height_secondary(store, sublayout, size),
         }
     }
     fn before(&self, store: &'_ Self::Data, axis: Direction) -> Option<Units> {
