@@ -1,6 +1,3 @@
-use std::alloc::Layout;
-use std::marker::PhantomData;
-
 use smallvec::SmallVec;
 
 use crate::{Cache, LayoutType, Node, Units};
@@ -90,7 +87,7 @@ where
 {
     // TODO: Investigate whether a box constraints struct is needed. So far only the parent main/cross is needed,
     // which is currently stored in bc.0.max and bc.1.max respectively. It's possible that the other constraints will
-    // be needed when min/max sized are added so I've left it fo now.
+    // be needed when min/max sized are added so I've left it for now.
 
     // NOTE: Due to the recursive nature of this function, any code written before the loop on the children is performed
     // on the 'down' pass of the tree, and any code after the loop is performed on the 'up' phase.
@@ -131,77 +128,22 @@ where
     // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
 
+    // Debug printing
+    // println!("DOWN {:?} computed_main: {}  computed_cross: {}", node.key(), computed_main, computed_cross);
     
-    // // Compute cross-axis size.
-    // let mut computed_cross = match cross {
-    //     Pixels(val) => {
-    //         val
-    //     }
-        
-    //     Percentage(val) => {
-    //         // println!("Do this: {} {}", bc.max.1, val);
-    //         (bc.max.1 * (val / 100.0)).round()
-    //     }
-        
-    //     Stretch(_) => {
-    //         bc.max.1
-    //     }
-        
-    //     _ => 0.0
-    // };
-
-    println!("DOWN {:?} computed_main: {}  computed_cross: {}", node.key(), computed_main, computed_cross);
-    
+    // Apply content size
     if main == Units::Auto && cross != Units::Auto {
         if let Some(content_size) = node.content_size(store, computed_cross) {
             computed_main = content_size;
         }
     }
 
+    // If the cross-size is supposed to be determined by the parent then this should probably be done by the parent as well
     if cross == Units::Auto && main != Units::Auto {
         if let Some(content_size) = node.content_size(store, computed_main) {
             computed_cross = content_size;
         }
     }
-
-    // match (parent_layout_type, layout_type) {
-    //     (LayoutType::Row, LayoutType::Column) if main == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_cross) {
-    //             computed_main = content_size;
-    //             println!("Row Column main - {}", content_size);
-    //         }
-    //     }
-
-    //     (LayoutType::Column, LayoutType::Column) if main == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_cross) {
-    //             computed_main = content_size;
-    //             println!("Column Column main - {}", content_size);
-    //         }
-    //     }
-
-    //     (LayoutType::Row, LayoutType::Row) if cross == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_main) {
-    //             computed_cross = content_size;
-    //             println!("Row Row - {}", content_size);
-    //         }
-    //     }
-
-    //     (LayoutType::Column, LayoutType::Row) if main == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_cross) {
-    //             computed_main = content_size;
-    //             println!("Column Row - {}", content_size);
-    //         }
-    //     }
-
-    //     (LayoutType::Column, LayoutType::Column) if cross == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_main) {
-    //             computed_cross = content_size;
-    //             println!("Column Column - {}", content_size);
-    //         }
-    //     }
-
-    //     _ => {}
-    // }
 
     // Determine the main/cross size for the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross
@@ -210,46 +152,6 @@ where
     } else {
         (computed_main, computed_cross)
     };
-
-    // Apply content-size.
-    // let (main_size, cross_size) = match (parent_layout_type, layout_type) {
-    //     (LayoutType::Row, LayoutType::Column) if cross == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_main) {
-    //             println!("THIS computed_cross: {}", computed_cross);
-    //             computed_cross = content_size;
-    //         }
-
-    //         (computed_cross, computed_main)
-    //     }
-
-    //     (LayoutType::Row, LayoutType::Row) if cross == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_main) {
-    //             computed_cross = content_size;
-
-    //         }
-
-    //         (computed_main, computed_cross)
-    //     }
-
-    //     (LayoutType::Column, LayoutType::Row) if main == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_cross) {
-    //             computed_main = content_size;
-    //             println!("THIS computed_main: {}", computed_main);
-    //         }
-
-    //         (computed_cross, computed_main)
-    //     }
-
-    //     (LayoutType::Column, LayoutType::Column) if cross == Units::Auto => {
-    //         if let Some(content_size) = node.content_size(store, computed_main) {
-    //             computed_cross = content_size;
-    //         }
-
-    //         (computed_main, computed_cross)
-    //     }
-
-    //     _ => (0.0, 0.0)
-    // };
 
     // Sum of all non-flexible space and size on the main-axis of the node.
     let mut main_non_flex = 0.0f32;
@@ -283,6 +185,7 @@ where
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
 
+    // TODO: Should node have a method for querying the number of children?
     let num_children = node.children(tree).fold(0, |acc, _| acc + 1);
 
     // Compute non-flexible children.
@@ -320,9 +223,9 @@ where
         }
 
         // Sum of flex factors on the main-axis of the child node.
-        let mut child_cross_flex_sum = 0.0;
-        // Sum of flex factors on the cross-axis of the child node.
         let mut child_main_flex_sum = 0.0;
+        // Sum of flex factors on the cross-axis of the child node.
+        let mut child_cross_flex_sum = 0.0;
 
         let mut computed_child_main_before = 0.0;
         let mut computed_child_main = 0.0;
@@ -436,35 +339,8 @@ where
         let child_cross_non_flex =
             computed_child_cross_before + computed_child_cross + computed_child_cross_after;
 
-        // Here we can compute stretch cross_before, stretch cross, and stretch cross_after
-        // This should be done in a loop to apply min/max constraints
-        // let mut child_cross_free_space = parent_cross - child_cross_non_flex;
-        // if let Stretch(factor) = child_cross_before {
-        //     // let desired_cross = factor * cross_px_per_flex + remainder;
-        //     // let actual_cross = desired_cross.round();
-        //     // remainder = desired_cross - actual_cross;
-        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-        //     // println!("cross before is flex: {:?} {} {} {} {}", child.key(), factor, child_cross_free_space, child_cross_flex_sum, actual_cross);
-        //     child_cross_free_space -= actual_cross;
-        //     child_cross_flex_sum -= factor;
-        //     computed_child_cross_before = actual_cross;
-        // }
 
-        // if let Stretch(factor) = child_cross_after {
-        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-        //     child_cross_free_space -= actual_cross;
-        //     child_cross_flex_sum -= factor;
-        //     computed_child_cross_after = actual_cross;
-        // }
-
-        // if let Stretch(factor) = child_cross {
-        //     let actual_cross = (factor * (child_cross_free_space / child_cross_flex_sum)).round();
-        //     child_cross_free_space -= actual_cross;
-        //     child_cross_flex_sum -= factor;
-        //     computed_child_cross = actual_cross;
-        // }
-
-        // println!("{:?} {:?} cross_free_space {}", node.key(), child.key(), child_cross_free_space);
+        // TODO: Compute child cross content_size here
 
         match child_main {
             Stretch(factor) => {
@@ -524,16 +400,6 @@ where
             cross_after: computed_child_cross_after,
         });
     }
-
-    //if parent_layout_type == layout_type {
-    //if let Auto = main {
-    // computed_main = computed_main.max(main_sum);
-    //}
-    //} else {
-    //    if let Auto = cross {
-    //computed_cross = main_sum;
-    //    }
-    //}
 
     // println!("{:?} parent_main: {} parent_cross: {}", node.key(), parent_main, parent_cross);
 
@@ -598,16 +464,6 @@ where
         }
     }
 
-    // if parent_layout_type == layout_type {
-    //     if let Auto = cross {
-    //         computed_cross = cross_max;
-    //     }
-    // } else {
-    //     if let Auto = main {
-    //         computed_main = cross_max;
-    //     }
-    // }
-
     // Compute flexible space and size on the cross-axis.
     // This needs to be done after computing the main-axis because layout computation for stretch children may cause
     // the cross space to change due to content size.
@@ -648,7 +504,7 @@ where
                 // };
 
                 // let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
-                println!("CHILD {:?} actual_cross: {}", child.node.key(), actual_cross);
+                //println!("CHILD {:?} actual_cross: {}", child.node.key(), actual_cross);
 
                 // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
                 // in the cache without needing to call layout again.
@@ -749,12 +605,13 @@ where
         }
     }
 
-    println!(
-        "UP {:?} computed_main {}  computed_cross: {}",
-        node.key(),
-        computed_main,
-        computed_cross,
-    );
+    // Debug printing
+    // println!(
+    //     "UP {:?} computed_main {}  computed_cross: {}",
+    //     node.key(),
+    //     computed_main,
+    //     computed_cross,
+    // );
 
     // Set the computed size of the node in the cache.
     match parent_layout_type {
