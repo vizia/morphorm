@@ -1,6 +1,7 @@
 
 use crate::entity::Entity;
 
+/// A type representing a tree of entities.
 #[derive(Default, Debug)]
 pub struct Tree {
     pub parent: Vec<Option<Entity>>,
@@ -60,16 +61,8 @@ impl Tree {
         iterator.map(|item| *item).collect::<Vec<_>>()
     }
 
-    pub fn get_parent(&self, entity: Entity) -> Option<&Entity> {
-        self.parent.get(entity.index()).map_or(None, |parent| parent.as_ref())
-    }
-
     pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
         self.first_child.get(entity.index()).map_or(None, |first_child| first_child.as_ref())
-    }
-
-    pub fn get_last_child(&self, _entity: Entity) -> Option<Entity> {
-        todo!()
     }
 
     pub fn get_next_sibling(&self, entity: &Entity) -> Option<&Entity> {
@@ -79,13 +72,6 @@ impl Tree {
     pub fn get_prev_sibling(&self, entity: Entity) -> Option<Entity> {
         self.prev_sibling.get(entity.index()).map_or(None, |next_sibling| *next_sibling)
     }
-
-    // pub fn down_iter<'a>(&'a self) -> DownwardIterator<'a> {
-    //     DownwardIterator { 
-    //         tree: self, 
-    //         current_node: Some(Entity(0)),
-    //     }
-    // }
 }
 
 pub struct DownwardIterator<'a> {
@@ -178,6 +164,7 @@ impl<'a> Iterator for DownwardIterator<'a> {
 //     }
 // }
 
+/// An iterator for iterating the children of an entity.
 pub struct ChildIterator<'a> {
     pub tree: &'a Tree,
     pub current_node: Option<&'a Entity>,
