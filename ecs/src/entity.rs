@@ -1,5 +1,7 @@
-// Part of a very simple ECS for demonstration purposes only
+// Part of a very simple ECS for demonstration purposes only.
 
+
+/// An ID type used to set/get data from a store.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity(pub usize);
 
@@ -9,6 +11,7 @@ impl Entity {
     }
 }
 
+/// Manager for creating entities.
 #[derive(Default)]
 pub struct EntityManager {
     count: usize,

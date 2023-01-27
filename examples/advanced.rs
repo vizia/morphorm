@@ -24,16 +24,16 @@ use morphorm::{layout, BoxConstraints, Cache, LayoutType, Node, PositionType, Un
 #[derive(Default, Clone)]
 pub struct Widget {
     child: Vec<Widget>,
-    main: Units,
-    cross: Units,
-    main_before: Units,
-    main_after: Units,
-    cross_before: Units,
-    cross_after: Units,
-    child_main_before: Units,
-    child_main_after: Units,
-    child_cross_before: Units,
-    child_cross_after: Units,
+    width: Units,
+    height: Units,
+    left: Units,
+    right: Units,
+    top: Units,
+    bottom: Units,
+    child_left: Units,
+    child_right: Units,
+    child_top: Units,
+    child_bottom: Units,
     layout_type: LayoutType,
     position_type: PositionType,
     color: femtovg::Color,
@@ -41,7 +41,7 @@ pub struct Widget {
 }
 
 impl Widget {
-    pub fn new(id: u32, main: Units, cross: Units) -> Self {
+    pub fn new(id: u32, width: Units, height: Units) -> Self {
         let random_red: u8 = rand::thread_rng().gen();
         let random_green: u8 = rand::thread_rng().gen();
         let random_blue: u8 = rand::thread_rng().gen();
@@ -49,12 +49,8 @@ impl Widget {
         Self {
             id,
             color: femtovg::Color::rgb(random_red, random_green, random_blue),
-            main,
-            cross,
-            main_before: Units::Auto,
-            main_after: Units::Auto,
-            cross_before: Units::Auto,
-            cross_after: Units::Auto,
+            width,
+            height,
             ..Default::default()
         }
     }
@@ -66,7 +62,7 @@ impl Node for Widget {
     type ChildIter<'t> = std::slice::Iter<'t, Widget>;
     type CacheKey = u32;
 
-    fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t> {
+    fn children<'t>(&'t self, _tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         self.child.iter()
     }
 
@@ -74,56 +70,56 @@ impl Node for Widget {
         self.id
     }
 
-    fn main(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.main)
+    fn width(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.width)
     }
 
-    fn cross(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.cross)
+    fn height(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.height)
     }
 
-    fn layout_type(&self, store: &Self::Store) -> Option<morphorm::LayoutType> {
+    fn layout_type(&self, _store: &Self::Store) -> Option<morphorm::LayoutType> {
         Some(self.layout_type)
     }
 
-    fn position_type(&self, store: &Self::Store) -> Option<morphorm::PositionType> {
+    fn position_type(&self, _store: &Self::Store) -> Option<morphorm::PositionType> {
         Some(self.position_type)
     }
 
-    fn main_before(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.main_before)
+    fn left(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.left)
     }
 
-    fn main_after(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.main_after)
+    fn right(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.right)
     }
 
-    fn cross_before(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.cross_before)
+    fn top(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.top)
     }
 
-    fn cross_after(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.cross_after)
+    fn bottom(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.bottom)
     }
 
-    fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
+    fn content_size(&self, _store: &Self::Store, _cross_size: f32) -> Option<f32> {
         None
     }
 
-    fn child_main_before(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.child_main_before)
+    fn child_left(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.child_left)
     }
 
-    fn child_main_after(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.child_main_after)
+    fn child_right(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.child_right)
     }
 
-    fn child_cross_before(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.child_cross_before)
+    fn child_top(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.child_top)
     }
 
-    fn child_cross_after(&self, store: &Self::Store) -> Option<Units> {
-        Some(self.child_cross_after)
+    fn child_bottom(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.child_bottom)
     }
 }
 
@@ -229,8 +225,10 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
             ContextBuilder::new().with_vsync(false).build_windowed(wb, &el).unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
-        let renderer = OpenGl::new(|s| windowed_context.get_proc_address(s) as *const _)
-            .expect("Cannot create renderer");
+        let renderer = unsafe {
+            OpenGl::new_from_function(|s| windowed_context.get_proc_address(s) as *const _)
+                .expect("Cannot create renderer")
+        };
 
         (renderer, windowed_context)
     };

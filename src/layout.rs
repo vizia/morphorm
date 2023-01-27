@@ -1,1072 +1,637 @@
-use crate::Cache;
-use crate::Hierarchy;
-use crate::Node;
-use crate::{Direction, GeometryChanged, LayoutType, PositionType, Units};
-
 use smallvec::SmallVec;
+
+use crate::{Cache, LayoutType, Node, NodeExt, Units};
+use crate::{PositionType, Units::*};
+
+#[derive(Debug, Copy, Clone)]
+pub struct BoxConstraints {
+    pub min: (f32, f32),
+    pub max: (f32, f32),
+}
+
+impl Default for BoxConstraints {
+    fn default() -> Self {
+        BoxConstraints { min: (0.0, 0.0), max: (0.0, 0.0) }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Size {
+    pub main: f32,
+    pub cross: f32,
+}
 
 #[derive(Debug, Clone, Copy)]
 enum Axis {
-    Before,
-    Size,
-    After,
+    MainBefore,
+    Main,
+    MainAfter,
 }
 
-#[derive(Clone, Copy)]
-pub struct ComputedData<N: for<'w> Node<'w>> {
-    node: N,
+#[derive(Copy, Clone)]
+pub struct StretchNode<'a, N: Node> {
+    node: &'a N,
+
+    index: usize,
 
     value: f32,
-    min: f32,
-    max: f32,
+    _min: f32,
+    _max: f32,
     axis: Axis,
 }
 
-/// Perform a layout calculation on the visual tree of nodes, the resulting positions and sizes are stored within the provided cache
-pub fn layout<'a, C, H>(
-    cache: &mut C,
-    hierarchy: &'a H,
-    store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
-) where
-    C: Cache<Item = <H as Hierarchy<'a>>::Item>,
-    H: Hierarchy<'a>,
-{
-    // Step 1 - Determine fist and last parent-directed child of each node and cache it
-    // This needs to be done at least once before the rest of layout and when the position_type of a node changes
-    for parent in hierarchy.down_iter() {
-        // Skip non-visible nodes
-        let visible = cache.visible(parent);
-        if !visible {
-            continue;
-        }
+#[derive(Copy, Clone)]
+pub struct ChildNode<'a, N: Node> {
+    node: &'a N,
 
-        // Reset the sum and max for the parent
-        cache.set_child_width_sum(parent, 0.0);
-        cache.set_child_height_sum(parent, 0.0);
-        cache.set_child_width_max(parent, 0.0);
-        cache.set_child_height_max(parent, 0.0);
+    // Sum of the flex factors on the main axis of the node.
+    main_flex_sum: f32,
 
-        cache.set_geo_changed(parent, GeometryChanged::POSX_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::POSY_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::WIDTH_CHANGED, false);
-        cache.set_geo_changed(parent, GeometryChanged::HEIGHT_CHANGED, false);
+    // The available free space on the main axis of the node.
+    // Equivalent to parent_main_space - main_non_flex
+    main_non_flex: f32,
 
-        let mut found_first = false;
-        let mut last_child = None;
+    main_remainder: f32,
 
-        for node in hierarchy.child_iter(parent) {
-            // Skip non-visible nodes
-            let visible = cache.visible(node);
-            if !visible {
-                continue;
-            }
+    // Sum of the cross_before, cross, and cross_after flex factors of the node.
+    cross_flex_sum: f32,
 
-            cache.set_stack_first_child(node, false);
-            cache.set_stack_last_child(node, false);
+    cross_non_flex: f32,
 
-            let position_type = node.position_type(store).unwrap_or_default();
+    cross: f32,
 
-            match position_type {
-                PositionType::ParentDirected => {
-                    if !found_first {
-                        found_first = true;
-                        cache.set_stack_first_child(node, true);
-                    }
-                    last_child = Some(node);
-                }
+    cross_remainder: f32,
 
-                PositionType::SelfDirected => {
-                    cache.set_stack_first_child(node, true);
-                    cache.set_stack_last_child(node, true);
-                }
-            }
-        }
-
-        if let Some(last_child) = last_child {
-            cache.set_stack_last_child(last_child, true);
-        }
-    }
-
-    // Step 2 - Iterate up the hierarchy
-    // This step is required to determine the sum and max width/height of child nodes
-    // to determine the width/height of parent nodes when set to Auto
-    for node in hierarchy.up_iter() {
-        // Skip non-visible nodes
-        let visible = cache.visible(node);
-        if !visible {
-            continue;
-        }
-
-        let parent = hierarchy.parent(node);
-
-        step2(node, parent, cache, store, Direction::X);
-        step2(node, parent, cache, store, Direction::Y);
-    }
-
-    // Step 3 - Iterate down the hierarchy
-    for parent in hierarchy.down_iter() {
-        let visible = cache.visible(parent);
-        if !visible {
-            continue;
-        }
-
-        let parent_layout_type = parent.layout_type(store).unwrap_or_default();
-
-        match parent_layout_type {
-            LayoutType::Row => {
-                step3_row_col(parent, cache, hierarchy, store, Direction::X, true);
-                step3_row_col(parent, cache, hierarchy, store, Direction::Y, false);
-            }
-
-            LayoutType::Column => {
-                step3_row_col(parent, cache, hierarchy, store, Direction::Y, true);
-                step3_row_col(parent, cache, hierarchy, store, Direction::X, false);
-            }
-
-            LayoutType::Grid => step3_grid(parent, cache, hierarchy, store),
-        }
-    }
+    // Computed main-before space of the node.
+    main_before: f32,
+    // Computed main-after space of the node.
+    main_after: f32,
+    // Computed cross-before space of the node.
+    cross_before: f32,
+    // Computed cross-after space of the node.
+    cross_after: f32,
 }
 
-pub fn step2<'a, C, N>(
-    node: N,
-    parent: Option<N>,
+// Perform layout on a node
+pub fn layout<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    bc: &BoxConstraints,
     cache: &mut C,
-    store: &'a N::Data,
-    dir: Direction,
-) where
-    C: Cache<Item = N>,
-    N: Node<'a>,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N::CacheKey>,
 {
-    let parent_layout_type =
-        parent.map_or(None, |parent| parent.layout_type(store)).unwrap_or_default();
+    // TODO: Investigate whether a box constraints struct is needed. So far only the parent main/cross is needed,
+    // which is currently stored in bc.0.max and bc.1.max respectively. It's possible that the other constraints will
+    // be needed when min/max sized are added so I've left it for now.
+
+    // NOTE: Due to the recursive nature of this function, any code written before the loop on the children is performed
+    // on the 'down' pass of the tree, and any code after the loop is performed on the 'up' phase.
+    // However, positioning of children need to happen after all children have a computed size, so it's placed after the loop
+    // causing the positioning to occur on the 'up' phase.
+    // This has the effect of positioning children relative to the parent and not absolutely. To account for this, the system in charge
+    // of rendering the nodes must also recursively traverse the tree and add the parent position to the node position.
+    // Unclear whether morphorm should provide that or whether the user should do that. At the moment it's on the user.
+    // See draw_node() in 'examples/common/mod.rs'.
+
+    // TODO: Min/Max constraints for space and size
+    // TODO: Grid layout
+    // TODO: ADD TESTS FOR EVERYTHING!
+    // TODO: Should stretch nodes have a min-size of their children?
+
+    // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
 
-    let child_before =
-        parent.map_or(None, |parent| parent.child_before(store, dir)).unwrap_or_default();
-    let child_after =
-        parent.map_or(None, |parent| parent.child_after(store, dir)).unwrap_or_default();
-    let row_col_between =
-        parent.map_or(None, |parent| parent.row_col_between(store, dir)).unwrap_or_default();
-    let mut before = node.before(store, dir).unwrap_or_default();
-    let mut after = node.after(store, dir).unwrap_or_default();
-    let min_before = node.min_before(store, dir).unwrap_or_default().value_or(0.0, -f32::MAX);
-    let max_before = node.max_before(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
-    let min_after = node.min_after(store, dir).unwrap_or_default().value_or(0.0, -f32::MAX);
-    let max_after = node.max_after(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
-    let size = node.size(store, dir).unwrap_or(Units::Stretch(1.0));
+    // The desired main-axis size of the node.
+    let main = node.main(store, parent_layout_type).unwrap_or(Units::Stretch(1.0));
+    // The desired cross-axis size of the node.
+    let cross = node.cross(store, parent_layout_type).unwrap_or(Units::Stretch(1.0));
 
-    // integrate content_width and content_height into the child max and sum
-    // this means that if a node has both content and children (weird!) they should overlap
-    let content_size = node.content_size(store, dir).unwrap_or_default();
-    cache.set_child_size_max(node, cache.child_size_max(node, dir).max(content_size), dir);
-    cache.set_child_size_sum(node, cache.child_size_sum(node, dir).max(content_size), dir);
+    // Compute main-axis size.
+    let mut computed_main = match main {
+        Pixels(val) => val,
 
-    // If Auto, then set the minimum height to be at least the height_sum/height_max/col_max of the children (depending on layout type)
-    let mut min_size = node
-        .min_size(store, dir)
-        .unwrap_or_default()
-        .value_or(0.0, cache.child_size_layout(node, dir, layout_type));
-    min_size = min_size.clamp(0.0, f32::MAX);
+        Percentage(val) => (bc.max.0 * (val / 100.0)).round(),
 
-    let mut max_size = node.max_size(store, dir).unwrap_or_default().value_or(f32::MAX, f32::MAX);
-    max_size = max_size.max(min_size);
+        Stretch(_) => bc.max.0,
 
-    let border_before = node.border_before(store, dir).unwrap_or_default().value_or(0.0, 0.0);
-    let border_after = node.border_after(store, dir).unwrap_or_default().value_or(0.0, 0.0);
-
-    // If left/right/top/bottom are Auto then the parent child_left/child_right/child_top/child_bottom overrides them
-    // The override is also dependent on position in stack (first, last, other) and layout type
-    if let Some(layout_dir) = parent_layout_type.direction() {
-        if layout_dir == dir {
-            if before == Units::Auto {
-                if cache.stack_first_child(node) {
-                    before = child_before;
-                } else {
-                    before = row_col_between;
-                }
-            }
-            if after == Units::Auto {
-                if cache.stack_last_child(node) {
-                    after = child_after;
-                }
-            }
-        } else {
-            if before == Units::Auto {
-                before = child_before;
-            }
-            if after == Units::Auto {
-                after = child_after;
-            }
-        }
-    }
-
-    let mut new_before = 0.0;
-    let mut new_size = 0.0;
-    let mut new_after = 0.0;
-    let mut used_space = 0.0;
-
-    match parent_layout_type {
-        LayoutType::Column | LayoutType::Row => {
-            match before {
-                Units::Pixels(val) => {
-                    new_before = val.clamp(min_before, max_before);
-                    used_space += new_before;
-                }
-
-                Units::Stretch(_) => {
-                    used_space += min_before.clamp(0.0, f32::MAX);
-                }
-
-                _ => {}
-            }
-
-            match size {
-                Units::Pixels(val) => {
-                    new_size = val.clamp(min_size, max_size);
-                    used_space += new_size;
-                }
-
-                Units::Auto => {
-                    new_size = cache.child_size_layout(node, dir, layout_type);
-
-                    new_size = new_size.clamp(min_size, max_size);
-
-                    new_size += border_before + border_after;
-
-                    used_space += new_size;
-                }
-
-                Units::Stretch(_) => {
-                    used_space += min_size;
-                }
-
-                _ => {}
-            }
-
-            match after {
-                Units::Pixels(val) => {
-                    new_after = val.clamp(min_after, max_after);
-                    used_space += new_after;
-                }
-
-                Units::Stretch(_) => {
-                    used_space += min_after.clamp(0.0, f32::MAX);
-                }
-
-                _ => {}
-            }
-
-            let position_type = node.position_type(store).unwrap_or_default();
-
-            cache.set_new_size(node, new_size, dir);
-            cache.set_before(node, new_before, dir);
-            cache.set_after(node, new_after, dir);
-
-            if let Some(parent) = parent {
-                if position_type == PositionType::ParentDirected {
-                    cache.set_child_size_sum(
-                        parent,
-                        cache.child_size_sum(parent, dir) + used_space,
-                        dir,
-                    );
-
-                    cache.set_child_size_max(
-                        parent,
-                        used_space.max(cache.child_size_max(parent, dir)),
-                        dir,
-                    );
-                }
-            }
-        }
-
-        LayoutType::Grid => {
-            // TODO
-        }
-    }
-}
-
-pub fn step3_row_col<'a, C, H>(
-    parent: <H as Hierarchy<'a>>::Item,
-    cache: &mut C,
-    hierarchy: &'a H,
-    store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
-    dir: Direction,
-    primary: bool,
-) where
-    C: Cache<Item = <H as Hierarchy<'a>>::Item>,
-    H: Hierarchy<'a>,
-{
-    let parent_layout_type = parent.layout_type(store).unwrap_or_default();
-    let child_before = parent.child_before(store, dir).unwrap_or_default();
-    let child_after = parent.child_after(store, dir).unwrap_or_default();
-
-    let row_col_between = parent.row_col_between(store, dir).unwrap_or_default();
-
-    let mut parent_size = cache.new_size(parent, dir);
-    let parent_width_hard = cache.new_width(parent);
-
-    let parent_border_before =
-        parent.border_before(store, dir).unwrap_or_default().value_or(parent_width_hard, 0.0);
-    let parent_border_after =
-        parent.border_after(store, dir).unwrap_or_default().value_or(parent_width_hard, 0.0);
-
-    parent_size -= parent_border_before + parent_border_after;
-
-    let mut parent_free_space = parent_size;
-    let mut parent_stretch_sum = 0.0;
-
-    let mut axis = SmallVec::<[ComputedData<<H as Hierarchy>::Item>; 3]>::new();
-
-    // ////////////////////////////////
-    // Calculate inflexible children //
-    ///////////////////////////////////
-    for node in hierarchy.child_iter(parent) {
-        let visible = cache.visible(node);
-        if !visible {
-            continue;
-        }
-
-        let layout_type = node.layout_type(store).unwrap_or_default();
-
-        let mut before = node.before(store, dir).unwrap_or_default();
-        let mut after = node.after(store, dir).unwrap_or_default();
-
-        let min_before =
-            node.min_before(store, dir).unwrap_or_default().value_or(parent_size, -f32::MAX);
-        let max_before =
-            node.max_before(store, dir).unwrap_or_default().value_or(parent_size, f32::MAX);
-        let min_after =
-            node.min_after(store, dir).unwrap_or_default().value_or(parent_size, -f32::MAX);
-        let max_after =
-            node.max_after(store, dir).unwrap_or_default().value_or(parent_size, f32::MAX);
-
-        let size = node.size(store, dir).unwrap_or(Units::Stretch(1.0));
-
-        let auto_size = content_size_smart(store, cache, node, parent, dir, layout_type, primary);
-
-        let mut min_size =
-            node.min_size(store, dir).unwrap_or_default().value_or(parent_size, auto_size);
-        min_size = min_size.clamp(0.0, f32::MAX);
-
-        let mut max_size = node
-            .max_size(store, dir)
-            .unwrap_or(Units::Pixels(f32::MAX))
-            .value_or(parent_size, auto_size);
-        max_size = max_size.max(min_size);
-
-        let border_before =
-            node.border_before(store, dir).unwrap_or_default().value_or(parent_width_hard, 0.0);
-        let border_after =
-            node.border_after(store, dir).unwrap_or_default().value_or(parent_width_hard, 0.0);
-
-        let position_type = node.position_type(store).unwrap_or_default();
-
-        // Parent overrides
-        if let Some(layout_dir) = parent_layout_type.direction() {
-            if layout_dir == dir {
-                if before == Units::Auto {
-                    if cache.stack_first_child(node) {
-                        before = child_before;
-                    } else {
-                        before = row_col_between;
-                    }
-                }
-                if after == Units::Auto {
-                    if cache.stack_last_child(node) {
-                        after = child_after;
-                    }
-                }
-            } else {
-                if before == Units::Auto {
-                    before = child_before;
-                }
-                if after == Units::Auto {
-                    after = child_after;
-                }
-            }
-        }
-
-        let mut stretch_sum = 0.0;
-        let mut free_space = parent_size;
-
-        let new_before = incorperate_axis(
-            before,
-            parent_size,
-            min_before,
-            max_before,
-            &mut free_space,
-            &mut stretch_sum,
-            Axis::Before,
-            &mut axis,
-            node,
-            0.0,
-        );
-        let new_size = incorperate_axis(
-            size,
-            parent_size,
-            min_size,
-            max_size,
-            &mut free_space,
-            &mut stretch_sum,
-            Axis::Size,
-            &mut axis,
-            node,
-            {
-                let auto = auto_size.clamp(min_size, max_size);
-                auto + border_before + border_after
-            },
-        );
-        let new_after = incorperate_axis(
-            after,
-            parent_size,
-            min_after,
-            max_after,
-            &mut free_space,
-            &mut stretch_sum,
-            Axis::After,
-            &mut axis,
-            node,
-            0.0,
-        );
-
-        cache.set_new_size(node, new_size, dir);
-        cache.set_before(node, new_before, dir);
-        cache.set_after(node, new_after, dir);
-
-        if position_type == PositionType::ParentDirected {
-            parent_free_space -= parent_size - free_space;
-            parent_stretch_sum += stretch_sum;
-        }
-
-        cache.set_free_space(node, free_space, dir);
-        cache.set_stretch_sum(node, stretch_sum, dir);
-    }
-
-    if parent_stretch_sum == 0.0 {
-        parent_stretch_sum = 1.0;
-    }
-
-    // Sort the stretch elements in each axis by the maximum size
-    axis.sort_by(|a, b| b.min.partial_cmp(&a.min).unwrap());
-
-    let mut stretch_sum = 0.0;
-    let mut free_space = 0.0;
-
-    /////////////////////////////////////
-    // Calculate flexible space & size //
-    /////////////////////////////////////
-    for computed_data in axis.iter() {
-        let node = computed_data.node.clone();
-
-        let position_type = node.position_type(store).unwrap_or_default();
-
-        match position_type {
-            PositionType::SelfDirected => {
-                free_space = cache.free_space(node, dir);
-                stretch_sum = cache.stretch_sum(node, dir);
-            }
-
-            PositionType::ParentDirected => {
-                if let Some(parent_layout_dir) = parent_layout_type.direction() {
-                    if parent_layout_dir == dir {
-                        stretch_sum = parent_stretch_sum;
-                        free_space = parent_free_space;
-                    } else {
-                        free_space = cache.free_space(node, dir);
-                        stretch_sum = cache.stretch_sum(node, dir);
-                    }
-                }
-            }
-        }
-
-        // Prevent a divide by zero when the stretch sum is 0
-        if stretch_sum == 0.0 {
-            stretch_sum = 1.0;
-        }
-
-        // Compute the new left/width/height based on free space, stretch factor, and stretch_sum
-        #[cfg(feature = "rounding")]
-        let mut new_value = (free_space * computed_data.value / stretch_sum).round();
-        #[cfg(not(feature = "rounding"))]
-        let mut new_value = free_space * computed_data.value / stretch_sum;
-
-        // Clamp the new left/width/right to be between min_ left/width/right and max_ left/width/right
-        new_value = new_value.clamp(computed_data.min, computed_data.max);
-
-        // Could perhaps replace this with a closure
-        match computed_data.axis {
-            Axis::Before => cache.set_before(node, new_value, dir),
-            Axis::Size => cache.set_new_size(node, new_value, dir),
-            Axis::After => cache.set_after(node, new_value, dir),
-        }
-
-        match position_type {
-            PositionType::SelfDirected => {
-                cache.set_stretch_sum(node, stretch_sum - computed_data.value, dir);
-                cache.set_free_space(node, free_space - new_value, dir);
-            }
-
-            PositionType::ParentDirected => {
-                if let Some(parent_layout_dir) = parent_layout_type.direction() {
-                    if parent_layout_dir == dir {
-                        parent_free_space -= new_value;
-                        parent_stretch_sum -= computed_data.value;
-                    } else {
-                        cache.set_stretch_sum(node, stretch_sum - computed_data.value, dir);
-                        cache.set_free_space(node, free_space - new_value, dir);
-                    }
-                }
-            }
-        }
-    }
-
-    let mut current_pos = 0.0;
-    let parent_pos = cache.pos(parent, dir) + parent_border_before;
-
-    ///////////////////////
-    // Position Children //
-    ///////////////////////
-    for node in hierarchy.child_iter(parent) {
-        let visible = cache.visible(node);
-        if !visible {
-            continue;
-        }
-
-        let before = cache.before(node, dir);
-        let after = cache.after(node, dir);
-
-        let new_size = cache.new_size(node, dir);
-
-        let position_type = node.position_type(store).unwrap_or_default();
-
-        let new_pos = match position_type {
-            PositionType::SelfDirected => parent_pos + before,
-
-            PositionType::ParentDirected => {
-                let new_pos = parent_pos + current_pos + before;
-
-                if let Some(parent_layout_dir) = parent_layout_type.direction() {
-                    if parent_layout_dir == dir {
-                        current_pos += before + new_size + after;
-                    }
-                }
-
-                new_pos
-            }
-        };
-
-        if new_pos != cache.pos(node, dir) {
-            cache.set_geo_changed(node, GeometryChanged::pos_changed(dir), true);
-        }
-
-        if new_size != cache.size(node, dir) {
-            cache.set_geo_changed(node, GeometryChanged::size_changed(dir), true);
-        }
-
-        cache.set_pos(node, new_pos, dir);
-        cache.set_size(node, new_size, dir);
-    }
-}
-
-pub fn step3_grid<'a, C, H>(
-    parent: <H as Hierarchy<'a>>::Item,
-    cache: &mut C,
-    hierarchy: &'a H,
-    store: &'a <<H as Hierarchy<'a>>::Item as Node<'a>>::Data,
-) where
-    C: Cache<Item = <H as Hierarchy<'a>>::Item>,
-    H: Hierarchy<'a>,
-{
-    let parent_width = cache.new_width(parent);
-    let parent_height = cache.new_height(parent);
-
-    /////////////////////////////////////////////////////
-    // Determine Size of non-flexible rows and columns //
-    /////////////////////////////////////////////////////
-    let grid_rows = parent.grid_rows(store).unwrap_or_default();
-    let grid_cols = parent.grid_cols(store).unwrap_or_default();
-
-    let mut row_heights = vec![(0.0, 0.0); 2 * grid_rows.len() + 2];
-    let mut col_widths = vec![(0.0, 0.0,); 2 * grid_cols.len() + 2];
-
-    let row_heights_len = row_heights.len();
-    let col_widths_len = col_widths.len();
-
-    let mut col_free_space = parent_width;
-    let mut row_free_space = parent_height;
-
-    let mut row_stretch_sum = 0.0;
-    let mut col_stretch_sum = 0.0;
-
-    let row_between = parent.row_between(store).unwrap_or_default();
-    let col_between = parent.col_between(store).unwrap_or_default();
-
-    let child_left = parent.child_left(store).unwrap_or_default();
-    let child_right = parent.child_right(store).unwrap_or_default();
-    let child_top = parent.child_top(store).unwrap_or_default();
-    let child_bottom = parent.child_bottom(store).unwrap_or_default();
-
-    match child_top {
-        Units::Pixels(val) => {
-            row_heights[0].1 = val;
-            row_free_space -= val;
-        }
-
-        Units::Stretch(val) => {
-            row_stretch_sum += val;
-        }
-
-        _ => {}
-    }
-
-    match child_bottom {
-        Units::Pixels(val) => {
-            row_heights[row_heights_len - 1].1 = val;
-            row_free_space -= val;
-        }
-
-        Units::Stretch(val) => {
-            row_stretch_sum += val;
-        }
-
-        _ => {}
-    }
-
-    match child_left {
-        Units::Pixels(val) => {
-            col_widths[0].1 = val;
-            col_free_space -= val;
-        }
-
-        Units::Stretch(val) => {
-            col_stretch_sum += val;
-        }
-
-        _ => {}
-    }
-
-    match child_right {
-        Units::Pixels(val) => {
-            col_widths[col_widths_len - 1].1 = val;
-            col_free_space -= val;
-        }
-
-        Units::Stretch(val) => {
-            col_stretch_sum += val;
-        }
-
-        _ => {}
-    }
-
-    for (i, row) in grid_rows.iter().enumerate() {
-        let row_index = 2 * i + 1;
-
-        match row {
-            &Units::Pixels(val) => {
-                row_heights[row_index].1 = val;
-                row_free_space -= val;
-            }
-
-            &Units::Stretch(val) => {
-                row_stretch_sum += val;
-            }
-
-            _ => {}
-        }
-
-        if i < grid_rows.len() - 1 {
-            let gutter_index = 2 * i + 2;
-            match row_between {
-                Units::Pixels(val) => {
-                    row_heights[gutter_index].1 = val;
-                    row_free_space -= val;
-                }
-
-                Units::Stretch(val) => {
-                    row_stretch_sum += val;
-                }
-
-                _ => {}
-            }
-        }
-    }
-
-    for (i, col) in grid_cols.iter().enumerate() {
-        let col_index = 2 * i + 1;
-        match col {
-            &Units::Pixels(val) => {
-                col_widths[col_index].1 = val;
-                col_free_space -= val;
-            }
-
-            &Units::Stretch(val) => {
-                col_stretch_sum += val;
-            }
-
-            _ => {}
-        }
-
-        if i < grid_cols.len() - 1 {
-            let gutter_index = 2 * i + 2;
-            match col_between {
-                Units::Pixels(val) => {
-                    col_widths[gutter_index].1 = val;
-                    col_free_space -= val;
-                }
-
-                Units::Stretch(val) => {
-                    col_stretch_sum += val;
-                }
-
-                _ => {}
-            }
-        }
-    }
-
-    if row_stretch_sum == 0.0 {
-        row_stretch_sum = 1.0;
-    }
-    if col_stretch_sum == 0.0 {
-        col_stretch_sum = 1.0;
-    }
-
-    /////////////////////////////////////////////////
-    // Determine Size of flexible rows and columns //
-    /////////////////////////////////////////////////
-
-    match child_top {
-        Units::Stretch(val) => {
-            #[cfg(feature = "rounding")]
-            {
-                row_heights[0].1 = (row_free_space * val / row_stretch_sum).round();
-            }
-            #[cfg(not(feature = "rounding"))]
-            {
-                row_heights[0].1 = row_free_space * val / row_stretch_sum;
-            }
-        }
-
-        _ => {}
-    }
-
-    match child_bottom {
-        Units::Stretch(val) => {
-            #[cfg(feature = "rounding")]
-            {
-                row_heights[row_heights_len - 1].1 =
-                    (row_free_space * val / row_stretch_sum).round();
-            }
-            #[cfg(not(feature = "rounding"))]
-            {
-                row_heights[row_heights_len - 1].1 = row_free_space * val / row_stretch_sum;
-            }
-        }
-
-        _ => {}
-    }
-
-    match child_left {
-        Units::Stretch(val) => {
-            #[cfg(feature = "rounding")]
-            {
-                col_widths[0].1 = (col_free_space * val / col_stretch_sum).round();
-            }
-            #[cfg(not(feature = "rounding"))]
-            {
-                col_widths[0].1 = col_free_space * val / col_stretch_sum;
-            }
-        }
-
-        _ => {}
-    }
-
-    match child_right {
-        Units::Stretch(val) => {
-            #[cfg(feature = "rounding")]
-            {
-                col_widths[col_widths_len - 1].1 = (col_free_space * val / col_stretch_sum).round();
-            }
-            #[cfg(not(feature = "rounding"))]
-            {
-                col_widths[col_widths_len - 1].1 = col_free_space * val / col_stretch_sum;
-            }
-        }
-
-        _ => {}
-    }
-
-    let mut current_row_pos = cache.posy(parent) + row_heights[0].1;
-    let mut current_col_pos = cache.posx(parent) + col_widths[0].1;
-
-    for (i, row) in grid_rows.iter().enumerate() {
-        let row_index = 2 * i + 1;
-        match row {
-            &Units::Stretch(val) => {
-                #[cfg(feature = "rounding")]
-                {
-                    row_heights[row_index].1 = (row_free_space * val / row_stretch_sum).round();
-                }
-                #[cfg(not(feature = "rounding"))]
-                {
-                    row_heights[row_index].1 = row_free_space * val / row_stretch_sum;
-                }
-            }
-
-            _ => {}
-        }
-
-        row_heights[row_index].0 = current_row_pos;
-        current_row_pos += row_heights[row_index].1;
-
-        if i < grid_rows.len() - 1 {
-            let gutter_index = 2 * i + 2;
-            match row_between {
-                Units::Stretch(val) => {
-                    #[cfg(feature = "rounding")]
-                    {
-                        row_heights[gutter_index].1 =
-                            (row_free_space * val / row_stretch_sum).round();
-                    }
-                    #[cfg(not(feature = "rounding"))]
-                    {
-                        row_heights[gutter_index].1 = row_free_space * val / row_stretch_sum;
-                    }
-                }
-
-                _ => {}
-            }
-
-            row_heights[gutter_index].0 = current_row_pos;
-            current_row_pos += row_heights[gutter_index].1;
-        }
-    }
-    let row_heights_len = row_heights.len() - 1;
-    row_heights[row_heights_len - 1].0 = current_row_pos;
-
-    for (i, col) in grid_cols.iter().enumerate() {
-        let col_index = 2 * i + 1;
-
-        match col {
-            &Units::Stretch(val) => {
-                #[cfg(feature = "rounding")]
-                {
-                    col_widths[col_index].1 = (col_free_space * val / col_stretch_sum).round();
-                }
-                #[cfg(not(feature = "rounding"))]
-                {
-                    col_widths[col_index].1 = col_free_space * val / col_stretch_sum;
-                }
-            }
-
-            _ => {}
-        }
-
-        col_widths[col_index].0 = current_col_pos;
-        current_col_pos += col_widths[col_index].1;
-
-        if i < grid_cols.len() - 1 {
-            let gutter_index = 2 * i + 2;
-            match col_between {
-                Units::Stretch(val) => {
-                    #[cfg(feature = "rounding")]
-                    {
-                        col_widths[gutter_index].1 =
-                            (col_free_space * val / col_stretch_sum).round();
-                    }
-                    #[cfg(not(feature = "rounding"))]
-                    {
-                        col_widths[gutter_index].1 = col_free_space * val / col_stretch_sum;
-                    }
-                }
-
-                _ => {}
-            }
-
-            col_widths[gutter_index].0 = current_col_pos;
-            current_col_pos += col_widths[gutter_index].1;
-        }
-    }
-
-    let col_widths_len = col_widths.len() - 1;
-    col_widths[col_widths_len - 1].0 = current_col_pos;
-
-    ///////////////////////////////////////////////////
-    // Position and Size child nodes within the grid //
-    ///////////////////////////////////////////////////
-    for node in hierarchy.child_iter(parent) {
-        let visible = cache.visible(node);
-        if !visible {
-            continue;
-        }
-
-        let row_start = 2 * node.row_index(store).unwrap_or_default() + 1;
-        let row_span = 2 * node.row_span(store).unwrap_or(1) - 1;
-        let row_end = row_start + row_span;
-
-        let col_start = 2 * node.col_index(store).unwrap_or_default() + 1;
-        let col_span = 2 * node.col_span(store).unwrap_or(1) - 1;
-        let col_end = col_start + col_span;
-
-        let new_posx = col_widths[col_start].0;
-        let new_width = col_widths[col_end].0 - new_posx;
-
-        let new_posy = row_heights[row_start].0;
-        let new_height = row_heights[row_end].0 - new_posy;
-
-        if new_posx != cache.posx(node) {
-            cache.set_geo_changed(node, GeometryChanged::POSX_CHANGED, true);
-        }
-
-        if new_posy != cache.posy(node) {
-            cache.set_geo_changed(node, GeometryChanged::POSY_CHANGED, true);
-        }
-
-        if new_width != cache.width(node) {
-            cache.set_geo_changed(node, GeometryChanged::WIDTH_CHANGED, true);
-        }
-
-        if new_height != cache.height(node) {
-            cache.set_geo_changed(node, GeometryChanged::HEIGHT_CHANGED, true);
-        }
-
-        cache.set_posx(node, new_posx);
-        cache.set_posy(node, new_posy);
-        cache.set_width(node, new_width);
-        cache.set_height(node, new_height);
-
-        cache.set_new_width(node, cache.width(node));
-        cache.set_new_height(node, cache.height(node));
-    }
-}
-
-fn incorperate_axis<N: Clone + for<'w> Node<'w>>(
-    units: Units,
-    parent_size: f32,
-    min: f32,
-    max: f32,
-    free_space: &mut f32,
-    stretch_sum: &mut f32,
-    axis: Axis,
-    axis_buf: &mut SmallVec<[ComputedData<N>; 3]>,
-    node: N,
-    auto_size: f32,
-) -> f32 {
-    match units {
-        Units::Pixels(val) => {
-            let new = val.clamp(min, max);
-            *free_space -= new;
-            new
-        }
-
-        Units::Percentage(val) => {
-            #[cfg(feature = "rounding")]
-            let new = ((val / 100.0) * parent_size).round();
-            #[cfg(not(feature = "rounding"))]
-            let new = (val / 100.0) * parent_size;
-            let new = new.clamp(min, max);
-            *free_space -= new;
-            new
-        }
-
-        Units::Stretch(val) => {
-            *stretch_sum += val;
-            axis_buf.push(ComputedData { node: node.clone(), value: val, min, max, axis });
+        Auto => {
+            // computed_main = 0.0;
+            // -std::f32::INFINITY
             0.0
         }
+    };
 
-        Units::Auto => {
-            *free_space -= auto_size;
-            auto_size
+    // Cross-axis size is determined by the parent
+    let mut computed_cross = bc.max.1;
+
+    // Debug printing
+    println!(
+        "DOWN {:?} computed_main: {}  computed_cross: {}",
+        node.key(),
+        computed_main,
+        computed_cross
+    );
+
+    // Apply content size
+    if main == Units::Auto && cross != Units::Auto {
+        if let Some(content_size) = node.content_size(store, computed_cross) {
+            computed_main = content_size;
         }
     }
-}
 
-// this function is called to retrieve the auto size of a child
-fn content_size_smart<'a, C, N>(
-    store: &'a N::Data,
-    cache: &mut C,
-    node: N,
-    parent: N,
-    dir: Direction,
-    layout_type: LayoutType,
-    primary: bool,
-) -> f32
-where
-    C: Cache<Item = N>,
-    N: Node<'a>,
-{
-    let basic_answer = cache.child_size_layout(node, dir, layout_type);
-    // don't care about grids for now
-    if layout_type == LayoutType::Grid {
-        return basic_answer;
+    // If the cross-size is supposed to be determined by the parent then this should probably be done by the parent as well
+    if cross == Units::Auto && main != Units::Auto {
+        if let Some(content_size) = node.content_size(store, computed_main) {
+            computed_cross = content_size;
+        }
     }
 
-    // first: check if we're computing the primary or secondary direction of this node
-    if Some(dir) == layout_type.direction() {
-        // primary direction: easy case - just use the computed size from phase 2
-        basic_answer
+    // Determine the main/cross size for the children based on the layout type of the parent and the node.
+    // i.e. if the parent layout type and the node layout type are different, swap the main and the cross
+    let (parent_main, parent_cross) = if parent_layout_type != layout_type {
+        (computed_cross, computed_main)
     } else {
-        // secondary direction: hard case - need to compute secondary content-size
-        let other_dim = if !primary {
-            // easy case - we've already computed the other dimension
-            cache.size(node, !dir)
+        (computed_main, computed_cross)
+    };
+
+    // Sum of all non-flexible space and size on the main-axis of the node.
+    let mut main_non_flex = 0.0f32;
+
+    // Sum of all space and size flex factors on the main-axis of the node.
+    let mut main_flex_sum = 0.0;
+
+    // Sum of all child nodes on the main-axis.
+    let mut main_sum = 0.0f32;
+    // Maximum of all child nodes on the cross-axis.
+    let mut cross_max = 0.0f32;
+
+    // List of child nodes for the current node.
+    let mut children = SmallVec::<[ChildNode<N>; 3]>::new();
+
+    // List of stretch nodes for the current node.
+    // A stretch node is any flexible space/size. e.g. main_before, main, and main_after are separate stretch nodes
+    let mut stretch_nodes = SmallVec::<[StretchNode<N>; 3]>::new();
+
+    // Parent overrides for child auto space.
+    let node_child_main_before = node.child_main_before(store, layout_type).unwrap_or(Units::Auto);
+    let node_child_main_after = node.child_main_after(store, layout_type).unwrap_or(Units::Auto);
+    let node_child_cross_before =
+        node.child_cross_before(store, layout_type).unwrap_or(Units::Auto);
+    let node_child_cross_after = node.child_cross_after(store, layout_type).unwrap_or(Units::Auto);
+
+    // Determine index of first and last parent-directed child nodes.
+    let mut iter = node.children(tree).enumerate().filter(|(_, child)| {
+        child.position_type(store).unwrap_or_default() != PositionType::SelfDirected
+    });
+
+    let first = iter.next().map(|(index, _)| index);
+    let last = iter.last().map_or(first, |(index, _)| Some(index));
+
+    // TODO: Should node have a method for querying the number of children?
+    let num_children = node.children(tree).fold(0, |acc, _| acc + 1);
+
+    // Compute non-flexible children.
+    for (index, child) in node.children(tree).enumerate() {
+        let child_position_type =
+            child.position_type(store).unwrap_or(PositionType::ParentDirected);
+
+        let mut child_main_before = child.main_before(store, layout_type).unwrap_or(Units::Auto);
+        let child_main = child.main(store, layout_type).unwrap_or(Units::Stretch(1.0));
+        let mut child_main_after = child.main_after(store, layout_type).unwrap_or(Units::Auto);
+
+        let mut child_cross_before = child.cross_before(store, layout_type).unwrap_or(Units::Auto);
+        let child_cross = child.cross(store, layout_type).unwrap_or(Units::Stretch(1.0));
+        let mut child_cross_after = child.cross_after(store, layout_type).unwrap_or(Units::Auto);
+
+        // Apply parent overrides to auto child space.
+        if child_main_before == Units::Auto {
+            if first == Some(index) || child_position_type == PositionType::SelfDirected {
+                child_main_before = node_child_main_before;
+            }
+        }
+
+        if child_main_after == Units::Auto {
+            if last == Some(index) || child_position_type == PositionType::SelfDirected {
+                child_main_after = node_child_main_after;
+            }
+        }
+
+        if child_cross_before == Units::Auto {
+            child_cross_before = node_child_cross_before;
+        }
+
+        if child_cross_after == Units::Auto {
+            child_cross_after = node_child_cross_after;
+        }
+
+        // Sum of flex factors on the main-axis of the child node.
+        let mut child_main_flex_sum = 0.0;
+        // Sum of flex factors on the cross-axis of the child node.
+        let mut child_cross_flex_sum = 0.0;
+
+        let mut computed_child_main_before = 0.0;
+        let mut computed_child_main = 0.0;
+        let mut computed_child_main_after = 0.0;
+
+        let mut computed_child_cross_before = 0.0;
+        let mut computed_child_cross = 0.0;
+        let mut computed_child_cross_after = 0.0;
+
+        match child_cross_before {
+            Pixels(val) => {
+                computed_child_cross_before = val;
+            }
+
+            Percentage(val) => {
+                computed_child_cross_before = (parent_cross * (val / 100.0)).round();
+            }
+
+            Stretch(factor) => {
+                child_cross_flex_sum += factor;
+            }
+
+            _ => {}
+        }
+
+        match child_cross_after {
+            Pixels(val) => {
+                computed_child_cross_after = val;
+            }
+
+            Percentage(val) => {
+                computed_child_cross_after = (parent_cross * (val / 100.0)).round();
+            }
+
+            Stretch(factor) => {
+                child_cross_flex_sum += factor;
+            }
+
+            _ => {}
+        }
+
+        match child_cross {
+            Pixels(val) => {
+                computed_child_cross = val;
+            }
+
+            Percentage(val) => {
+                computed_child_cross = (parent_cross * (val / 100.0)).round();
+            }
+
+            Stretch(factor) => {
+                child_cross_flex_sum += factor;
+            }
+
+            _ => {}
+        }
+
+        match child_main_before {
+            Pixels(val) => {
+                computed_child_main_before = val;
+            }
+
+            Percentage(val) => {
+                computed_child_main_before = (parent_main * (val / 100.0)).round();
+            }
+
+            Stretch(factor) => {
+                child_main_flex_sum += factor;
+
+                // Add node to list of stretch nodes for the line
+                stretch_nodes.push(StretchNode {
+                    node: child,
+                    index,
+                    value: factor,
+                    _min: 0.0,
+                    _max: std::f32::INFINITY,
+                    axis: Axis::MainBefore,
+                });
+            }
+
+            _ => {}
+        }
+
+        match child_main_after {
+            Pixels(val) => {
+                computed_child_main_after = val;
+            }
+
+            Percentage(val) => {
+                computed_child_main_after = (parent_main * (val / 100.0)).round();
+            }
+
+            Stretch(factor) => {
+                child_main_flex_sum += factor;
+
+                // Add node to list of stretch nodes for the line
+                stretch_nodes.push(StretchNode {
+                    node: child,
+                    index,
+                    value: factor,
+                    _min: 0.0,
+                    _max: std::f32::INFINITY,
+                    axis: Axis::MainAfter,
+                });
+            }
+
+            _ => {}
+        }
+
+        // Total computed size on the cross-axis of the child.
+        let child_cross_non_flex =
+            computed_child_cross_before + computed_child_cross + computed_child_cross_after;
+
+        // TODO: Compute child cross content_size here
+
+        match child_main {
+            Stretch(factor) => {
+                child_main_flex_sum += factor;
+
+                // Add node to list of stretch nodes for the node
+                stretch_nodes.push(StretchNode {
+                    node: child,
+                    index,
+                    value: factor,
+                    _min: 0.0,
+                    _max: std::f32::INFINITY,
+                    axis: Axis::Main,
+                });
+            }
+
+            _ => {
+                // println!("{:?} child_cross_free_space: {}")
+                let child_bc =
+                    BoxConstraints { min: (0.0, 0.0), max: (parent_main, computed_child_cross) };
+
+                let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
+
+                computed_child_main = child_size.main;
+                computed_child_cross = child_size.cross;
+            }
+        }
+
+        // Total computed size on the main-axis of the child.
+        let child_main_non_flex =
+            computed_child_main_before + computed_child_main + computed_child_main_after;
+
+        if child_position_type == PositionType::ParentDirected {
+            main_non_flex += child_main_non_flex;
+            main_flex_sum += child_main_flex_sum;
+
+            main_sum += child_main_non_flex;
+            // cross_max = cross_max.max(child_cross_non_flex);
         } else {
-            // we need to pre-compute the other dimension
-            // this is possible because we're going against the layout direction, so there are no
-            // other elements that could be taking up stretch space
+            main_sum = main_sum.max(child_main_non_flex);
+        }
 
-            let parent_size = cache.new_size(parent, !dir);
-            let mut stretch_sum = 0.0;
-            let mut width_remaining = parent_size;
-            // TODO: min/max-before/after
-            match node.before(store, !dir).unwrap_or_default() {
-                Units::Pixels(px) => width_remaining -= px,
-                Units::Percentage(p) => width_remaining -= p / 100.0 * parent_size,
-                Units::Stretch(su) => stretch_sum += su,
-                Units::Auto => {} // auto before/after means 0
-            }
-            match node.size(store, !dir).unwrap_or_default() {
-                Units::Pixels(px) => width_remaining -= px,
-                Units::Percentage(p) => width_remaining -= p / 100.0 * parent_size,
-                Units::Stretch(su) => stretch_sum += su,
-                Units::Auto => width_remaining -= cache.child_size_layout(node, !dir, layout_type),
-            }
-            match node.after(store, !dir).unwrap_or_default() {
-                Units::Pixels(px) => width_remaining -= px,
-                Units::Percentage(p) => width_remaining -= p / 100.0 * parent_size,
-                Units::Stretch(su) => stretch_sum += su,
-                Units::Auto => {}
-            }
-            if stretch_sum == 0.0 {
-                stretch_sum = 1.0;
-            }
-            let other_min = match node.min_size(store, !dir).unwrap_or_default() {
-                Units::Pixels(px) => px,
-                Units::Percentage(p) => p / 100.0 * parent_size,
-                Units::Stretch(su) => width_remaining * su / stretch_sum,
-                Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }
-            .clamp(0.0, f32::MAX);
-            let other_max = match node.max_size(store, !dir).unwrap_or_default() {
-                Units::Pixels(px) => px,
-                Units::Percentage(p) => p / 100.0 * parent_size,
-                Units::Stretch(su) => width_remaining * su / stretch_sum,
-                Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }
-            .clamp(other_min, f32::MAX);
-            let other_size = match node.size(store, !dir).unwrap_or_default() {
-                Units::Pixels(v) => v,
-                Units::Percentage(p) => p / 100.0 * parent_size,
-                Units::Stretch(su) => width_remaining * su / stretch_sum,
-                Units::Auto => cache.child_size_layout(node, !dir, layout_type),
-            }
-            .clamp(other_min, other_max);
+        cross_max = cross_max.max(child_cross_non_flex);
 
-            other_size
+        children.push(ChildNode {
+            node: child,
+            main_flex_sum: child_main_flex_sum,
+            main_non_flex: child_main_non_flex,
+            main_remainder: 0.0,
+            cross_flex_sum: child_cross_flex_sum,
+            cross_non_flex: child_cross_non_flex,
+            cross: computed_child_cross,
+            cross_remainder: 0.0,
+            main_before: computed_child_main_before,
+            main_after: computed_child_main_after,
+            cross_before: computed_child_cross_before,
+            cross_after: computed_child_cross_after,
+        });
+    }
+
+    // println!("{:?} parent_main: {} parent_cross: {}", node.key(), parent_main, parent_cross);
+
+    // Calculate free space on the main-axis for the node.
+    // This is the computed main-axis size of the node minus the sum of the main-axis sizes of all the children.
+    let free_main_space = (parent_main.max(main_sum) - main_non_flex).max(0.0);
+    let mut remainder: f32 = 0.0;
+    let main_px_per_flex = free_main_space / main_flex_sum;
+
+    // println!("{:?} free_main_space: {} {} {} {}", node.key(), parent_main, main_sum, main_non_flex, free_main_space);
+
+    // Compute flexible space and size on the main axis
+    for item in stretch_nodes.iter() {
+        let child_position_type = item.node.position_type(store).unwrap_or_default();
+
+        let factor = item.value;
+
+        let actual_main = if child_position_type == PositionType::SelfDirected {
+            let child_main_free_space =
+                (parent_main.max(main_sum) - children[item.index].main_non_flex).max(0.0);
+            let px_per_flex = child_main_free_space / children[item.index].main_flex_sum;
+            let desired_main = factor * px_per_flex + children[item.index].main_remainder;
+            let actual_main = desired_main.round();
+            children[item.index].main_remainder = desired_main - actual_main;
+            actual_main
+        } else {
+            let desired_main = factor * main_px_per_flex + remainder;
+            let actual_main = desired_main.round();
+            remainder = desired_main - actual_main;
+            actual_main
         };
 
-        let computed = node.content_size_secondary(store, other_dim, dir).unwrap_or_default();
-        computed.clamp(basic_answer, f32::MAX)
+        let computed_child_cross = children[item.index].cross;
+
+        match item.axis {
+            Axis::MainBefore => {
+                children[item.index].main_before = actual_main;
+            }
+
+            Axis::MainAfter => {
+                children[item.index].main_after = actual_main;
+            }
+
+            Axis::Main => {
+                let child_bc = BoxConstraints {
+                    min: (actual_main, computed_child_cross),
+                    max: (actual_main, computed_child_cross),
+                };
+
+                let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
+
+                children[item.index].cross_non_flex += child_size.cross;
+                cross_max = cross_max.max(children[item.index].cross_non_flex);
+
+                if child_size.main.is_finite() {
+                } else {
+                    // TODO: This is currently unreachable so there needs to be another way to warn
+                    // if there's only stretch children in an auto parent.
+                    println!("WARNING: Flex child in Auto parent");
+                }
+            }
+        }
     }
+
+    // Compute flexible space and size on the cross-axis.
+    // This needs to be done after computing the main-axis because layout computation for stretch children may cause
+    // the cross space to change due to content size.
+    // Hmmm, but surely this only applies to auto cross size?
+    for child in children.iter_mut() {
+        let child_cross_free_space = parent_cross.max(cross_max) - child.cross_non_flex;
+        // println!("{:?} {:?} child_cross_free_space: {} {} {}", node.key(), child.node.key(), parent_cross, cross_max, child.cross_non_flex);
+        let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
+
+        let child_cross_before = child.node.cross_before(store, layout_type).unwrap_or(Auto);
+        let child_cross = child.node.cross(store, layout_type).unwrap_or(Stretch(1.0));
+        let child_cross_after = child.node.cross_after(store, layout_type).unwrap_or(Auto);
+
+        match child_cross_before {
+            Stretch(factor) => {
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
+                child.cross_before = actual_cross;
+            }
+
+            _ => {}
+        }
+
+        match child_cross {
+            Stretch(factor) => {
+                // TODO: remove duplication
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
+
+                // let child_bc = BoxConstraints {
+                //     min: (actual_main, computed_child_cross),
+                //     max: (actual_main, computed_child_cross),
+                // };
+
+                // let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
+                //println!("CHILD {:?} actual_cross: {}", child.node.key(), actual_cross);
+
+                // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
+                // in the cache without needing to call layout again.
+                match layout_type {
+                    LayoutType::Row => {
+                        cache.set_height(child.node.key(), actual_cross);
+                    }
+
+                    LayoutType::Column => {
+                        cache.set_width(child.node.key(), actual_cross);
+                    }
+
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+
+        match child_cross_after {
+            Stretch(factor) => {
+                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+                let actual_cross = desired_cross.round();
+                child.cross_remainder = desired_cross - actual_cross;
+                child.cross_after = actual_cross;
+            }
+
+            _ => {}
+        }
+    }
+
+    // Position children.
+    let mut main_pos = 0.0;
+    for child in children.iter() {
+        let child_position_type = child.node.position_type(store).unwrap_or_default();
+
+        match child_position_type {
+            PositionType::SelfDirected => match layout_type {
+                LayoutType::Row => {
+                    cache.set_posx(child.node.key(), child.main_before);
+                    cache.set_posy(child.node.key(), child.cross_before);
+                }
+
+                LayoutType::Column => {
+                    cache.set_posy(child.node.key(), child.main_before);
+                    cache.set_posx(child.node.key(), child.cross_before);
+                }
+
+                _ => {}
+            },
+
+            PositionType::ParentDirected => {
+                main_pos += child.main_before;
+
+                match layout_type {
+                    LayoutType::Row => {
+                        cache.set_posx(child.node.key(), main_pos);
+                        cache.set_posy(child.node.key(), child.cross_before);
+                        let child_width = cache.width(child.node.key());
+                        main_pos += child_width;
+                    }
+
+                    LayoutType::Column => {
+                        cache.set_posy(child.node.key(), main_pos);
+                        cache.set_posx(child.node.key(), child.cross_before);
+                        let child_height = cache.height(child.node.key());
+                        main_pos += child_height;
+                    }
+
+                    _ => {}
+                }
+
+                main_pos += child.main_after;
+            }
+        };
+    }
+
+    // This part is required for auto size when the node has children but conflicts with the content size when the node doesn't have children
+    // TODO: Make it so a node can only have content size if it has no children?
+    // TODO: Potentially split and move this to before stretch calculations.
+    if num_children != 0 {
+        if parent_layout_type == layout_type {
+            if let Auto = main {
+                computed_main = main_sum;
+            }
+
+            if let Auto = cross {
+                computed_cross = cross_max;
+            }
+        } else {
+            if let Auto = main {
+                computed_main = cross_max;
+            }
+
+            if let Auto = cross {
+                computed_cross = main_sum;
+            }
+        }
+    }
+
+    // Debug printing
+    // println!(
+    //     "UP {:?} computed_main {}  computed_cross: {}",
+    //     node.key(),
+    //     computed_main,
+    //     computed_cross,
+    // );
+
+    // Set the computed size of the node in the cache.
+    match parent_layout_type {
+        LayoutType::Row => {
+            //println!("node: {:?} set_width: {} set_height: {}", node.key(), computed_main, computed_cross);
+            cache.set_width(node.key(), computed_main);
+            cache.set_height(node.key(), computed_cross);
+        }
+
+        LayoutType::Column => {
+            cache.set_height(node.key(), computed_main);
+            cache.set_width(node.key(), computed_cross);
+        }
+
+        _ => {}
+    }
+
+    // Propagate the computed size back up the tree.
+    Size { main: computed_main, cross: computed_cross }
 }

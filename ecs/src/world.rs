@@ -7,7 +7,7 @@ use crate::tree::Tree;
 
 use rand::Rng;
 
-
+/// An object which manages the state of an ECS application.
 #[derive(Default)]
 pub struct World {
     pub entity_manager: EntityManager,
@@ -44,57 +44,57 @@ impl World {
     }
 
     /// Set the desired width
-    pub fn set_main(&mut self, entity: Entity, value: Units) {
-        self.store.main.insert(entity, value);
+    pub fn set_width(&mut self, entity: Entity, value: Units) {
+        self.store.width.insert(entity, value);
     }
 
     /// Set the desired height
-    pub fn set_cross(&mut self, entity: Entity, value: Units) {
-        self.store.cross.insert(entity, value);
+    pub fn set_height(&mut self, entity: Entity, value: Units) {
+        self.store.height.insert(entity, value);
     }
 
     /// Set the desired left space
-    pub fn set_main_before(&mut self, entity: Entity, value: Units) {
-        self.store.main_before.insert(entity, value);
+    pub fn set_left(&mut self, entity: Entity, value: Units) {
+        self.store.left.insert(entity, value);
     }
 
     /// Set the desired right space
-    pub fn set_main_after(&mut self, entity: Entity, value: Units) {
-        self.store.main_after.insert(entity, value);
+    pub fn set_right(&mut self, entity: Entity, value: Units) {
+        self.store.right.insert(entity, value);
     }
 
     /// Set the desired top space
-    pub fn set_cross_before(&mut self, entity: Entity, value: Units) {
-        self.store.cross_before.insert(entity, value);
+    pub fn set_top(&mut self, entity: Entity, value: Units) {
+        self.store.top.insert(entity, value);
     }
 
     /// Set the desired bottom space
-    pub fn set_cross_after(&mut self, entity: Entity, value: Units) {
-        self.store.cross_after.insert(entity, value);
+    pub fn set_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.bottom.insert(entity, value);
     }
 
     /// Set the desired child_ space
     pub fn set_child_space(&mut self, entity: Entity, value: Units) {
-        self.store.child_main_before.insert(entity, value);
-        self.store.child_main_after.insert(entity, value);
-        self.store.child_cross_before.insert(entity, value);
-        self.store.child_cross_after.insert(entity, value);
+        self.store.child_left.insert(entity, value);
+        self.store.child_right.insert(entity, value);
+        self.store.child_top.insert(entity, value);
+        self.store.child_bottom.insert(entity, value);
     }
 
-    pub fn set_child_main_before(&mut self, entity: Entity, value: Units) {
-        self.store.child_main_before.insert(entity, value);
+    pub fn set_child_left(&mut self, entity: Entity, value: Units) {
+        self.store.child_left.insert(entity, value);
     }
 
-    pub fn set_child_main_after(&mut self, entity: Entity, value: Units) {
-        self.store.child_main_after.insert(entity, value);
+    pub fn set_child_right(&mut self, entity: Entity, value: Units) {
+        self.store.child_right.insert(entity, value);
     }
 
-    pub fn set_child_cross_before(&mut self, entity: Entity, value: Units) {
-        self.store.child_cross_before.insert(entity, value);
+    pub fn set_child_top(&mut self, entity: Entity, value: Units) {
+        self.store.child_top.insert(entity, value);
     }
 
-    pub fn set_child_cross_after(&mut self, entity: Entity, value: Units) {
-        self.store.child_cross_after.insert(entity, value);
+    pub fn set_child_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.child_bottom.insert(entity, value);
     }
 
 

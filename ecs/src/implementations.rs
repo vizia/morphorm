@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter::Rev;
 
 use morphorm::*;
 
@@ -34,28 +33,28 @@ impl Node for Entity {
         store.position_type.get(self).copied()
     }
 
-    fn main(&self, store: &Self::Store) -> Option<Units> {
-        store.main.get(self).copied()
+    fn width(&self, store: &Self::Store) -> Option<Units> {
+        store.width.get(self).copied()
     }
 
-    fn cross(&self, store: &Self::Store) -> Option<Units> {
-        store.cross.get(self).copied()
+    fn height(&self, store: &Self::Store) -> Option<Units> {
+        store.height.get(self).copied()
     }
 
-    fn main_before(&self, store: &Self::Store) -> Option<Units> {
-        store.main_before.get(self).copied()
+    fn left(&self, store: &Self::Store) -> Option<Units> {
+        store.left.get(self).copied()
     }
 
-    fn main_after(&self, store: &Self::Store) -> Option<Units> {
-        store.main_after.get(self).copied()
+    fn right(&self, store: &Self::Store) -> Option<Units> {
+        store.right.get(self).copied()
     }
 
-    fn cross_before(&self, store: &Self::Store) -> Option<Units> {
-        store.cross_before.get(self).copied()
+    fn top(&self, store: &Self::Store) -> Option<Units> {
+        store.top.get(self).copied()
     }
 
-    fn cross_after(&self, store: &Self::Store) -> Option<Units> {
-        store.cross_after.get(self).copied()
+    fn bottom(&self, store: &Self::Store) -> Option<Units> {
+        store.bottom.get(self).copied()
     }
 
     fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32> {
@@ -66,102 +65,27 @@ impl Node for Entity {
         }
     }
 
-    fn child_main_before(&self, store: &Self::Store) -> Option<Units> {
-        store.child_main_before.get(self).copied()
+    fn child_left(&self, store: &Self::Store) -> Option<Units> {
+        store.child_left.get(self).copied()
     }
 
-    fn child_main_after(&self, store: &Self::Store) -> Option<Units> {
-        store.child_main_after.get(self).copied()
+    fn child_right(&self, store: &Self::Store) -> Option<Units> {
+        store.child_right.get(self).copied()
     }
 
-    fn child_cross_before(&self, store: &Self::Store) -> Option<Units> {
-        store.child_cross_before.get(self).copied()
+    fn child_top(&self, store: &Self::Store) -> Option<Units> {
+        store.child_top.get(self).copied()
     }
 
-    fn child_cross_after(&self, store: &Self::Store) -> Option<Units> {
-        store.child_cross_after.get(self).copied()
-    }
-}
-
-// impl<'a,'w> Node<'w> for &'a Entity
-// where 'a: 'w
-// {
-//     type Data = Store;
-// }
-
-/*
-impl<'a> Hierarchy<'a> for Tree {
-    type Item = Entity;
-    type DownIter = std::vec::IntoIter<Entity>;
-    type UpIter = Rev<std::vec::IntoIter<Entity>>;
-    type ChildIter = ChildIterator<'a>;
-
-    fn up_iter(&'a self) -> Self::UpIter {
-        self.flatten().into_iter().rev()
-    }
-
-    fn down_iter(&'a self) -> Self::DownIter {
-        self.flatten().into_iter()
-    }
-
-    fn child_iter(&'a self, node: Self::Item) -> Self::ChildIter {
-        let first_child = self.get_first_child(node);
-        ChildIterator {
-            tree: self,
-            current_node: first_child,
-        }
-    }
-
-    fn parent(&self, node: Self::Item) -> Option<Self::Item> {
-        if node.index() < self.parent.len() {
-            return self.parent[node.index()]
-        }
-
-        None
-    }
-
-    fn is_first_child(&self, node: Self::Item) -> bool {
-        if let Some(parent) = self.parent(node) {
-            if let Some(first_child) = self.get_first_child(parent) {
-                if first_child == node {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        false
-    }
-
-    fn is_last_child(&self, node: Self::Item) -> bool {
-        if let Some(parent) = self.parent(node) {
-            if let Some(mut temp) = self.get_first_child(parent) {
-                while let Some(next_sibling) = self.get_next_sibling(temp) {
-                    temp = next_sibling;
-                }
-
-                if temp == node {
-                    return true;
-                }
-            }
-        }
-
-        false
+    fn child_bottom(&self, store: &Self::Store) -> Option<Units> {
+        store.child_bottom.get(self).copied()
     }
 }
-*/
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Rect {
     pub posx: f32,
     pub posy: f32,
-    pub width: f32,
-    pub height: f32,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Size {
     pub width: f32,
     pub height: f32,
 }

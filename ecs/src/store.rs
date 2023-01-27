@@ -3,7 +3,7 @@ use std::{collections::HashMap};
 
 use crate::entity::Entity;
 
-/// A storage struct representing a component store for an ECS
+/// A storage struct representing a component store for an ECS.
 #[derive(Default)]
 pub struct Store {
     pub visible: HashMap<Entity, bool>,
@@ -11,33 +11,33 @@ pub struct Store {
     pub layout_type: HashMap<Entity, LayoutType>,
     pub position_type: HashMap<Entity, PositionType>,
 
-    pub main_before: HashMap<Entity, Units>,
-    pub main_after: HashMap<Entity, Units>,
-    pub cross_before: HashMap<Entity, Units>,
-    pub cross_after: HashMap<Entity, Units>,
+    pub left: HashMap<Entity, Units>,
+    pub right: HashMap<Entity, Units>,
+    pub top: HashMap<Entity, Units>,
+    pub bottom: HashMap<Entity, Units>,
 
-    pub min_main_before: HashMap<Entity, Units>,
-    pub max_main_before: HashMap<Entity, Units>,
-    pub min_main_after: HashMap<Entity, Units>,
-    pub max_main_after: HashMap<Entity, Units>,
+    pub min_left: HashMap<Entity, Units>,
+    pub max_left: HashMap<Entity, Units>,
+    pub min_right: HashMap<Entity, Units>,
+    pub max_right: HashMap<Entity, Units>,
     pub min_top: HashMap<Entity, Units>,
     pub max_top: HashMap<Entity, Units>,
     pub min_bottom: HashMap<Entity, Units>,
     pub max_bottom: HashMap<Entity, Units>,
 
-    pub main: HashMap<Entity, Units>,
-    pub cross: HashMap<Entity, Units>,
-    pub min_main: HashMap<Entity, Units>,
-    pub max_main: HashMap<Entity, Units>,
-    pub min_cross: HashMap<Entity, Units>,
-    pub max_cross: HashMap<Entity, Units>,
+    pub width: HashMap<Entity, Units>,
+    pub height: HashMap<Entity, Units>,
+    pub min_width: HashMap<Entity, Units>,
+    pub max_width: HashMap<Entity, Units>,
+    pub min_height: HashMap<Entity, Units>,
+    pub max_height: HashMap<Entity, Units>,
 
-    pub child_main_before: HashMap<Entity, Units>,
-    pub child_main_after: HashMap<Entity, Units>,
-    pub child_cross_before: HashMap<Entity, Units>,
-    pub child_cross_after: HashMap<Entity, Units>,
-    pub main_between: HashMap<Entity, Units>,
-    pub cross_between: HashMap<Entity, Units>,
+    pub child_left: HashMap<Entity, Units>,
+    pub child_right: HashMap<Entity, Units>,
+    pub child_top: HashMap<Entity, Units>,
+    pub child_bottom: HashMap<Entity, Units>,
+    pub col_between: HashMap<Entity, Units>,
+    pub row_between: HashMap<Entity, Units>,
 
     // pub grid_rows: HashMap<Entity, Vec<Units>>,
     // pub grid_cols: HashMap<Entity, Vec<Units>>,

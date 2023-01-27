@@ -1,41 +1,12 @@
-use bitflags::bitflags;
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Direction {
-    X,
-    Y,
-}
-
-impl std::ops::Not for Direction {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        match self {
-            Direction::X => Direction::Y,
-            Direction::Y => Direction::X,
-        }
-    }
-}
-
-/// The layout type determines how nodes will be positioned when directed by the parent
+/// The layout type determines how the nodes will position its parent-directed children.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LayoutType {
-    /// Stack child elements horizontally
+    /// Stack child elements horizontally.
     Row,
-    /// Stack child elements vertically
+    /// Stack child elements vertically.
     Column,
-    /// Position child elements into specified rows and columns
+    /// Position child elements into specified rows and columns.
     Grid,
-}
-
-impl LayoutType {
-    pub fn direction(&self) -> Option<Direction> {
-        match self {
-            LayoutType::Row => Some(Direction::X),
-            LayoutType::Column => Some(Direction::Y),
-            LayoutType::Grid => None,
-        }
-    }
 }
 
 impl Default for LayoutType {
@@ -44,12 +15,12 @@ impl Default for LayoutType {
     }
 }
 
-/// The position type determines whether a node will be positioned in-line with its siblings or seperate
+/// The position type determines whether a node will be positioned in-line with its siblings or seperately.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PositionType {
-    /// Node is positioned relative to parent but ignores its siblings
+    /// Node is positioned relative to parent but ignores its siblings.
     SelfDirected,
-    /// Node is positioned relative to parent and in-line with siblings
+    /// Node is positioned relative to parent and in-line with siblings.
     ParentDirected,
 }
 
@@ -59,16 +30,16 @@ impl Default for PositionType {
     }
 }
 
-/// Units which describe spacing and size
+/// Units which describe spacing and size.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Units {
-    /// A number of pixels
+    /// A number of logical pixels.
     Pixels(f32),
-    /// A percentage of the parent dimension
+    /// A percentage of the parent dimension.
     Percentage(f32),
-    /// A factor of the remaining free space
+    /// A factor of the remaining free space.
     Stretch(f32),
-    /// Automatically determine the value
+    /// Automatically determine the value.
     Auto,
 }
 
@@ -121,184 +92,3 @@ impl Units {
         }
     }
 }
-
-bitflags! {
-    /// Flags which determine if the geometry needs to be calculated before layout, and whether the geometry has changed after layout
-    #[derive(Default)]
-    pub struct GeometryChanged: u8 {
-        /// The x position of the node needs recalculating
-        const CHANGE_POSX    = 0b00000001;
-        /// The y position of the node needs recalculating
-        const CHANGE_POSY    = 0b00000010;
-        /// The width of the node needs recalculating
-        const CHANGE_WIDTH   = 0b00000100;
-        /// The height of the node needs recalculating
-        const CHANGE_HEIGHT  = 0b00001000;
-        /// The x position of the node has changed
-        const POSX_CHANGED   = 0b00010000;
-        /// The y position of the node has changed
-        const POSY_CHANGED   = 0b00100000;
-        /// The width of the node has changed
-        const WIDTH_CHANGED  = 0b01000000;
-        /// The height of the node has changed
-        const HEIGHT_CHANGED = 0b10000000;
-    }
-}
-
-impl GeometryChanged {
-    pub fn change_pos(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::CHANGE_POSX,
-            Direction::Y => Self::CHANGE_POSY,
-        }
-    }
-
-    pub fn change_size(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::CHANGE_WIDTH,
-            Direction::Y => Self::CHANGE_HEIGHT,
-        }
-    }
-
-    pub fn pos_changed(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::POSX_CHANGED,
-            Direction::Y => Self::POSY_CHANGED,
-        }
-    }
-
-    pub fn size_changed(dir: Direction) -> Self {
-        match dir {
-            Direction::X => Self::WIDTH_CHANGED,
-            Direction::Y => Self::HEIGHT_CHANGED,
-        }
-    }
-}
-
-// WIP
-/*
-#[derive(Debug, Clone, Copy)]
-pub struct Value {
-    min: f32,
-    val: f32,
-    max: f32,
-}
-
-const MIN: f32 = -std::f32::MAX;
-const MAX: f32 = std::f32::MAX;
-
-
-#[derive(Debug, Clone, Copy)]
-pub enum Units2 {
-    Pixels(Value),
-    Percentage(Value),
-    Stretch(Value),
-    Auto,
-}
-
-impl Units2 {
-    pub fn pixels(val: f32) -> Self {
-        Self::Pixels(Value {min: MIN, val, max: MAX})
-    }
-
-    pub fn percentage(val: f32) -> Self {
-        Self::Pixels(Value {min: MIN, val, max: MAX})
-    }
-
-    pub fn stretch(val: f32) -> Self {
-        Self::Pixels(Value {min: MIN, val, max: MAX})
-    }
-
-    pub fn auto() -> Self {
-        Self::Auto
-    }
-
-    pub fn min(self, min: f32) -> Self {
-        match self {
-            Units2::Pixels(px) => {
-                assert!(min < px.max, "min must be less than max");
-                Units2::Pixels(Value {
-                    min,
-                    val: px.val,
-                    max: px.max,
-                })
-            }
-
-            Units2::Percentage(pc) => {
-                assert!(min < pc.max, "min must be less than max");
-                Units2::Percentage(Value {
-                    min,
-                    val: pc.val,
-                    max: pc.max,
-                })
-            }
-
-            Units2::Stretch(s) => {
-                assert!(min < s.max, "min must be less than max");
-                Units2::Stretch(Value {
-                    min,
-                    val: s.val,
-                    max: s.max,
-                })
-            }
-
-            Units2::Auto => {
-                Units2::Auto
-            }
-        }
-    }
-
-    pub fn max(self, max: f32) -> Self {
-        match self {
-            Units2::Pixels(px) => {
-                assert!(max > px.min, "max must be greater than min");
-                Units2::Pixels(Value {
-                    min: px.min,
-                    val: px.val,
-                    max,
-                })
-            }
-
-            Units2::Percentage(pc) => {
-                assert!(max > pc.min, "max must be greater than min");
-                Units2::Percentage(Value {
-                    min: pc.min,
-                    val: pc.val,
-                    max,
-                })
-            }
-
-            Units2::Stretch(s) => {
-                assert!(max > s.min, "max must be greater than min");
-                Units2::Stretch(Value {
-                    min: s.min,
-                    val: s.val,
-                    max,
-                })
-            }
-
-            Units2::Auto => {
-                Units2::Auto
-            }
-        }
-    }
-
-    pub fn clamp(&mut self) {
-        match self {
-            Units2::Pixels(px) => {
-                px.val = px.val.clamp(px.min, px.max);
-            }
-
-            Units2::Percentage(pc) => {
-                pc.val = pc.val.clamp(pc.min, pc.max);
-            }
-
-            Units2::Stretch(s) => {
-                s.val = s.val.clamp(s.min, s.max);
-            }
-
-            _=> {}
-        }
-    }
-}
-*/
