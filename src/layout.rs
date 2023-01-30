@@ -183,7 +183,7 @@ where
 
     // Determine index of first and last parent-directed child nodes.
     let mut iter = node.children(tree).enumerate().filter(|(_, child)| {
-        child.position_type(store) == Some(PositionType::ParentDirected)
+        child.position_type(store).unwrap_or_default() == PositionType::ParentDirected
     });
 
     let first = iter.next().map(|(index, _)| index);
