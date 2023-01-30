@@ -184,6 +184,8 @@ where
         node.child_cross_before(store, layout_type).unwrap_or(Units::Auto);
     let node_child_cross_after = node.child_cross_after(store, layout_type).unwrap_or(Units::Auto);
 
+    let node_child_main_between = node.main_between(store, layout_type).unwrap_or_default();
+
     // Determine index of first and last parent-directed child nodes.
     let mut iter = node.children(tree).enumerate().filter(|(_, child)| {
         child.position_type(store).unwrap_or_default() != PositionType::SelfDirected
@@ -212,6 +214,8 @@ where
         if child_main_before == Units::Auto {
             if first == Some(index) || child_position_type == PositionType::SelfDirected {
                 child_main_before = node_child_main_before;
+            } else {
+                child_main_before = node_child_main_between;
             }
         }
 
