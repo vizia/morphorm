@@ -142,6 +142,31 @@ pub(crate) trait NodeExt: Node {
             _ => None,
         }
     }
+
+    fn main_between(
+        &self,
+        store: &Self::Store,
+        parent_layout_type: LayoutType,
+    ) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.col_between(store),
+            LayoutType::Column => self.row_between(store),
+            _=> None,
+        }
+    }
+
+    // Currently unused until wrapping is implemented
+    fn cross_between(
+        &self,
+        store: &Self::Store,
+        parent_layout_type: LayoutType,
+    ) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.row_between(store),
+            LayoutType::Column => self.col_between(store),
+            _=> None,
+        }
+    }
 }
 
 impl<N: Node> NodeExt for N {}
