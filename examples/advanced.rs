@@ -34,6 +34,8 @@ pub struct Widget {
     child_right: Units,
     child_top: Units,
     child_bottom: Units,
+    row_between: Units,
+    col_between: Units,
     layout_type: LayoutType,
     position_type: PositionType,
     color: femtovg::Color,
@@ -120,6 +122,14 @@ impl Node for Widget {
 
     fn child_bottom(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.child_bottom)
+    }
+
+    fn row_between(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.row_between)
+    }
+
+    fn col_between(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.col_between)
     }
 }
 

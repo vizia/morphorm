@@ -41,6 +41,9 @@ pub trait Node: Sized + Clone {
     fn child_right(&self, store: &Self::Store) -> Option<Units>;
     fn child_top(&self, store: &Self::Store) -> Option<Units>;
     fn child_bottom(&self, store: &Self::Store) -> Option<Units>;
+
+    fn row_between(&self, store: &Self::Store) -> Option<Units>;
+    fn col_between(&self, store: &Self::Store) -> Option<Units>;
 }
 
 pub(crate) trait NodeExt: Node {

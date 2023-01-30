@@ -80,6 +80,14 @@ impl Node for Entity {
     fn child_bottom(&self, store: &Self::Store) -> Option<Units> {
         store.child_bottom.get(self).copied()
     }
+
+    fn row_between(&self, store: &Self::Store) -> Option<Units> {
+        store.row_between.get(self).copied()
+    }
+
+    fn col_between(&self, store: &Self::Store) -> Option<Units> {
+        store.col_between.get(self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
