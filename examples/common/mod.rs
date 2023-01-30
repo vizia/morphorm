@@ -51,7 +51,7 @@ pub fn render(mut world: World, root: Entity) {
         #[cfg(not(target_arch = "wasm32"))]
         let window = windowed_context.window();
 
-        *control_flow = ControlFlow::Poll;
+        *control_flow = ControlFlow::Wait;
 
         match event {
             Event::LoopDestroyed => return,
@@ -98,7 +98,7 @@ pub fn render(mut world: World, root: Entity) {
 
                 WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
                     if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
-                        print_node(&root, &world);
+                        print_node(&world, &root, true, false, String::new());
                     }
                 }
                 _ => (),
@@ -140,10 +140,6 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
     let width = world.cache.width(node.key());
     let height = world.cache.height(node.key());
 
-    //println!("Draw node: {:?} {} {}", node.key(), posx, posy);
-
-    //println!("Draw Node: {:?} at position: {} {}", node.key(), posx + parent_posx, posy+parent_posy);
-
     let red = world.store.red.get(&node.key()).unwrap_or(&0u8);
     let green = world.store.green.get(&node.key()).unwrap_or(&0u8);
     let blue = world.store.blue.get(&node.key()).unwrap_or(&0u8);
@@ -170,21 +166,26 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
     }
 }
 
-fn print_node<N: Node<Tree = Tree, CacheKey = Entity>>(
-    node: &N,
-    world: &World,
-) {
-
+/// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
+fn print_node(world: &World, node: &impl Node<Tree = Tree, CacheKey = Entity>, is_root: bool, has_sibling: bool, lines_string: String) {
     let entity = node.key();
+
+    let fork_string = if is_root {"│"} else if has_sibling { "├───┤" } else { "└───┤" };
     println!(
-        "{:?} px: {:?} py: {:?} w: {:?} h: {:?}",
-        entity,
-        world.cache.posx(entity),
-        world.cache.posy(entity),
-        world.cache.width(entity),
-        world.cache.height(entity)
+        "{lines}{fork}{id}| {x:#3} {y:#3} {w:#3} {h:#3}│",
+        lines = lines_string,
+        fork = fork_string,
+        id = entity.0,
+        x = world.cache.posx(entity),
+        y = world.cache.posx(entity),
+        w = world.cache.width(entity),
+        h = world.cache.height(entity),
     );
+    let bar = if is_root {""} else if has_sibling { "│   " } else { "    " };
+    let new_string = lines_string + bar;
+
     for child in node.children(&world.tree) {
-        print_node(child, world);
+        let has_sibling = world.tree.get_next_sibling(&child.key()).is_some();
+        print_node(world, child, false, has_sibling, new_string.clone());
     }
 }
