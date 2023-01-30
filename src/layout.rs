@@ -119,23 +119,19 @@ where
 
         Stretch(_) => bc.max.0,
 
-        Auto => {
-            // computed_main = 0.0;
-            // -std::f32::INFINITY
-            0.0
-        }
+        Auto => 0.0,
     };
 
     // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
 
     // Debug printing
-    println!(
-        "DOWN {:?} computed_main: {}  computed_cross: {}",
-        node.key(),
-        computed_main,
-        computed_cross
-    );
+    // println!(
+    //     "DOWN {:?} computed_main: {}  computed_cross: {}",
+    //     node.key(),
+    //     computed_main,
+    //     computed_cross
+    // );
 
     // Apply content size
     if main == Units::Auto && cross != Units::Auto {
@@ -167,6 +163,7 @@ where
 
     // Sum of all child nodes on the main-axis.
     let mut main_sum = 0.0f32;
+
     // Maximum of all child nodes on the cross-axis.
     let mut cross_max = 0.0f32;
 
@@ -178,37 +175,33 @@ where
     let mut stretch_nodes = SmallVec::<[StretchNode<N>; 3]>::new();
 
     // Parent overrides for child auto space.
-    let node_child_main_before = node.child_main_before(store, layout_type).unwrap_or(Units::Auto);
-    let node_child_main_after = node.child_main_after(store, layout_type).unwrap_or(Units::Auto);
-    let node_child_cross_before =
-        node.child_cross_before(store, layout_type).unwrap_or(Units::Auto);
-    let node_child_cross_after = node.child_cross_after(store, layout_type).unwrap_or(Units::Auto);
-
+    let node_child_main_before = node.child_main_before(store, layout_type).unwrap_or_default();
+    let node_child_main_after = node.child_main_after(store, layout_type).unwrap_or_default();
+    let node_child_cross_before = node.child_cross_before(store, layout_type).unwrap_or_default();
+    let node_child_cross_after = node.child_cross_after(store, layout_type).unwrap_or_default();
     let node_child_main_between = node.main_between(store, layout_type).unwrap_or_default();
 
     // Determine index of first and last parent-directed child nodes.
     let mut iter = node.children(tree).enumerate().filter(|(_, child)| {
-        child.position_type(store).unwrap_or_default() != PositionType::SelfDirected
+        child.position_type(store) == Some(PositionType::ParentDirected)
     });
 
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
 
-    // TODO: Should node have a method for querying the number of children?
-    let num_children = node.children(tree).fold(0, |acc, _| acc + 1);
+    let num_children = node.children(tree).count();
 
     // Compute non-flexible children.
     for (index, child) in node.children(tree).enumerate() {
-        let child_position_type =
-            child.position_type(store).unwrap_or(PositionType::ParentDirected);
+        let child_position_type = child.position_type(store).unwrap_or_default();
 
-        let mut child_main_before = child.main_before(store, layout_type).unwrap_or(Units::Auto);
+        let mut child_main_before = child.main_before(store, layout_type).unwrap_or_default();
         let child_main = child.main(store, layout_type).unwrap_or(Units::Stretch(1.0));
-        let mut child_main_after = child.main_after(store, layout_type).unwrap_or(Units::Auto);
+        let mut child_main_after = child.main_after(store, layout_type).unwrap_or_default();
 
-        let mut child_cross_before = child.cross_before(store, layout_type).unwrap_or(Units::Auto);
+        let mut child_cross_before = child.cross_before(store, layout_type).unwrap_or_default();
         let child_cross = child.cross(store, layout_type).unwrap_or(Units::Stretch(1.0));
-        let mut child_cross_after = child.cross_after(store, layout_type).unwrap_or(Units::Auto);
+        let mut child_cross_after = child.cross_after(store, layout_type).unwrap_or_default();
 
         // Apply parent overrides to auto child space.
         if child_main_before == Units::Auto {
@@ -306,7 +299,6 @@ where
             Stretch(factor) => {
                 child_main_flex_sum += factor;
 
-                // Add node to list of stretch nodes for the line
                 stretch_nodes.push(StretchNode {
                     node: child,
                     index,
@@ -332,7 +324,6 @@ where
             Stretch(factor) => {
                 child_main_flex_sum += factor;
 
-                // Add node to list of stretch nodes for the line
                 stretch_nodes.push(StretchNode {
                     node: child,
                     index,
@@ -347,10 +338,8 @@ where
         }
 
         // Total computed size on the cross-axis of the child.
-        let child_cross_non_flex =
+        let mut child_cross_non_flex =
             computed_child_cross_before + computed_child_cross + computed_child_cross_after;
-
-        // TODO: Compute child cross content_size here
 
         match child_main {
             Stretch(factor) => {
@@ -368,7 +357,6 @@ where
             }
 
             _ => {
-                // println!("{:?} child_cross_free_space: {}")
                 let child_bc =
                     BoxConstraints { min: (0.0, 0.0), max: (parent_main, computed_child_cross) };
 
@@ -376,6 +364,10 @@ where
 
                 computed_child_main = child_size.main;
                 computed_child_cross = child_size.cross;
+                
+                if child_cross == Units::Auto {
+                    child_cross_non_flex += computed_child_cross;
+                }
             }
         }
 
@@ -388,7 +380,6 @@ where
             main_flex_sum += child_main_flex_sum;
 
             main_sum += child_main_non_flex;
-            // cross_max = cross_max.max(child_cross_non_flex);
         } else {
             main_sum = main_sum.max(child_main_non_flex);
         }
@@ -411,15 +402,11 @@ where
         });
     }
 
-    // println!("{:?} parent_main: {} parent_cross: {}", node.key(), parent_main, parent_cross);
-
     // Calculate free space on the main-axis for the node.
     // This is the computed main-axis size of the node minus the sum of the main-axis sizes of all the children.
     let free_main_space = (parent_main.max(main_sum) - main_non_flex).max(0.0);
     let mut remainder: f32 = 0.0;
     let main_px_per_flex = free_main_space / main_flex_sum;
-
-    // println!("{:?} free_main_space: {} {} {} {}", node.key(), parent_main, main_sum, main_non_flex, free_main_space);
 
     // Compute flexible space and size on the main axis
     for item in stretch_nodes.iter() {
@@ -595,18 +582,22 @@ where
     if num_children != 0 {
         if parent_layout_type == layout_type {
             if let Auto = main {
+                println!("{:?} A", node.key());
                 computed_main = main_sum;
             }
 
             if let Auto = cross {
+                println!("{:?} B", node.key());
                 computed_cross = cross_max;
             }
         } else {
             if let Auto = main {
+                println!("{:?} C", node.key());
                 computed_main = cross_max;
             }
 
             if let Auto = cross {
+                println!("{:?} D", node.key());
                 computed_cross = main_sum;
             }
         }
@@ -623,7 +614,6 @@ where
     // Set the computed size of the node in the cache.
     match parent_layout_type {
         LayoutType::Row => {
-            //println!("node: {:?} set_width: {} set_height: {}", node.key(), computed_main, computed_cross);
             cache.set_width(node.key(), computed_main);
             cache.set_height(node.key(), computed_cross);
         }
