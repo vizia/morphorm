@@ -1,5 +1,5 @@
 use femtovg::FontId;
-use glutin::event::{VirtualKeyCode, ElementState};
+use glutin::event::{ElementState, VirtualKeyCode};
 use morphorm_ecs::tree::Tree;
 pub use morphorm_ecs::{Entity, World};
 
@@ -30,13 +30,16 @@ pub fn render(mut world: World, root: Entity) {
             .with_inner_size(winit::dpi::PhysicalSize::new(1000, 600))
             .with_title("Morphorm Demo");
 
-        let windowed_context =
-            ContextBuilder::new().with_vsync(false).build_windowed(window_builder, &event_loop).unwrap();
+        let windowed_context = ContextBuilder::new()
+            .with_vsync(false)
+            .build_windowed(window_builder, &event_loop)
+            .unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
         let renderer = unsafe {
             OpenGl::new_from_function(|s| windowed_context.get_proc_address(s) as *const _)
-            .expect("Cannot create renderer") };
+                .expect("Cannot create renderer")
+        };
 
         (renderer, windowed_context)
     };
@@ -45,7 +48,6 @@ pub fn render(mut world: World, root: Entity) {
 
     let font =
         canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
-
 
     event_loop.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
@@ -97,7 +99,9 @@ pub fn render(mut world: World, root: Entity) {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
-                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
+                    if input.virtual_keycode == Some(VirtualKeyCode::H)
+                        && input.state == ElementState::Pressed
+                    {
                         print_node(&world, &root, true, false, String::new());
                     }
                 }
@@ -167,10 +171,22 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
 }
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
-fn print_node(world: &World, node: &impl Node<Tree = Tree, CacheKey = Entity>, is_root: bool, has_sibling: bool, lines_string: String) {
+fn print_node(
+    world: &World,
+    node: &impl Node<Tree = Tree, CacheKey = Entity>,
+    is_root: bool,
+    has_sibling: bool,
+    lines_string: String,
+) {
     let entity = node.key();
 
-    let fork_string = if is_root {"│"} else if has_sibling { "├───┤" } else { "└───┤" };
+    let fork_string = if is_root {
+        "│"
+    } else if has_sibling {
+        "├───┤"
+    } else {
+        "└───┤"
+    };
     println!(
         "{lines}{fork}{id}| {x:#3} {y:#3} {w:#3} {h:#3}│",
         lines = lines_string,
@@ -181,7 +197,13 @@ fn print_node(world: &World, node: &impl Node<Tree = Tree, CacheKey = Entity>, i
         w = world.cache.width(entity),
         h = world.cache.height(entity),
     );
-    let bar = if is_root {""} else if has_sibling { "│   " } else { "    " };
+    let bar = if is_root {
+        ""
+    } else if has_sibling {
+        "│   "
+    } else {
+        "    "
+    };
     let new_string = lines_string + bar;
 
     for child in node.children(&world.tree) {

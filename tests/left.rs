@@ -307,7 +307,6 @@ fn stretch_left_stretch_width() {
     );
 }
 
-
 #[test]
 fn pixels_left_self_directed() {
     let mut world = World::default();
