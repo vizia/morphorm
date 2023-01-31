@@ -5,21 +5,12 @@ use winit::window::WindowBuilder;
 
 use rand::Rng;
 
-use femtovg::{
-    renderer::OpenGl,
-    Align,
-    Baseline,
-    Canvas,
-    Color,
-    Paint,
-    Path,
-    FontId,
-};
+use femtovg::{renderer::OpenGl, Align, Baseline, Canvas, Color, FontId, Paint, Path};
 
 use std::collections::HashMap;
 
-use morphorm::*;
 use morphorm::Units::*;
+use morphorm::*;
 
 #[derive(Default, Clone)]
 pub struct Widget {
@@ -321,7 +312,8 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
                     layout(
                         &root,
                         LayoutType::Row,
-                        physical_size.width as f32, physical_size.height as f32,
+                        physical_size.width as f32,
+                        physical_size.height as f32,
                         &mut cache,
                         &(),
                         &(),

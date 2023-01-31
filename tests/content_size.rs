@@ -89,7 +89,7 @@ fn nested_content_size() {
 //     world.set_cross(node3, Units::Auto);
 //     world.set_content_size(node3, |main| main);
 
-//     
+//
 
 //     layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 

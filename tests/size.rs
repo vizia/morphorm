@@ -144,7 +144,7 @@ fn stretch_width_stretch_height() {
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 600.0 }));
 
-    world.set_layout_type(root, LayoutType::Column);  
+    world.set_layout_type(root, LayoutType::Column);
 
     layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 

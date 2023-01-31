@@ -1,7 +1,7 @@
 use smallvec::SmallVec;
 
-use crate::{Cache, LayoutType, Node, NodeExt, Units, PositionType};
 use crate::Units::*;
+use crate::{Cache, LayoutType, Node, NodeExt, PositionType, Units};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
@@ -25,7 +25,7 @@ pub struct StretchNode<'a, N: Node> {
     node: &'a N,
     // The index of the node.
     index: usize,
-    // The stretch factor of the node. 
+    // The stretch factor of the node.
     factor: f32,
     // The minimum constraint of the node.
     _min: f32,
@@ -199,10 +199,9 @@ where
             }
         }
 
-        if child_main_after == Units::Auto {
-            if last == Some(index) || child_position_type == PositionType::SelfDirected {
-                child_main_after = node_child_main_after;
-            }
+        if child_main_after == Units::Auto && (last == Some(index) || child_position_type == PositionType::SelfDirected)
+        {
+            child_main_after = node_child_main_after;
         }
 
         if child_cross_before == Units::Auto {
@@ -377,7 +376,6 @@ where
             }
 
             _ => {
-
                 let child_size = layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store);
 
                 computed_child_main = child_size.main;
@@ -476,49 +474,37 @@ where
         let child_cross = child.node.cross(store, layout_type).unwrap_or(Stretch(1.0));
         let child_cross_after = child.node.cross_after(store, layout_type).unwrap_or(Auto);
 
-        match child_cross_before {
-            Stretch(factor) => {
-                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-                let actual_cross = desired_cross.round();
-                child.cross_remainder = desired_cross - actual_cross;
-                child.cross_before = actual_cross;
-            }
-
-            _ => {}
+        if let Stretch(factor) = child_cross_before {
+            let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+            let actual_cross = desired_cross.round();
+            child.cross_remainder = desired_cross - actual_cross;
+            child.cross_before = actual_cross;
         }
 
-        match child_cross {
-            Stretch(factor) => {
-                // TODO: remove duplication
-                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-                let actual_cross = desired_cross.round();
-                child.cross_remainder = desired_cross - actual_cross;
+        if let Stretch(factor) = child_cross {
+            // TODO: remove duplication
+            let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+            let actual_cross = desired_cross.round();
+            child.cross_remainder = desired_cross - actual_cross;
 
-                // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
-                // in the cache without needing to call layout again.
-                match layout_type {
-                    LayoutType::Row => {
-                        cache.set_height(child.node.key(), actual_cross);
-                    }
+            // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
+            // in the cache without needing to call layout again.
+            match layout_type {
+                LayoutType::Row => {
+                    cache.set_height(child.node.key(), actual_cross);
+                }
 
-                    LayoutType::Column => {
-                        cache.set_width(child.node.key(), actual_cross);
-                    }
+                LayoutType::Column => {
+                    cache.set_width(child.node.key(), actual_cross);
                 }
             }
-
-            _ => {}
         }
 
-        match child_cross_after {
-            Stretch(factor) => {
-                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-                let actual_cross = desired_cross.round();
-                child.cross_remainder = desired_cross - actual_cross;
-                child.cross_after = actual_cross;
-            }
-
-            _ => {}
+        if let Stretch(factor) = child_cross_after {
+            let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+            let actual_cross = desired_cross.round();
+            child.cross_remainder = desired_cross - actual_cross;
+            child.cross_after = actual_cross;
         }
     }
 
