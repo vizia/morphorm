@@ -26,14 +26,11 @@ pub fn render(mut world: World, root: Entity) {
     let (renderer, windowed_context) = {
         use glutin::ContextBuilder;
 
-        let window_builder = WindowBuilder::new()
-            .with_inner_size(winit::dpi::PhysicalSize::new(1000, 600))
-            .with_title("Morphorm Demo");
+        let window_builder =
+            WindowBuilder::new().with_inner_size(winit::dpi::PhysicalSize::new(1000, 600)).with_title("Morphorm Demo");
 
-        let windowed_context = ContextBuilder::new()
-            .with_vsync(false)
-            .build_windowed(window_builder, &event_loop)
-            .unwrap();
+        let windowed_context =
+            ContextBuilder::new().with_vsync(false).build_windowed(window_builder, &event_loop).unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
         let renderer = unsafe {
@@ -46,8 +43,7 @@ pub fn render(mut world: World, root: Entity) {
 
     let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
 
-    let font =
-        canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
+    let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
     event_loop.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
@@ -60,8 +56,7 @@ pub fn render(mut world: World, root: Entity) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    let layout_type =
-                        world.store.layout_type.get(&root).cloned().unwrap_or_default();
+                    let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
                     let mut root_bc = BoxConstraints::default();
                     match layout_type {
                         LayoutType::Row => {
@@ -85,21 +80,12 @@ pub fn render(mut world: World, root: Entity) {
                         }
                     }
 
-                    layout(
-                        &root,
-                        layout_type,
-                        &root_bc,
-                        &mut world.cache,
-                        &world.tree,
-                        &world.store,
-                    );
+                    layout(&root, layout_type, &root_bc, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
-                    if input.virtual_keycode == Some(VirtualKeyCode::H)
-                        && input.state == ElementState::Pressed
-                    {
+                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
                         print_node(&world, &root, true, false, String::new());
                     }
                 }
@@ -110,13 +96,7 @@ pub fn render(mut world: World, root: Entity) {
                 let size = window.inner_size();
 
                 canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-                canvas.clear_rect(
-                    0,
-                    0,
-                    size.width as u32,
-                    size.height as u32,
-                    Color::rgbf(0.3, 0.3, 0.32),
-                );
+                canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
                 draw_node(&root, &world, 0.0, 0.0, font, &mut canvas);
 

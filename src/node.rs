@@ -119,35 +119,19 @@ pub(crate) trait NodeExt: Node {
         parent_layout_type.select(self.bottom(store), self.right(store))
     }
 
-    fn child_main_before(
-        &self,
-        store: &Self::Store,
-        parent_layout_type: LayoutType,
-    ) -> Option<Units> {
+    fn child_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         parent_layout_type.select(self.child_left(store), self.child_top(store))
     }
 
-    fn child_main_after(
-        &self,
-        store: &Self::Store,
-        parent_layout_type: LayoutType,
-    ) -> Option<Units> {
+    fn child_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         parent_layout_type.select(self.child_right(store), self.child_bottom(store))
     }
 
-    fn child_cross_before(
-        &self,
-        store: &Self::Store,
-        parent_layout_type: LayoutType,
-    ) -> Option<Units> {
+    fn child_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         parent_layout_type.select(self.child_top(store), self.child_left(store))
     }
 
-    fn child_cross_after(
-        &self,
-        store: &Self::Store,
-        parent_layout_type: LayoutType,
-    ) -> Option<Units> {
+    fn child_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         parent_layout_type.select(self.child_bottom(store), self.child_right(store))
     }
 
@@ -160,12 +144,36 @@ pub(crate) trait NodeExt: Node {
         parent_layout_type.select(self.row_between(store), self.col_between(store))
     }
 
-    fn min_main_before(
-        &self,
-        store: &Self::Store,
-        parent_layout_type: LayoutType,
-    ) -> Option<Units> {
+    fn min_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         parent_layout_type.select(self.min_left(store), self.min_top(store))
+    }
+
+    fn max_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.max_left(store), self.max_top(store))
+    }
+
+    fn min_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.min_right(store), self.min_bottom(store))
+    }
+
+    fn max_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.max_right(store), self.max_bottom(store))
+    }
+
+    fn min_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.min_top(store), self.min_left(store))
+    }
+
+    fn max_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.max_top(store), self.max_left(store))
+    }
+
+    fn min_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.min_bottom(store), self.min_right(store))
+    }
+
+    fn max_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        parent_layout_type.select(self.max_bottom(store), self.max_right(store))
     }
 }
 

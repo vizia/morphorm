@@ -20,10 +20,7 @@ fn min_width_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
 }
 
 #[test]
@@ -45,10 +42,7 @@ fn max_width_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
 }
 
 #[test]
@@ -70,10 +64,7 @@ fn min_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 }));
 }
 
 #[test]
@@ -95,10 +86,7 @@ fn max_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 }));
 }
 
 #[test]
@@ -120,10 +108,7 @@ fn min_width_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 }));
 }
 
 #[test]
@@ -145,10 +130,7 @@ fn max_width_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 }));
 }
 
 #[test]
@@ -170,10 +152,7 @@ fn min_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 }));
 }
 
 #[test]
@@ -195,10 +174,7 @@ fn max_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 }));
 }
 
 #[test]
@@ -221,10 +197,7 @@ fn min_width_pixels_min_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
 
 #[test]
@@ -247,10 +220,7 @@ fn max_width_pixels_max_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
 
 #[test]
@@ -273,10 +243,7 @@ fn min_width_pixels_max_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
 
 #[test]
@@ -299,10 +266,7 @@ fn max_width_pixels_min_height_pixels() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
 
 #[test]
@@ -325,10 +289,7 @@ fn min_width_percentage_min_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
 #[test]
@@ -351,10 +312,7 @@ fn max_width_percentage_max_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
 #[test]
@@ -377,10 +335,7 @@ fn min_width_percentage_max_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
 #[test]
@@ -403,8 +358,5 @@ fn max_width_percentage_min_height_percentage() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
