@@ -3,16 +3,10 @@ use smallvec::SmallVec;
 use crate::{Cache, LayoutType, Node, NodeExt, Units};
 use crate::{PositionType, Units::*};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct BoxConstraints {
     pub min: (f32, f32),
     pub max: (f32, f32),
-}
-
-impl Default for BoxConstraints {
-    fn default() -> Self {
-        BoxConstraints { min: (0.0, 0.0), max: (0.0, 0.0) }
-    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -99,9 +93,6 @@ where
     // See draw_node() in 'examples/common/mod.rs'.
 
     // TODO: Min/Max constraints for space and size
-    // TODO: Grid layout
-    // TODO: ADD TESTS FOR EVERYTHING!
-    // TODO: Should stretch nodes have a min-size of their children?
 
     // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
@@ -121,6 +112,12 @@ where
 
         Auto => 0.0,
     };
+    
+    let min_main = node.min_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, -f32::MAX);
+    let max_main = node.max_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, f32::MAX);    
+    
+    // Apply main-axis size constraints for pixels and percentage.
+    computed_main = computed_main.clamp(min_main, max_main);
 
     // Cross-axis size is determined by the parent
     let mut computed_cross = bc.max.1;
@@ -340,6 +337,12 @@ where
         // Total computed size on the cross-axis of the child.
         let mut child_cross_non_flex =
             computed_child_cross_before + computed_child_cross + computed_child_cross_after;
+
+        // Apply cross-axis size constraints for pixels & percentage.
+        let min_cross = child.min_cross(store, parent_layout_type).unwrap_or_default().to_px(bc.max.1, -f32::MAX);
+        let max_cross = child.max_cross(store, parent_layout_type).unwrap_or_default().to_px(bc.max.1, f32::MAX);
+        
+        computed_child_cross = computed_child_cross.clamp(min_cross, max_cross);
 
         match child_main {
             Stretch(factor) => {
@@ -582,22 +585,18 @@ where
     if num_children != 0 {
         if parent_layout_type == layout_type {
             if let Auto = main {
-                println!("{:?} A", node.key());
                 computed_main = main_sum;
             }
 
             if let Auto = cross {
-                println!("{:?} B", node.key());
                 computed_cross = cross_max;
             }
         } else {
             if let Auto = main {
-                println!("{:?} C", node.key());
                 computed_main = cross_max;
             }
 
             if let Auto = cross {
-                println!("{:?} D", node.key());
                 computed_cross = main_sum;
             }
         }

@@ -44,6 +44,11 @@ pub trait Node: Sized + Clone {
 
     fn row_between(&self, store: &Self::Store) -> Option<Units>;
     fn col_between(&self, store: &Self::Store) -> Option<Units>;
+
+    fn min_width(&self, store: &Self::Store) -> Option<Units>;
+    fn min_height(&self, store: &Self::Store) -> Option<Units>;
+    fn max_width(&self, store: &Self::Store) -> Option<Units>;
+    fn max_height(&self, store: &Self::Store) -> Option<Units>;
 }
 
 pub(crate) trait NodeExt: Node {
@@ -56,10 +61,42 @@ pub(crate) trait NodeExt: Node {
         }
     }
 
+    fn min_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.min_width(store),
+            LayoutType::Column => self.min_height(store),
+            _ => None,
+        }
+    }
+
+    fn max_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.max_width(store),
+            LayoutType::Column => self.max_height(store),
+            _ => None,
+        }
+    }
+
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
         match parent_layout_type {
             LayoutType::Row => self.height(store),
             LayoutType::Column => self.width(store),
+            _ => None,
+        }
+    }
+
+    fn min_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.min_height(store),
+            LayoutType::Column => self.min_width(store),
+            _ => None,
+        }
+    }
+
+    fn max_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<Units> {
+        match parent_layout_type {
+            LayoutType::Row => self.max_height(store),
+            LayoutType::Column => self.max_width(store),
             _ => None,
         }
     }
