@@ -104,6 +104,38 @@ impl Node for Entity {
     fn max_height(&self, store: &Self::Store) -> Option<Units> {
         store.max_height.get(self).copied()
     }
+    
+    fn min_left(&self, store: &Self::Store) -> Option<Units> {
+        store.min_left.get(self).copied()
+    }
+
+    fn max_left(&self, store: &Self::Store) -> Option<Units> {
+        store.max_left.get(self).copied()
+    }
+
+    fn min_right(&self, store: &Self::Store) -> Option<Units> {
+        store.min_right.get(self).copied()
+    }
+
+    fn max_right(&self, store: &Self::Store) -> Option<Units> {
+        store.max_right.get(self).copied()
+    }
+
+    fn min_top(&self, store: &Self::Store) -> Option<Units> {
+        store.min_top.get(self).copied()
+    }
+
+    fn max_top(&self, store: &Self::Store) -> Option<Units> {
+        store.max_top.get(self).copied()
+    }
+
+    fn min_bottom(&self, store: &Self::Store) -> Option<Units> {
+        store.min_bottom.get(self).copied()
+    }
+
+    fn max_bottom(&self, store: &Self::Store) -> Option<Units> {
+        store.max_bottom.get(self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

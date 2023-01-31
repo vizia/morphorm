@@ -10,6 +10,8 @@ fn stretch_cross_space_pixels_cross() {
     world.set_height(root, Units::Pixels(600.0));
     world.set_layout_type(root, LayoutType::Row);
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -35,6 +37,8 @@ fn stretch_cross_space_percentage_cross() {
     world.set_height(root, Units::Pixels(600.0));
     world.set_layout_type(root, LayoutType::Row);
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Percentage(50.0));
@@ -58,6 +62,8 @@ fn stretch_cross_space_stretch_cross() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_layout_type(root, LayoutType::Row);
+
     world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));

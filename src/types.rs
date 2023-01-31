@@ -1,37 +1,34 @@
 /// The layout type determines how the nodes will position its parent-directed children.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum LayoutType {
     /// Stack child elements horizontally.
     Row,
     /// Stack child elements vertically.
+    #[default]
     Column,
-    /// Position child elements into specified rows and columns.
-    Grid,
 }
 
-impl Default for LayoutType {
-    fn default() -> Self {
-        LayoutType::Row
+impl LayoutType {
+    pub(crate) fn select<T>(&self, first: T, second: T) -> T {
+        match self {
+            LayoutType::Row => first,
+            LayoutType::Column => second,
+        }
     }
 }
 
 /// The position type determines whether a node will be positioned in-line with its siblings or seperately.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum PositionType {
     /// Node is positioned relative to parent but ignores its siblings.
     SelfDirected,
     /// Node is positioned relative to parent and in-line with siblings.
+    #[default]
     ParentDirected,
 }
 
-impl Default for PositionType {
-    fn default() -> Self {
-        PositionType::ParentDirected
-    }
-}
-
 /// Units which describe spacing and size.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum Units {
     /// A number of logical pixels.
     Pixels(f32),
@@ -40,23 +37,18 @@ pub enum Units {
     /// A factor of the remaining free space.
     Stretch(f32),
     /// Automatically determine the value.
+    #[default]
     Auto,
 }
 
-impl Default for Units {
-    fn default() -> Self {
-        Units::Auto
-    }
-}
-
 impl Units {
-    /// Converts the units to an f32 value
-    pub fn to_px(&self, parent_value: f32, auto: f32) -> f32 {
+    /// Returns the units converted to pixels or a provided default.
+    pub fn to_px(&self, parent_value: f32, default: f32) -> f32 {
         match self {
             &Units::Pixels(pixels) => pixels,
             &Units::Percentage(percentage) => (percentage / 100.0) * parent_value,
-            &Units::Stretch(_) => auto,
-            &Units::Auto => auto,
+            &Units::Stretch(_) => default,
+            &Units::Auto => default,
         }
     }
 
@@ -86,9 +78,6 @@ impl Units {
 
     /// Returns true if the value is auto
     pub fn is_auto(&self) -> bool {
-        match self {
-            Units::Auto => true,
-            _ => false,
-        }
+        self == &Units::Auto
     }
 }

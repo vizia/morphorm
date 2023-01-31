@@ -112,10 +112,12 @@ where
 
         Auto => 0.0,
     };
-    
-    let min_main = node.min_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, -f32::MAX);
-    let max_main = node.max_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, f32::MAX);    
-    
+
+    let min_main =
+        node.min_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, -f32::MAX);
+    let max_main =
+        node.max_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, f32::MAX);
+
     // Apply main-axis size constraints for pixels and percentage.
     computed_main = computed_main.clamp(min_main, max_main);
 
@@ -339,9 +341,15 @@ where
             computed_child_cross_before + computed_child_cross + computed_child_cross_after;
 
         // Apply cross-axis size constraints for pixels & percentage.
-        let min_cross = child.min_cross(store, parent_layout_type).unwrap_or_default().to_px(bc.max.1, -f32::MAX);
-        let max_cross = child.max_cross(store, parent_layout_type).unwrap_or_default().to_px(bc.max.1, f32::MAX);
-        
+        let min_cross = child
+            .min_cross(store, parent_layout_type)
+            .unwrap_or_default()
+            .to_px(bc.max.1, -f32::MAX);
+        let max_cross = child
+            .max_cross(store, parent_layout_type)
+            .unwrap_or_default()
+            .to_px(bc.max.1, f32::MAX);
+
         computed_child_cross = computed_child_cross.clamp(min_cross, max_cross);
 
         match child_main {
@@ -367,7 +375,7 @@ where
 
                 computed_child_main = child_size.main;
                 computed_child_cross = child_size.cross;
-                
+
                 if child_cross == Units::Auto {
                     child_cross_non_flex += computed_child_cross;
                 }
@@ -513,8 +521,6 @@ where
                     LayoutType::Column => {
                         cache.set_width(child.node.key(), actual_cross);
                     }
-
-                    _ => {}
                 }
             }
 
@@ -549,8 +555,6 @@ where
                     cache.set_posy(child.node.key(), child.main_before);
                     cache.set_posx(child.node.key(), child.cross_before);
                 }
-
-                _ => {}
             },
 
             PositionType::ParentDirected => {
@@ -570,8 +574,6 @@ where
                         let child_height = cache.height(child.node.key());
                         main_pos += child_height;
                     }
-
-                    _ => {}
                 }
 
                 main_pos += child.main_after;
@@ -621,8 +623,6 @@ where
             cache.set_height(node.key(), computed_main);
             cache.set_width(node.key(), computed_cross);
         }
-
-        _ => {}
     }
 
     // Propagate the computed size back up the tree.

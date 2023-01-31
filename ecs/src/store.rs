@@ -39,18 +39,7 @@ pub struct Store {
     pub col_between: HashMap<Entity, Units>,
     pub row_between: HashMap<Entity, Units>,
 
-    // pub grid_rows: HashMap<Entity, Vec<Units>>,
-    // pub grid_cols: HashMap<Entity, Vec<Units>>,
-
-    // pub row_index: HashMap<Entity, usize>,
-    // pub col_index: HashMap<Entity, usize>,
-    // pub row_span: HashMap<Entity, usize>,
-    // pub col_span: HashMap<Entity, usize>,
-
-    pub border_width: HashMap<Entity, Units>,
-
     pub content_size: HashMap<Entity, Box<dyn Fn(f32) -> f32>>,
-
 
     pub red: HashMap<Entity, u8>,
     pub green: HashMap<Entity, u8>,

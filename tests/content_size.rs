@@ -9,6 +9,8 @@ fn content_size_height() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Auto);
@@ -32,6 +34,8 @@ fn content_size_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Auto);
     world.set_height(node, Units::Pixels(400.0));
@@ -54,6 +58,8 @@ fn nested_content_size() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(400.0));

@@ -9,6 +9,8 @@ fn min_width_pixels() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -31,6 +33,8 @@ fn max_width_pixels() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
@@ -55,6 +59,8 @@ fn min_height_pixels() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -78,6 +84,8 @@ fn max_height_pixels() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(400.0));
@@ -93,10 +101,6 @@ fn max_height_pixels() {
     );
 }
 
-
-
-
-
 #[test]
 fn min_width_percentage() {
     let mut world = World::default();
@@ -104,6 +108,8 @@ fn min_width_percentage() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -128,6 +134,8 @@ fn max_width_percentage() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -150,6 +158,8 @@ fn min_height_percentage() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -174,6 +184,8 @@ fn max_height_percentage() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(400.0));
@@ -196,6 +208,8 @@ fn min_width_pixels_min_height_pixels() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -221,6 +235,8 @@ fn max_width_pixels_max_height_pixels() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Pixels(400.0));
@@ -244,6 +260,8 @@ fn min_width_pixels_max_height_pixels() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -269,6 +287,8 @@ fn max_width_pixels_min_height_pixels() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -292,6 +312,8 @@ fn min_width_percentage_min_height_percentage() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -317,6 +339,8 @@ fn max_width_percentage_max_height_percentage() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Pixels(400.0));
@@ -340,6 +364,8 @@ fn min_width_percentage_max_height_percentage() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -365,6 +391,8 @@ fn max_width_percentage_min_height_percentage() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(400.0));
     world.set_height(node, Units::Pixels(100.0));
@@ -380,4 +408,3 @@ fn max_width_percentage_min_height_percentage() {
         Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 })
     );
 }
-
