@@ -22,10 +22,7 @@ fn stretch_cross_space_pixels_cross() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 250.0, width: 100.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 250.0, width: 100.0, height: 100.0 }));
 }
 
 #[test]
@@ -49,10 +46,7 @@ fn stretch_cross_space_percentage_cross() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 300.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 300.0 }));
 }
 
 #[test]
@@ -76,8 +70,5 @@ fn stretch_cross_space_stretch_cross() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 200.0, width: 100.0, height: 200.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 200.0, width: 100.0, height: 200.0 }));
 }

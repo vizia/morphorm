@@ -97,25 +97,6 @@ impl World {
         self.store.child_bottom.insert(entity, value);
     }
 
-    // pub fn set_child_left(&mut self, entity: Entity, value: Units) {
-    //     self.store.child_left.insert(entity, value);
-    // }
-
-    // pub fn set_child_right(&mut self, entity: Entity, value: Units) {
-    //     self.store.child_right.insert(entity, value);
-    // }
-
-    // pub fn set_child_top(&mut self, entity: Entity, value: Units) {
-    //     self.store.child_top.insert(entity, value);
-    // }
-
-    // pub fn set_child_bottom(&mut self, entity: Entity, value: Units) {
-    //     self.store.child_bottom.insert(entity, value);
-    // }
-
-
-
-
     /// Set the desired child_left space
     pub fn set_child_left(&mut self, entity: Entity, value: Units) {
         self.store.child_left.insert(entity, value);
@@ -146,35 +127,37 @@ impl World {
         self.store.col_between.insert(entity, value);
     }
 
-    // /// Set the desired grid rows
-    // pub fn set_grid_rows(&mut self, entity: Entity, value: Vec<Units>) {
-    //     self.store.grid_rows.insert(entity, value);
-    // }
+    pub fn set_min_left(&mut self, entity: Entity, value: Units) {
+        self.store.min_left.insert(entity, value);
+    }
 
-    // /// Set the desired grid columns
-    // pub fn set_grid_cols(&mut self, entity: Entity, value: Vec<Units>) {
-    //     self.store.grid_cols.insert(entity, value);
-    // }
+    pub fn set_max_left(&mut self, entity: Entity, value: Units) {
+        self.store.max_left.insert(entity, value);
+    }
 
-    // /// Set the desired grid row index
-    // pub fn set_row(&mut self, entity: Entity, index: usize, span: usize) {
-    //     self.store.row_index.insert(entity, index);
-    //     self.store.row_span.insert(entity, span);
-    // }
+    pub fn set_min_right(&mut self, entity: Entity, value: Units) {
+        self.store.min_right.insert(entity, value);
+    }
 
-    // /// Set the desired grid row span
-    // pub fn set_col(&mut self, entity: Entity, index: usize, span: usize) {
-    //     self.store.col_index.insert(entity, index);
-    //     self.store.col_span.insert(entity, span);
-    // }
+    pub fn set_max_right(&mut self, entity: Entity, value: Units) {
+        self.store.max_right.insert(entity, value);
+    }
 
-    // pub fn set_min_width(&mut self, entity: Entity, value: Units) {
-    //     self.store.min_width.insert(entity, value);
-    // }
+    pub fn set_min_top(&mut self, entity: Entity, value: Units) {
+        self.store.min_top.insert(entity, value);
+    }
 
-    // pub fn set_min_height(&mut self, entity: Entity, value: Units) {
-    //     self.store.min_height.insert(entity, value);
-    // }
+    pub fn set_max_top(&mut self, entity: Entity, value: Units) {
+        self.store.max_top.insert(entity, value);
+    }
+
+    pub fn set_min_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.min_bottom.insert(entity, value);
+    }
+
+    pub fn set_max_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.max_bottom.insert(entity, value);
+    }
 
     pub fn set_content_size(&mut self, entity: Entity, content: impl Fn(f32) -> f32 + 'static) {
         self.store.content_size.insert(entity, Box::new(content));

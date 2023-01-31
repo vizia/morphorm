@@ -20,10 +20,7 @@ fn content_size_height() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
 }
 
 #[test]
@@ -45,10 +42,7 @@ fn content_size_width() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 400.0 })
-    );
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 400.0 }));
 }
 
 #[test]
@@ -74,15 +68,9 @@ fn nested_content_size() {
 
     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(
-        world.cache.bounds(node1),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
 
-    assert_eq!(
-        world.cache.bounds(node2),
-        Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 })
-    );
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
 }
 
 // #[test]

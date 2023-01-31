@@ -270,14 +270,7 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Stretch(1.0), Stretch(1.0));
     root.child.push(Widget::new(1, Pixels(40.0), Pixels(40.0)));
-    layout(
-        &root,
-        LayoutType::Row,
-        &BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) },
-        &mut cache,
-        &(),
-        &(),
-    );
+    layout(&root, LayoutType::Row, &BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) }, &mut cache, &(), &());
     render(cache, root);
 }
 
@@ -291,8 +284,7 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
             .with_inner_size(winit::dpi::PhysicalSize::new(1000i32, 600i32))
             .with_title("Morphorm Demo");
 
-        let windowed_context =
-            ContextBuilder::new().with_vsync(false).build_windowed(wb, &el).unwrap();
+        let windowed_context = ContextBuilder::new().with_vsync(false).build_windowed(wb, &el).unwrap();
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
         let renderer = unsafe {
@@ -305,8 +297,7 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
 
     let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
 
-    let font =
-        canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
+    let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
     //world.cache.set_width(root, 1000.0);
     //world.cache.set_height(root, 600.0);
@@ -363,13 +354,7 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
                 let size = window.inner_size();
 
                 canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-                canvas.clear_rect(
-                    0,
-                    0,
-                    size.width as u32,
-                    size.height as u32,
-                    Color::rgbf(0.3, 0.3, 0.32),
-                );
+                canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
                 draw_node(&root, &cache, &mut canvas, font);
 
@@ -400,8 +385,7 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
     paint.set_text_align(Align::Center);
     paint.set_text_baseline(Baseline::Middle);
     paint.set_font(&vec![font]);
-    let _ =
-        canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), paint);
+    let _ = canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), paint);
 
     for child in (&node).children(&()) {
         draw_node(child, cache, canvas, font);
