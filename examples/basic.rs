@@ -15,9 +15,7 @@ fn main() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_left(node, Units::Stretch(1.0));
 
-    let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
-
-    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     render(world, root);
 }
