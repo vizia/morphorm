@@ -1,4 +1,3 @@
-use femtovg::FontId;
 use glutin::event::VirtualKeyCode;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -7,7 +6,6 @@ use winit::window::WindowBuilder;
 use rand::Rng;
 
 use femtovg::{
-    //CompositeOperation,
     renderer::OpenGl,
     Align,
     Baseline,
@@ -15,11 +13,13 @@ use femtovg::{
     Color,
     Paint,
     Path,
+    FontId,
 };
 
 use std::collections::HashMap;
 
-use morphorm::{layout, BoxConstraints, Cache, LayoutType, Node, PositionType, Units, Units::*};
+use morphorm::*;
+use morphorm::Units::*;
 
 #[derive(Default, Clone)]
 pub struct Widget {
@@ -270,7 +270,7 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Stretch(1.0), Stretch(1.0));
     root.child.push(Widget::new(1, Pixels(40.0), Pixels(40.0)));
-    layout(&root, LayoutType::Row, &BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) }, &mut cache, &(), &());
+    layout(&root, LayoutType::Row, 600.0, 600.0, &mut cache, &(), &());
     render(cache, root);
 }
 
@@ -321,10 +321,7 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
                     layout(
                         &root,
                         LayoutType::Row,
-                        &BoxConstraints {
-                            min: (physical_size.width as f32, physical_size.height as f32),
-                            max: (physical_size.width as f32, physical_size.height as f32),
-                        },
+                        physical_size.width as f32, physical_size.height as f32,
                         &mut cache,
                         &(),
                         &(),
@@ -378,14 +375,14 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
     let mut path = Path::new();
     path.rect(posx, posy, width, height);
     let paint = Paint::color(color);
-    canvas.fill_path(&mut path, paint);
+    canvas.fill_path(&mut path, &paint);
 
     let mut paint = Paint::color(Color::black());
     paint.set_font_size(24.0);
     paint.set_text_align(Align::Center);
     paint.set_text_baseline(Baseline::Middle);
     paint.set_font(&vec![font]);
-    let _ = canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), paint);
+    let _ = canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), &paint);
 
     for child in (&node).children(&()) {
         draw_node(child, cache, canvas, font);

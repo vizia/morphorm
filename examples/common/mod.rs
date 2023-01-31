@@ -57,30 +57,23 @@ pub fn render(mut world: World, root: Entity) {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
                     let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
-                    let mut root_bc = BoxConstraints::default();
-                    match layout_type {
+                    let (root_main, root_cross) = match layout_type {
                         LayoutType::Row => {
                             world.set_width(root, Units::Pixels(physical_size.width as f32));
                             world.set_height(root, Units::Pixels(physical_size.height as f32));
 
-                            root_bc = BoxConstraints {
-                                min: (physical_size.width as f32, physical_size.height as f32),
-                                max: (physical_size.width as f32, physical_size.height as f32),
-                            };
+                            (physical_size.width as f32, physical_size.height as f32)
                         }
 
                         LayoutType::Column => {
                             world.set_height(root, Units::Pixels(physical_size.height as f32));
                             world.set_width(root, Units::Pixels(physical_size.width as f32));
 
-                            root_bc = BoxConstraints {
-                                min: (physical_size.height as f32, physical_size.width as f32),
-                                max: (physical_size.height as f32, physical_size.width as f32),
-                            };
+                            (physical_size.height as f32, physical_size.width as f32)
                         }
-                    }
+                    };
 
-                    layout(&root, layout_type, &root_bc, &mut world.cache, &world.tree, &world.store);
+                    layout(&root, layout_type, root_main, root_cross, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -129,7 +122,7 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
     let mut path = Path::new();
     path.rect(parent_posx + posx, parent_posy + posy, width, height);
     let paint = Paint::color(Color::rgb(*red, *green, *blue));
-    canvas.fill_path(&mut path, paint);
+    canvas.fill_path(&mut path, &paint);
 
     let mut paint = Paint::color(Color::black());
     paint.set_font_size(24.0);
@@ -140,7 +133,7 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
         parent_posx + posx + width / 2.0,
         parent_posy + posy + height / 2.0,
         &node.key().0.to_string(),
-        paint,
+        &paint,
     );
 
     for child in node.children(&world.tree) {

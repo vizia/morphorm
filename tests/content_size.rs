@@ -16,9 +16,7 @@ fn content_size_height() {
     world.set_height(node, Units::Auto);
     world.set_content_size(node, |_| 100.0);
 
-    let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
-
-    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
 }
@@ -38,9 +36,7 @@ fn content_size_width() {
     world.set_height(node, Units::Pixels(400.0));
     world.set_content_size(node, |_| 100.0);
 
-    let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
-
-    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 400.0 }));
 }
@@ -64,9 +60,7 @@ fn nested_content_size() {
     world.set_height(node2, Units::Auto);
     world.set_content_size(node2, |_| 100.0);
 
-    let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
-
-    layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
 
@@ -95,9 +89,9 @@ fn nested_content_size() {
 //     world.set_cross(node3, Units::Auto);
 //     world.set_content_size(node3, |main| main);
 
-//     let root_bc = BoxConstraints { min: (600.0, 600.0), max: (600.0, 600.0) };
+//     
 
-//     layout(&root, LayoutType::Row, &root_bc, &mut world.cache, &world.tree, &world.store);
+//     layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
 //     assert_eq!(
 //         world.cache.bounds(node1),
@@ -116,7 +110,7 @@ fn nested_content_size() {
 
 //     // world.set_layout_type(root, LayoutType::Column);
 
-//     // layout(&root, LayoutType::Column, &root_bc, &mut world.cache, &world.tree, &world.store);
+//     // layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
 //     // assert_eq!(
 //     //     world.cache.bounds(node1),

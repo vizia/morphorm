@@ -1,18 +1,12 @@
 use smallvec::SmallVec;
 
-use crate::{Cache, LayoutType, Node, NodeExt, Units};
-use crate::{PositionType, Units::*};
+use crate::{Cache, LayoutType, Node, NodeExt, Units, PositionType};
+use crate::Units::*;
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
 
-#[derive(Default, Debug, Copy, Clone)]
-pub struct BoxConstraints {
-    pub min: (f32, f32),
-    pub max: (f32, f32),
-}
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Size {
     pub main: f32,
     pub cross: f32,
@@ -27,13 +21,17 @@ enum Axis {
 
 #[derive(Copy, Clone)]
 pub struct StretchNode<'a, N: Node> {
+    // A reference to the node.
     node: &'a N,
-
+    // The index of the node.
     index: usize,
-
-    value: f32,
+    // The stretch factor of the node. 
+    factor: f32,
+    // The minimum constraint of the node.
     _min: f32,
+    // The maximum constraint of the node.
     _max: f32,
+
     axis: Axis,
 }
 
@@ -45,7 +43,6 @@ pub struct ChildNode<'a, N: Node> {
     main_flex_sum: f32,
 
     // The available free space on the main axis of the node.
-    // Equivalent to parent_main_space - main_non_flex
     main_non_flex: f32,
 
     main_remainder: f32,
@@ -73,7 +70,8 @@ pub struct ChildNode<'a, N: Node> {
 pub fn layout<N, C>(
     node: &N,
     parent_layout_type: LayoutType,
-    bc: &BoxConstraints,
+    parent_main: f32,
+    node_cross: f32,
     cache: &mut C,
     tree: &<N as Node>::Tree,
     store: &<N as Node>::Store,
@@ -82,10 +80,6 @@ where
     N: Node,
     C: Cache<Node = N::CacheKey>,
 {
-    // TODO: Investigate whether a box constraints struct is needed. So far only the parent main/cross is needed,
-    // which is currently stored in bc.0.max and bc.1.max respectively. It's possible that the other constraints will
-    // be needed when min/max sized are added so I've left it for now.
-
     // NOTE: Due to the recursive nature of this function, any code written before the loop on the children is performed
     // on the 'down' pass of the tree, and any code after the loop is performed on the 'up' phase.
     // However, positioning of children need to happen after all children have a computed size, so it's placed after the loop
@@ -109,29 +103,21 @@ where
     let mut computed_main = match main {
         Pixels(val) => val,
 
-        Percentage(val) => (bc.max.0 * (val / 100.0)).round(),
+        Percentage(val) => (parent_main * (val / 100.0)).round(),
 
-        Stretch(_) => bc.max.0,
+        Stretch(_) => parent_main,
 
         Auto => 0.0,
     };
 
-    let min_main = node.min_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, DEFAULT_MIN);
-    let max_main = node.max_main(store, parent_layout_type).unwrap_or_default().to_px(bc.max.0, DEFAULT_MAX);
+    let min_main = node.min_main(store, parent_layout_type).unwrap_or_default().to_px(parent_main, DEFAULT_MIN);
+    let max_main = node.max_main(store, parent_layout_type).unwrap_or_default().to_px(parent_main, DEFAULT_MAX);
 
     // Apply main-axis size constraints for pixels and percentage.
     computed_main = computed_main.clamp(min_main, max_main);
 
-    // Cross-axis size is determined by the parent
-    let mut computed_cross = bc.max.1;
-
-    // Debug printing
-    // println!(
-    //     "DOWN {:?} computed_main: {}  computed_cross: {}",
-    //     node.key(),
-    //     computed_main,
-    //     computed_cross
-    // );
+    // Cross-axis size is determined by the parent.
+    let mut computed_cross = node_cross;
 
     // Apply content size
     if main == Units::Auto && cross != Units::Auto {
@@ -323,7 +309,7 @@ where
                 stretch_nodes.push(StretchNode {
                     node: child,
                     index,
-                    value: factor,
+                    factor,
                     _min: 0.0,
                     _max: std::f32::INFINITY,
                     axis: Axis::MainBefore,
@@ -355,7 +341,7 @@ where
                 stretch_nodes.push(StretchNode {
                     node: child,
                     index,
-                    value: factor,
+                    factor,
                     _min: 0.0,
                     _max: std::f32::INFINITY,
                     axis: Axis::MainAfter,
@@ -383,7 +369,7 @@ where
                 stretch_nodes.push(StretchNode {
                     node: child,
                     index,
-                    value: factor,
+                    factor,
                     _min: 0.0,
                     _max: std::f32::INFINITY,
                     axis: Axis::Main,
@@ -391,9 +377,8 @@ where
             }
 
             _ => {
-                let child_bc = BoxConstraints { min: (0.0, 0.0), max: (parent_main, computed_child_cross) };
 
-                let child_size = layout(child, layout_type, &child_bc, cache, tree, store);
+                let child_size = layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store);
 
                 computed_child_main = child_size.main;
                 computed_child_cross = child_size.cross;
@@ -444,17 +429,15 @@ where
     for item in stretch_nodes.iter() {
         let child_position_type = item.node.position_type(store).unwrap_or_default();
 
-        let factor = item.value;
-
         let actual_main = if child_position_type == PositionType::SelfDirected {
             let child_main_free_space = (parent_main.max(main_sum) - children[item.index].main_non_flex).max(0.0);
             let px_per_flex = child_main_free_space / children[item.index].main_flex_sum;
-            let desired_main = factor * px_per_flex + children[item.index].main_remainder;
+            let desired_main = item.factor * px_per_flex + children[item.index].main_remainder;
             let actual_main = desired_main.round();
             children[item.index].main_remainder = desired_main - actual_main;
             actual_main
         } else {
-            let desired_main = factor * main_px_per_flex + remainder;
+            let desired_main = item.factor * main_px_per_flex + remainder;
             let actual_main = desired_main.round();
             remainder = desired_main - actual_main;
             actual_main
@@ -472,22 +455,10 @@ where
             }
 
             Axis::Main => {
-                let child_bc = BoxConstraints {
-                    min: (actual_main, computed_child_cross),
-                    max: (actual_main, computed_child_cross),
-                };
-
-                let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
+                let child_size = layout(item.node, layout_type, actual_main, computed_child_cross, cache, tree, store);
 
                 children[item.index].cross_non_flex += child_size.cross;
                 cross_max = cross_max.max(children[item.index].cross_non_flex);
-
-                if child_size.main.is_finite() {
-                } else {
-                    // TODO: This is currently unreachable so there needs to be another way to warn
-                    // if there's only stretch children in an auto parent.
-                    println!("WARNING: Flex child in Auto parent");
-                }
             }
         }
     }
@@ -522,14 +493,6 @@ where
                 let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
                 let actual_cross = desired_cross.round();
                 child.cross_remainder = desired_cross - actual_cross;
-
-                // let child_bc = BoxConstraints {
-                //     min: (actual_main, computed_child_cross),
-                //     max: (actual_main, computed_child_cross),
-                // };
-
-                // let child_size = layout(item.node, layout_type, &child_bc, cache, tree, store);
-                //println!("CHILD {:?} actual_cross: {}", child.node.key(), actual_cross);
 
                 // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
                 // in the cache without needing to call layout again.
@@ -624,14 +587,6 @@ where
         }
     }
 
-    // Debug printing
-    // println!(
-    //     "UP {:?} computed_main {}  computed_cross: {}",
-    //     node.key(),
-    //     computed_main,
-    //     computed_cross,
-    // );
-
     // Set the computed size of the node in the cache.
     match parent_layout_type {
         LayoutType::Row => {
@@ -645,6 +600,6 @@ where
         }
     }
 
-    // Propagate the computed size back up the tree.
+    // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }
 }
