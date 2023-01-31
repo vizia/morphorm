@@ -9,10 +9,11 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
-    pub(crate) fn select<T>(&self, first: T, second: T) -> T {
+    // Helper function for selecting between values depending on the layout type.
+    pub(crate) fn select<T: Default>(&self, first: Option<T>, second: Option<T>) -> T {
         match self {
-            LayoutType::Row => first,
-            LayoutType::Column => second,
+            LayoutType::Row => first.unwrap_or_default(),
+            LayoutType::Column => second.unwrap_or_default(),
         }
     }
 }
