@@ -45,35 +45,26 @@ impl Units {
     /// Returns the units converted to pixels or a provided default.
     pub fn to_px(&self, parent_value: f32, default: f32) -> f32 {
         match self {
-            &Units::Pixels(pixels) => pixels,
-            &Units::Percentage(percentage) => (percentage / 100.0) * parent_value,
-            &Units::Stretch(_) => default,
-            &Units::Auto => default,
+            Units::Pixels(pixels) => *pixels,
+            Units::Percentage(percentage) => (percentage / 100.0) * parent_value,
+            Units::Stretch(_) => default,
+            Units::Auto => default,
         }
     }
 
     /// Returns true if the value is in pixels
     pub fn is_pixels(&self) -> bool {
-        match self {
-            Units::Pixels(_) => true,
-            _ => false,
-        }
+        matches!(self, Units::Pixels(_))
     }
 
     /// Returns true if the value is a percentage
     pub fn is_percentage(&self) -> bool {
-        match self {
-            Units::Percentage(_) => true,
-            _ => false,
-        }
+        matches!(self, Units::Percentage(_))
     }
 
     /// Returns true if the value is a stretch factor
     pub fn is_stretch(&self) -> bool {
-        match self {
-            Units::Stretch(_) => true,
-            _ => false,
-        }
+        matches!(self, Units::Stretch(_))
     }
 
     /// Returns true if the value is auto
