@@ -88,6 +88,22 @@ impl Node for Entity {
     fn col_between(&self, store: &Self::Store) -> Option<Units> {
         store.col_between.get(self).copied()
     }
+
+    fn min_width(&self, store: &Self::Store) -> Option<Units> {
+        store.min_width.get(self).copied()
+    }
+
+    fn max_width(&self, store: &Self::Store) -> Option<Units> {
+        store.max_width.get(self).copied()
+    }
+
+    fn min_height(&self, store: &Self::Store) -> Option<Units> {
+        store.min_height.get(self).copied()
+    }
+
+    fn max_height(&self, store: &Self::Store) -> Option<Units> {
+        store.max_height.get(self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

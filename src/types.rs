@@ -51,7 +51,7 @@ impl Default for Units {
 
 impl Units {
     /// Converts the units to an f32 value
-    pub fn value_or(&self, parent_value: f32, auto: f32) -> f32 {
+    pub fn to_px(&self, parent_value: f32, auto: f32) -> f32 {
         match self {
             &Units::Pixels(pixels) => pixels,
             &Units::Percentage(percentage) => (percentage / 100.0) * parent_value,

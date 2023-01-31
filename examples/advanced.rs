@@ -26,6 +26,10 @@ pub struct Widget {
     child: Vec<Widget>,
     width: Units,
     height: Units,
+    min_width: Units,
+    max_width: Units,
+    min_height: Units,
+    max_height: Units,
     left: Units,
     right: Units,
     top: Units,
@@ -78,6 +82,22 @@ impl Node for Widget {
 
     fn height(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.height)
+    }
+
+    fn min_width(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_width)
+    }
+
+    fn max_width(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_width)
+    }
+
+    fn min_height(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_height)
+    }
+
+    fn max_height(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_height)
     }
 
     fn layout_type(&self, _store: &Self::Store) -> Option<morphorm::LayoutType> {
