@@ -83,8 +83,6 @@ pub fn render(mut world: World, root: Entity) {
                                 max: (physical_size.height as f32, physical_size.width as f32),
                             };
                         }
-
-                        _ => {}
                     }
 
                     layout(

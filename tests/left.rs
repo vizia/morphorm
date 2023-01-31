@@ -9,6 +9,8 @@ fn pixels_left_pixels_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -42,6 +44,8 @@ fn percentage_left_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -77,6 +81,8 @@ fn stretch_left_pixels_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -110,6 +116,8 @@ fn pixels_left_percentage_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Percentage(25.0));
@@ -145,6 +153,8 @@ fn percentage_left_percentage_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Percentage(25.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -178,6 +188,8 @@ fn stretch_left_percentage_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Percentage(25.0));
@@ -213,6 +225,8 @@ fn pixels_left_stretch_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Stretch(1.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -246,6 +260,8 @@ fn percentage_left_stretch_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Stretch(1.0));
@@ -281,6 +297,8 @@ fn stretch_left_stretch_width() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Stretch(1.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -314,6 +332,8 @@ fn pixels_left_self_directed() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
@@ -350,6 +370,8 @@ fn percentage_left_self_directed() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(150.0));
@@ -384,6 +406,8 @@ fn stretch_left_self_directed() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));

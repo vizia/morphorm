@@ -10,6 +10,8 @@ fn pixels_col_between() {
     world.set_height(root, Units::Pixels(600.0));
     world.set_col_between(root, Units::Pixels(20.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));
     world.set_height(node1, Units::Pixels(150.0));
@@ -57,6 +59,8 @@ fn percentage_col_between() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
     world.set_col_between(root, Units::Percentage(50.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));
@@ -106,6 +110,8 @@ fn stretch_col_between() {
     world.set_height(root, Units::Pixels(600.0));
     world.set_col_between(root, Units::Stretch(1.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));
     world.set_height(node1, Units::Pixels(150.0));
@@ -153,6 +159,8 @@ fn pixels_row_between() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
     world.set_row_between(root, Units::Pixels(20.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));
@@ -202,6 +210,8 @@ fn percentage_row_between() {
     world.set_height(root, Units::Pixels(600.0));
     world.set_row_between(root, Units::Percentage(50.0));
 
+    world.set_layout_type(root, LayoutType::Row);
+
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));
     world.set_height(node1, Units::Pixels(150.0));
@@ -249,6 +259,8 @@ fn stretch_row_between() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
     world.set_row_between(root, Units::Stretch(1.0));
+
+    world.set_layout_type(root, LayoutType::Row);
 
     let node1 = world.add(Some(root));
     world.set_width(node1, Units::Pixels(100.0));

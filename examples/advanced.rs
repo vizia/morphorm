@@ -34,6 +34,14 @@ pub struct Widget {
     right: Units,
     top: Units,
     bottom: Units,
+    min_left: Units,
+    max_left: Units,
+    max_right: Units,
+    min_right: Units,
+    min_top: Units,
+    max_top: Units,
+    min_bottom: Units,
+    max_bottom: Units,
     child_left: Units,
     child_right: Units,
     child_top: Units,
@@ -150,6 +158,38 @@ impl Node for Widget {
 
     fn col_between(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.col_between)
+    }
+
+    fn min_left(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_left)
+    }
+
+    fn max_left(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_left)
+    }
+
+    fn min_right(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_right)
+    }
+
+    fn max_right(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_right)
+    }
+
+    fn min_top(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_top)
+    }
+
+    fn max_top(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_top)
+    }
+
+    fn min_bottom(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_bottom)
+    }
+
+    fn max_bottom(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_bottom)
     }
 }
 
