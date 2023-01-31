@@ -212,9 +212,8 @@ where
             child_cross_after = node_child_cross_after;
         }
 
-        // Sum of flex factors on the main-axis of the child node.
+        // Sum of flex factors on the main and cross axes of the child node.
         let mut child_main_flex_sum = 0.0;
-        // Sum of flex factors on the cross-axis of the child node.
         let mut child_cross_flex_sum = 0.0;
 
         let mut computed_child_main_before = 0.0;
@@ -283,7 +282,6 @@ where
             _ => {}
         }
 
-        // Apply cross-axis size constraints for pixels & percentage.
         let child_min_cross = child.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
         let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
@@ -470,7 +468,6 @@ where
         }
 
         if let Stretch(factor) = child_cross {
-            // TODO: remove duplication
             let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
             let actual_cross = desired_cross.round();
             child.cross_remainder = desired_cross - actual_cross;
