@@ -164,10 +164,10 @@ impl World {
     }
 
     pub fn set_all_stretch(&mut self, entity: Entity) {
-        self.set_left(entity, Units::Stretch(1.0));
-        self.set_top(entity, Units::Stretch(1.0));
-        self.set_right(entity, Units::Stretch(1.0));
-        self.set_bottom(entity, Units::Stretch(1.0));
+        // self.set_left(entity, Units::Stretch(1.0));
+        // self.set_top(entity, Units::Stretch(1.0));
+        // self.set_right(entity, Units::Stretch(1.0));
+        // self.set_bottom(entity, Units::Stretch(1.0));
         self.set_width(entity, Units::Stretch(1.0));
         self.set_height(entity, Units::Stretch(1.0));
     }
