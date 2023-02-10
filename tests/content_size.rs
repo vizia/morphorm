@@ -52,19 +52,20 @@ fn nested_content_size() {
     world.set_layout_type(root, LayoutType::Row);
 
     let node1 = world.add(Some(root));
-    world.set_width(node1, Units::Pixels(400.0));
-    world.set_height(node1, Units::Auto);
+    world.set_width(node1, Units::Auto);
+    world.set_height(node1, Units::Pixels(200.0));
+    world.set_layout_type(node1, LayoutType::Row);
 
     let node2 = world.add(Some(node1));
-    world.set_width(node2, Units::Pixels(400.0));
-    world.set_height(node2, Units::Auto);
-    world.set_content_size(node2, |_| 100.0);
+    world.set_width(node2, Units::Auto);
+    world.set_height(node2, Units::Stretch(1.0));
+    world.set_content_size(node2, |height| height);
 
     layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 
-    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 400.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
 
 // #[test]

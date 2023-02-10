@@ -217,9 +217,6 @@ fn max_top_percentage() {
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 300.0, width: 100.0, height: 150.0 }));
 }
 
-
-
-
 #[test]
 fn min_right_pixels() {
     let mut world = World::default();
