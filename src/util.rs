@@ -9,7 +9,7 @@ pub fn print_node<N: Node>(
     has_sibling: bool,
     lines_string: String,
 ) 
-where N::CacheKey: std::fmt::Display
+where N::CacheKey: Copy + std::fmt::Display
 {
     let entity = node.key();
 
