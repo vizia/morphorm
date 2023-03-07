@@ -1,14 +1,16 @@
 pub mod entity;
-pub use entity::Entity;
+pub use entity::*;
 
 mod store;
+pub use store::*;
 
 pub mod tree;
+pub use tree::*;
 
 
 pub mod world;
-pub use world::World;
+pub use world::*;
 
-pub use implementations::Rect;
+pub mod implementations;
+pub use implementations::*;
 
-mod implementations;

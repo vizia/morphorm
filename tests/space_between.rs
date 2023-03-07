@@ -20,7 +20,7 @@ fn pixels_col_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -28,7 +28,7 @@ fn pixels_col_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -54,7 +54,7 @@ fn percentage_col_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -62,7 +62,7 @@ fn percentage_col_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -88,7 +88,7 @@ fn stretch_col_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -96,7 +96,7 @@ fn stretch_col_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -122,7 +122,7 @@ fn pixels_row_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -130,7 +130,7 @@ fn pixels_row_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -156,7 +156,7 @@ fn percentage_row_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -164,7 +164,7 @@ fn percentage_row_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -190,7 +190,7 @@ fn stretch_row_between() {
     world.set_width(node2, Units::Pixels(100.0));
     world.set_height(node2, Units::Pixels(150.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
@@ -198,7 +198,7 @@ fn stretch_row_between() {
 
     world.set_layout_type(root, LayoutType::Column);
 
-    layout(&root, LayoutType::Column, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 

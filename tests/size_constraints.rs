@@ -16,7 +16,7 @@ fn min_width_pixels() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_min_width(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
 }
@@ -36,7 +36,7 @@ fn max_width_pixels() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_max_width(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
 }
@@ -56,7 +56,7 @@ fn min_height_pixels() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_min_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 }));
 }
@@ -76,7 +76,7 @@ fn max_height_pixels() {
     world.set_height(node, Units::Pixels(400.0));
     world.set_max_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 200.0 }));
 }
@@ -96,7 +96,7 @@ fn min_width_percentage() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_min_width(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 }));
 }
@@ -116,7 +116,7 @@ fn max_width_percentage() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_max_width(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 }));
 }
@@ -136,7 +136,7 @@ fn min_height_percentage() {
     world.set_height(node, Units::Pixels(100.0));
     world.set_min_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 }));
 }
@@ -156,7 +156,7 @@ fn max_height_percentage() {
     world.set_height(node, Units::Pixels(400.0));
     world.set_max_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 300.0 }));
 }
@@ -177,7 +177,7 @@ fn min_width_pixels_min_height_pixels() {
     world.set_min_width(node, Units::Pixels(200.0));
     world.set_min_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
@@ -198,7 +198,7 @@ fn max_width_pixels_max_height_pixels() {
     world.set_max_width(node, Units::Pixels(200.0));
     world.set_max_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
@@ -219,7 +219,7 @@ fn min_width_pixels_max_height_pixels() {
     world.set_min_width(node, Units::Pixels(200.0));
     world.set_max_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
@@ -240,7 +240,7 @@ fn max_width_pixels_min_height_pixels() {
     world.set_max_width(node, Units::Pixels(200.0));
     world.set_min_height(node, Units::Pixels(200.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 200.0 }));
 }
@@ -261,7 +261,7 @@ fn min_width_percentage_min_height_percentage() {
     world.set_min_width(node, Units::Percentage(50.0));
     world.set_min_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
@@ -282,7 +282,7 @@ fn max_width_percentage_max_height_percentage() {
     world.set_max_width(node, Units::Percentage(50.0));
     world.set_max_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
@@ -303,7 +303,7 @@ fn min_width_percentage_max_height_percentage() {
     world.set_min_width(node, Units::Percentage(50.0));
     world.set_max_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
@@ -324,7 +324,7 @@ fn max_width_percentage_min_height_percentage() {
     world.set_max_width(node, Units::Percentage(50.0));
     world.set_min_height(node, Units::Percentage(50.0));
 
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }

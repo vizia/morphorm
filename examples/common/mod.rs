@@ -1,8 +1,7 @@
 use femtovg::FontId;
 use glutin::event::{ElementState, VirtualKeyCode};
 use morphorm_ecs::tree::Tree;
-pub use morphorm_ecs::{Entity, World};
-
+pub use morphorm_ecs::*;
 pub use morphorm::*;
 
 use winit::event::{Event, WindowEvent};
@@ -57,23 +56,19 @@ pub fn render(mut world: World, root: Entity) {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
                     let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
-                    let (root_main, root_cross) = match layout_type {
+                    match layout_type {
                         LayoutType::Row => {
                             world.set_width(root, Units::Pixels(physical_size.width as f32));
                             world.set_height(root, Units::Pixels(physical_size.height as f32));
-
-                            (physical_size.width as f32, physical_size.height as f32)
                         }
 
                         LayoutType::Column => {
                             world.set_height(root, Units::Pixels(physical_size.height as f32));
                             world.set_width(root, Units::Pixels(physical_size.width as f32));
-
-                            (physical_size.height as f32, physical_size.width as f32)
                         }
                     };
 
-                    layout(&root, layout_type, root_main, root_cross, &mut world.cache, &world.tree, &world.store);
+                    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
