@@ -1,4 +1,4 @@
-use glutin::event::VirtualKeyCode;
+use glutin::event::{VirtualKeyCode, ElementState};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -263,8 +263,8 @@ impl Cache for LayoutCache {
 
 fn main() {
     let mut cache = LayoutCache::default();
-    let mut root = Widget::new(0, Stretch(1.0), Stretch(1.0));
-    root.child.push(Widget::new(1, Pixels(40.0), Pixels(40.0)));
+    let mut root = Widget::new(0, Pixels(600.0), Pixels(600.0));
+    root.child.push(Widget::new(1, Pixels(400.0), Pixels(400.0)));
     layout(&root, None, None, None, &mut cache, &(), &());
     render(cache, root);
 }
@@ -294,9 +294,6 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
 
     let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
-    //world.cache.set_width(root, 1000.0);
-    //world.cache.set_height(root, 600.0);
-
     el.run(move |event, _, control_flow| {
         #[cfg(not(target_arch = "wasm32"))]
         let window = windowed_context.window();
@@ -310,8 +307,6 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                     windowed_context.resize(*physical_size);
                     root.width = Units::Pixels(physical_size.width as f32);
                     root.height = Units::Pixels(physical_size.height as f32);
-                    //world.cache.set_width(root, physical_size.width as f32);
-                    //world.cache.set_height(root, physical_size.height as f32);
 
                     layout(
                         &root,
@@ -326,18 +321,8 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
                 WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
-                    if input.virtual_keycode == Some(VirtualKeyCode::H) {
-                        //let nodes = world.tree.flatten();
-                        // for node in nodes.into_iter() {
-                        //     println!(
-                        //         "{:?} px: {:?} py: {:?} w: {:?} h: {:?}",
-                        //         node,
-                        //         world.cache.posx(node),
-                        //         world.cache.posy(node),
-                        //         world.cache.width(node),
-                        //         world.cache.height(node)
-                        //     );
-                        // }
+                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
+                        print_node(&root, &cache, &(), true, false, String::new());
                     }
                 }
                 _ => (),
