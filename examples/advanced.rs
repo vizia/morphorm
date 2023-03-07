@@ -190,9 +190,9 @@ pub struct LayoutCache {
 }
 
 impl Cache for LayoutCache {
-    type Node = u32;
+    type CacheKey = u32;
 
-    fn width(&self, node: Self::Node) -> f32 {
+    fn width(&self, node: Self::CacheKey) -> f32 {
         if let Some(rect) = self.rect.get(&node) {
             return rect.0;
         }
@@ -200,7 +200,7 @@ impl Cache for LayoutCache {
         0.0
     }
 
-    fn height(&self, node: Self::Node) -> f32 {
+    fn height(&self, node: Self::CacheKey) -> f32 {
         if let Some(rect) = self.rect.get(&node) {
             return rect.1;
         }
@@ -208,7 +208,7 @@ impl Cache for LayoutCache {
         0.0
     }
 
-    fn posx(&self, node: Self::Node) -> f32 {
+    fn posx(&self, node: Self::CacheKey) -> f32 {
         if let Some(rect) = self.rect.get(&node) {
             return rect.2;
         }
@@ -216,7 +216,7 @@ impl Cache for LayoutCache {
         0.0
     }
 
-    fn posy(&self, node: Self::Node) -> f32 {
+    fn posy(&self, node: Self::CacheKey) -> f32 {
         if let Some(rect) = self.rect.get(&node) {
             return rect.3;
         }
@@ -224,7 +224,7 @@ impl Cache for LayoutCache {
         0.0
     }
 
-    fn set_width(&mut self, node: Self::Node, width: f32) {
+    fn set_width(&mut self, node: Self::CacheKey, width: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.0 = width;
         } else {
@@ -232,7 +232,7 @@ impl Cache for LayoutCache {
         }
     }
 
-    fn set_height(&mut self, node: Self::Node, height: f32) {
+    fn set_height(&mut self, node: Self::CacheKey, height: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.1 = height;
         } else {
@@ -240,7 +240,7 @@ impl Cache for LayoutCache {
         }
     }
 
-    fn set_posx(&mut self, node: Self::Node, posx: f32) {
+    fn set_posx(&mut self, node: Self::CacheKey, posx: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.2 = posx;
         } else {
@@ -248,7 +248,7 @@ impl Cache for LayoutCache {
         }
     }
 
-    fn set_posy(&mut self, node: Self::Node, posy: f32) {
+    fn set_posy(&mut self, node: Self::CacheKey, posy: f32) {
         if let Some(rect) = self.rect.get_mut(&node) {
             rect.3 = posy;
         } else {
@@ -261,11 +261,11 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Stretch(1.0), Stretch(1.0));
     root.child.push(Widget::new(1, Pixels(40.0), Pixels(40.0)));
-    layout(&root, LayoutType::Row, 600.0, 600.0, &mut cache, &(), &());
+    layout(&root, None, None, None, &mut cache, &(), &());
     render(cache, root);
 }
 
-pub fn render(mut cache: LayoutCache, root: Widget) {
+pub fn render(mut cache: LayoutCache, mut root: Widget) {
     let el = EventLoop::new();
 
     let (renderer, windowed_context) = {
@@ -304,16 +304,16 @@ pub fn render(mut cache: LayoutCache, root: Widget) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    //world.set_width(root, Units::Pixels(physical_size.width as f32));
-                    //world.set_height(root, Units::Pixels(physical_size.height as f32));
+                    root.width = Units::Pixels(physical_size.width as f32);
+                    root.height = Units::Pixels(physical_size.height as f32);
                     //world.cache.set_width(root, physical_size.width as f32);
                     //world.cache.set_height(root, physical_size.height as f32);
 
                     layout(
                         &root,
-                        LayoutType::Row,
-                        physical_size.width as f32,
-                        physical_size.height as f32,
+                        None,
+                        None,
+                        None,
                         &mut cache,
                         &(),
                         &(),

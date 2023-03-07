@@ -1,18 +1,23 @@
 use crate::{LayoutType, PositionType, Units};
 
 pub trait Node: Sized + Clone {
+    /// A type representing a store where layout properties are stored.
     type Store;
+    /// A type representing a tree structure where the children of the node are stored.
     type Tree;
+    /// An type reresenting an iterator over the children of the node.
     type ChildIter<'t>: Iterator<Item = &'t Self>
     where
         Self: 't;
 
-    type CacheKey: std::fmt::Debug;
+    /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
+    /// This type must be the same as the [`CacheKey`](crate::Cache::CacheKey) associated type on the [`Cache`](crate::Cache) trait.
+    type CacheKey;
 
-    /// Returns a key which can be used to set/get computed layout data fron the cache.
+    /// Returns a key which can be used to set/get computed layout data fron the [`cache`](crate::Cache).
     fn key(&self) -> Self::CacheKey;
 
-    /// Returns an iterator over the children of a node.
+    /// Returns an iterator over the children of the node.
     fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t>;
 
     /// Returns the layout type of the node.
