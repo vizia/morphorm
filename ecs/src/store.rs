@@ -39,7 +39,14 @@ pub struct Store {
     pub col_between: HashMap<Entity, Units>,
     pub row_between: HashMap<Entity, Units>,
 
-    pub content_size: HashMap<Entity, Box<dyn Fn(f32) -> f32>>,
+    pub content_main: HashMap<Entity, Box<dyn Fn(&Self, f32) -> f32>>,
+    pub content_cross: HashMap<Entity, Box<dyn Fn(&Self, f32) -> f32>>,
+
+    pub text: HashMap<Entity, String>,
+    pub text_wrap: HashMap<Entity, bool>,
+
+    pub text_context: femtovg::TextContext,
+    pub font_id: Option<femtovg::FontId>,
 
     pub red: HashMap<Entity, u8>,
     pub green: HashMap<Entity, u8>,

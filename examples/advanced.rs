@@ -123,7 +123,11 @@ impl Node for Widget {
         Some(self.bottom)
     }
 
-    fn content_size(&self, _store: &Self::Store, _cross_size: f32) -> Option<f32> {
+    fn content_main(&self, _store: &Self::Store, _cross_size: f32) -> Option<f32> {
+        None
+    }
+
+    fn content_cross(&self, _store: &Self::Store, _main_size: f32) -> Option<f32> {
         None
     }
 

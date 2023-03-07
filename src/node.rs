@@ -44,7 +44,11 @@ pub trait Node: Sized + Clone {
     /// Returns the desired bottom-side space of the node.
     fn bottom(&self, store: &Self::Store) -> Option<Units>;
 
-    fn content_size(&self, store: &Self::Store, cross_size: f32) -> Option<f32>;
+    /// Returns the desired main-axis size given a computed cross-axis size.
+    fn content_main(&self, store: &Self::Store, cross: f32) -> Option<f32>;
+
+    /// Returns the desired cross-axis size given a computed main-axis size.
+    fn content_cross(&self, store: &Self::Store, main: f32) -> Option<f32>;
 
     // Child Spacing
 

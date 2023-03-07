@@ -13,48 +13,6 @@ fn build_shallow_tree(world: &mut World, parent: Option<Entity>, depth: usize) {
     }
 }
 
-/// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
-fn print_node(
-    world: &World,
-    node: &impl Node<Tree = Tree, CacheKey = Entity>,
-    is_root: bool,
-    has_sibling: bool,
-    lines_string: String,
-) {
-    let entity = node.key();
-
-    let fork_string = if is_root {
-        "│"
-    } else if has_sibling {
-        "├───┤"
-    } else {
-        "└───┤"
-    };
-    println!(
-        "{lines}{fork}{id}| {x:#3} {y:#3} {w:#3} {h:#3}│",
-        lines = lines_string,
-        fork = fork_string,
-        id = entity.0,
-        x = world.cache.posx(entity),
-        y = world.cache.posx(entity),
-        w = world.cache.width(entity),
-        h = world.cache.height(entity),
-    );
-    let bar = if is_root {
-        ""
-    } else if has_sibling {
-        "│   "
-    } else {
-        "    "
-    };
-    let new_string = lines_string + bar;
-
-    for child in node.children(&world.tree) {
-        let has_sibling = world.tree.get_next_sibling(&child.key()).is_some();
-        print_node(world, child, false, has_sibling, new_string.clone());
-    }
-}
-
 fn wide_shallow_tree(c: &mut Criterion) {
     // let mut world = World::default();
     // let root = world.add(None);
