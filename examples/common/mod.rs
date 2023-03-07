@@ -1,6 +1,5 @@
 use femtovg::FontId;
 use glutin::event::{ElementState, VirtualKeyCode};
-use morphorm_ecs::tree::Tree;
 pub use morphorm_ecs::*;
 pub use morphorm::*;
 
@@ -74,7 +73,7 @@ pub fn render(mut world: World, root: Entity) {
 
                 WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
                     if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
-                        print_node(&world, &root, true, false, String::new());
+                        print_node(&root, &world.cache, &world.tree, true, false, String::new());
                     }
                 }
                 _ => (),
@@ -85,7 +84,7 @@ pub fn render(mut world: World, root: Entity) {
                 canvas.set_size(size.width as u32, size.height as u32, 1.0);
                 canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
-                draw_node(&root, &world, 0.0, 0.0, font, &mut canvas);
+                draw_node(&root, &world.tree, &world.cache, &world.store, 0.0, 0.0, font, &mut canvas);
 
                 canvas.flush();
                 windowed_context.swap_buffers().unwrap();
@@ -96,22 +95,24 @@ pub fn render(mut world: World, root: Entity) {
     });
 }
 
-fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
+fn draw_node<N: Node<CacheKey = Entity>>(
     node: &N,
-    world: &World,
+    tree: &N::Tree,
+    cache: &impl Cache<CacheKey = N::CacheKey>,
+    store: &Store,
     parent_posx: f32,
     parent_posy: f32,
     font: FontId,
     canvas: &mut Canvas<OpenGl>,
 ) {
-    let posx = world.cache.posx(node.key());
-    let posy = world.cache.posy(node.key());
-    let width = world.cache.width(node.key());
-    let height = world.cache.height(node.key());
+    let posx = cache.posx(node.key());
+    let posy = cache.posy(node.key());
+    let width = cache.width(node.key());
+    let height = cache.height(node.key());
 
-    let red = world.store.red.get(&node.key()).unwrap_or(&0u8);
-    let green = world.store.green.get(&node.key()).unwrap_or(&0u8);
-    let blue = world.store.blue.get(&node.key()).unwrap_or(&0u8);
+    let red = store.red.get(&node.key()).unwrap_or(&0u8);
+    let green = store.green.get(&node.key()).unwrap_or(&0u8);
+    let blue = store.blue.get(&node.key()).unwrap_or(&0u8);
 
     let mut path = Path::new();
     path.rect(parent_posx + posx, parent_posy + posy, width, height);
@@ -120,7 +121,7 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
 
 
 
-    if let Some(text) = world.store.text.get(&node.key()) {
+    if let Some(text) = store.text.get(&node.key()) {
         let mut paint = Paint::color(Color::black());
         paint.set_font_size(48.0);
         paint.set_text_align(Align::Left);
@@ -153,49 +154,7 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
         );
     }
 
-    for child in node.children(&world.tree) {
-        draw_node(child, world, posx + parent_posx, posy + parent_posy, font, canvas);
-    }
-}
-
-/// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
-fn print_node(
-    world: &World,
-    node: &impl Node<Tree = Tree, CacheKey = Entity>,
-    is_root: bool,
-    has_sibling: bool,
-    lines_string: String,
-) {
-    let entity = node.key();
-
-    let fork_string = if is_root {
-        "│"
-    } else if has_sibling {
-        "├───┤"
-    } else {
-        "└───┤"
-    };
-    println!(
-        "{lines}{fork}{id}| {x:#3} {y:#3} {w:#3} {h:#3}│",
-        lines = lines_string,
-        fork = fork_string,
-        id = entity.0,
-        x = world.cache.posx(entity),
-        y = world.cache.posx(entity),
-        w = world.cache.width(entity),
-        h = world.cache.height(entity),
-    );
-    let bar = if is_root {
-        ""
-    } else if has_sibling {
-        "│   "
-    } else {
-        "    "
-    };
-    let new_string = lines_string + bar;
-
-    for child in node.children(&world.tree) {
-        let has_sibling = world.tree.get_next_sibling(&child.key()).is_some();
-        print_node(world, child, false, has_sibling, new_string.clone());
+    for child in node.children(tree) {
+        draw_node(child, tree, cache, store, posx + parent_posx, posy + parent_posy, font, canvas);
     }
 }

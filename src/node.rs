@@ -12,7 +12,7 @@ pub trait Node: Sized + Clone {
 
     /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
     /// This type must be the same as the [`CacheKey`](crate::Cache::CacheKey) associated type on the [`Cache`](crate::Cache) trait.
-    type CacheKey;
+    type CacheKey: Copy;
 
     /// Returns a key which can be used to set/get computed layout data fron the [`cache`](crate::Cache).
     fn key(&self) -> Self::CacheKey;

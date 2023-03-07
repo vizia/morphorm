@@ -17,7 +17,7 @@ impl Node for Entity {
         *self
     }
 
-    fn children<'t>(&self, tree: &'t Self::Tree) -> Self::ChildIter<'t> {
+    fn children<'t>(&self, tree: &'t Tree) -> Self::ChildIter<'t> {
         let current_node = tree.get_first_child(self);
         ChildIterator {
             tree,
@@ -25,39 +25,39 @@ impl Node for Entity {
         }
     }
 
-    fn layout_type(&self, store: &Self::Store) -> Option<LayoutType> {
+    fn layout_type(&self, store: &Store) -> Option<LayoutType> {
         store.layout_type.get(self).copied()
     }
 
-    fn position_type(&self, store: &Self::Store) -> Option<PositionType> {
+    fn position_type(&self, store: &Store) -> Option<PositionType> {
         store.position_type.get(self).copied()
     }
 
-    fn width(&self, store: &Self::Store) -> Option<Units> {
+    fn width(&self, store: &Store) -> Option<Units> {
         store.width.get(self).copied()
     }
 
-    fn height(&self, store: &Self::Store) -> Option<Units> {
+    fn height(&self, store: &Store) -> Option<Units> {
         store.height.get(self).copied()
     }
 
-    fn left(&self, store: &Self::Store) -> Option<Units> {
+    fn left(&self, store: &Store) -> Option<Units> {
         store.left.get(self).copied()
     }
 
-    fn right(&self, store: &Self::Store) -> Option<Units> {
+    fn right(&self, store: &Store) -> Option<Units> {
         store.right.get(self).copied()
     }
 
-    fn top(&self, store: &Self::Store) -> Option<Units> {
+    fn top(&self, store: &Store) -> Option<Units> {
         store.top.get(self).copied()
     }
 
-    fn bottom(&self, store: &Self::Store) -> Option<Units> {
+    fn bottom(&self, store: &Store) -> Option<Units> {
         store.bottom.get(self).copied()
     }
 
-    fn content_main(&self, store: &Self::Store, cross: f32) -> Option<f32> {
+    fn content_main(&self, store: &Store, cross: f32) -> Option<f32> {
         if let Some(t) = store.content_main.get(self) {
             Some((t)(store, cross))
         } else {
@@ -65,7 +65,7 @@ impl Node for Entity {
         }
     }
 
-    fn content_cross(&self, store: &Self::Store, main: f32) -> Option<f32> {
+    fn content_cross(&self, store: &Store, main: f32) -> Option<f32> {
         if let Some(t) = store.content_cross.get(self) {
             Some((t)(store, main))
         } else {
@@ -73,75 +73,75 @@ impl Node for Entity {
         }
     }
 
-    fn child_left(&self, store: &Self::Store) -> Option<Units> {
+    fn child_left(&self, store: &Store) -> Option<Units> {
         store.child_left.get(self).copied()
     }
 
-    fn child_right(&self, store: &Self::Store) -> Option<Units> {
+    fn child_right(&self, store: &Store) -> Option<Units> {
         store.child_right.get(self).copied()
     }
 
-    fn child_top(&self, store: &Self::Store) -> Option<Units> {
+    fn child_top(&self, store: &Store) -> Option<Units> {
         store.child_top.get(self).copied()
     }
 
-    fn child_bottom(&self, store: &Self::Store) -> Option<Units> {
+    fn child_bottom(&self, store: &Store) -> Option<Units> {
         store.child_bottom.get(self).copied()
     }
 
-    fn row_between(&self, store: &Self::Store) -> Option<Units> {
+    fn row_between(&self, store: &Store) -> Option<Units> {
         store.row_between.get(self).copied()
     }
 
-    fn col_between(&self, store: &Self::Store) -> Option<Units> {
+    fn col_between(&self, store: &Store) -> Option<Units> {
         store.col_between.get(self).copied()
     }
 
-    fn min_width(&self, store: &Self::Store) -> Option<Units> {
+    fn min_width(&self, store: &Store) -> Option<Units> {
         store.min_width.get(self).copied()
     }
 
-    fn max_width(&self, store: &Self::Store) -> Option<Units> {
+    fn max_width(&self, store: &Store) -> Option<Units> {
         store.max_width.get(self).copied()
     }
 
-    fn min_height(&self, store: &Self::Store) -> Option<Units> {
+    fn min_height(&self, store: &Store) -> Option<Units> {
         store.min_height.get(self).copied()
     }
 
-    fn max_height(&self, store: &Self::Store) -> Option<Units> {
+    fn max_height(&self, store: &Store) -> Option<Units> {
         store.max_height.get(self).copied()
     }
     
-    fn min_left(&self, store: &Self::Store) -> Option<Units> {
+    fn min_left(&self, store: &Store) -> Option<Units> {
         store.min_left.get(self).copied()
     }
 
-    fn max_left(&self, store: &Self::Store) -> Option<Units> {
+    fn max_left(&self, store: &Store) -> Option<Units> {
         store.max_left.get(self).copied()
     }
 
-    fn min_right(&self, store: &Self::Store) -> Option<Units> {
+    fn min_right(&self, store: &Store) -> Option<Units> {
         store.min_right.get(self).copied()
     }
 
-    fn max_right(&self, store: &Self::Store) -> Option<Units> {
+    fn max_right(&self, store: &Store) -> Option<Units> {
         store.max_right.get(self).copied()
     }
 
-    fn min_top(&self, store: &Self::Store) -> Option<Units> {
+    fn min_top(&self, store: &Store) -> Option<Units> {
         store.min_top.get(self).copied()
     }
 
-    fn max_top(&self, store: &Self::Store) -> Option<Units> {
+    fn max_top(&self, store: &Store) -> Option<Units> {
         store.max_top.get(self).copied()
     }
 
-    fn min_bottom(&self, store: &Self::Store) -> Option<Units> {
+    fn min_bottom(&self, store: &Store) -> Option<Units> {
         store.min_bottom.get(self).copied()
     }
 
-    fn max_bottom(&self, store: &Self::Store) -> Option<Units> {
+    fn max_bottom(&self, store: &Store) -> Option<Units> {
         store.max_bottom.get(self).copied()
     }
 }
