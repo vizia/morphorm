@@ -115,7 +115,6 @@ where
     // TODO: Min/Max constraints for stretch space and size
 
 
-
     // If `None` then `node` is a root node and the parent layout type is not important.
     let parent_layout_type = parent_layout_type.unwrap_or_default();
 
@@ -160,19 +159,37 @@ where
         Auto => 0.0,
     };
 
-    // Apply content size to main axis.
-    if main == Units::Auto && cross != Units::Auto {
-        if let Some(content_size) = node.content_size(store, computed_cross) {
-            computed_main = content_size;
+    let num_children = node.children(tree).count();
+
+    // Apply content size.
+    // Note: content size is based on the layout type of the node and not the layout type of the parent. 
+    if parent_layout_type == layout_type {
+        if main == Units::Auto && num_children == 0 {
+            if let Some(content_size) = node.content_main(store, computed_cross) {
+                computed_main = content_size;
+            }
+        }
+    
+        if cross == Units::Auto && num_children == 0 {
+            if let Some(content_size) = node.content_cross(store, computed_main) {
+                computed_cross = content_size;
+            }
+        }
+    } else {
+        // When parent_layout_type != layout_type then cross becomes main and main becomes cross.
+        if cross == Units::Auto && num_children == 0 {
+            if let Some(content_size) = node.content_main(store, computed_main) {
+                computed_cross = content_size;
+            }
+        }
+
+        if main == Units::Auto && num_children == 0 {
+            if let Some(content_size) = node.content_cross(store, computed_cross) {
+                computed_main = content_size;
+            }
         }
     }
 
-    // Apply content size to cross axis.
-    if cross == Units::Auto && main != Units::Auto {
-        if let Some(content_size) = node.content_size(store, computed_main) {
-            computed_cross = content_size;
-        }
-    }
 
     // Apply main-axis size constraints for pixels and percentage.
     let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
@@ -226,8 +243,6 @@ where
 
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
-
-    let num_children = node.children(tree).count();
 
     // Compute space and size of non-flexible children.
     for (index, child) in node.children(tree).enumerate() {

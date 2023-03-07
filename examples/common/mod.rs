@@ -80,10 +80,9 @@ pub fn render(mut world: World, root: Entity) {
                 _ => (),
             },
             Event::RedrawRequested(_) => {
-                let dpi_factor = window.scale_factor();
                 let size = window.inner_size();
 
-                canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
+                canvas.set_size(size.width as u32, size.height as u32, 1.0);
                 canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
 
                 draw_node(&root, &world, 0.0, 0.0, font, &mut canvas);
@@ -119,17 +118,40 @@ fn draw_node<N: Node<Tree = Tree, CacheKey = Entity>>(
     let paint = Paint::color(Color::rgb(*red, *green, *blue));
     canvas.fill_path(&mut path, &paint);
 
-    let mut paint = Paint::color(Color::black());
-    paint.set_font_size(24.0);
-    paint.set_text_align(Align::Center);
-    paint.set_text_baseline(Baseline::Middle);
-    paint.set_font(&vec![font]);
-    let _ = canvas.fill_text(
-        parent_posx + posx + width / 2.0,
-        parent_posy + posy + height / 2.0,
-        &node.key().0.to_string(),
-        &paint,
-    );
+
+
+    if let Some(text) = world.store.text.get(&node.key()) {
+        let mut paint = Paint::color(Color::black());
+        paint.set_font_size(48.0);
+        paint.set_text_align(Align::Left);
+        paint.set_text_baseline(Baseline::Top);
+        paint.set_font(&vec![font]);
+
+        let font_metrics = canvas.measure_font(&paint).expect("Error measuring font");
+
+        let mut y = 0.0;
+        if let Ok(text_lines) = canvas.break_text_vec(width.ceil(), text, &paint) {
+            //println!("font height: {}", font_metrics.height());
+            for line in text_lines.into_iter() {
+                let _ = canvas.fill_text(parent_posx + posx, parent_posy + posy + y, &text[line], &paint);
+                // println!("{} {}", y, font_metrics.height());
+                y += font_metrics.height();
+            }
+        }
+    } else {
+        let mut paint = Paint::color(Color::black());
+        paint.set_font_size(48.0);
+        paint.set_text_align(Align::Center);
+        paint.set_text_baseline(Baseline::Middle);
+        paint.set_font(&vec![font]);
+
+        let _ = canvas.fill_text(
+            parent_posx + posx + width / 2.0,
+            parent_posy + posy + height / 2.0,
+            &node.key().0.to_string(),
+            &paint,
+        );
+    }
 
     for child in node.children(&world.tree) {
         draw_node(child, world, posx + parent_posx, posy + parent_posy, font, canvas);

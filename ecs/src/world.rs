@@ -159,9 +159,22 @@ impl World {
         self.store.max_bottom.insert(entity, value);
     }
 
-    pub fn set_content_size(&mut self, entity: Entity, content: impl Fn(f32) -> f32 + 'static) {
-        self.store.content_size.insert(entity, Box::new(content));
+    pub fn set_content_main(&mut self, entity: Entity, content: impl Fn(&Store, f32) -> f32 + 'static) {
+        self.store.content_main.insert(entity, Box::new(content));
     }
+
+    pub fn set_content_cross(&mut self, entity: Entity, content: impl Fn(&Store, f32) -> f32 + 'static) {
+        self.store.content_cross.insert(entity, Box::new(content));
+    }
+
+    pub fn set_text(&mut self, entity: Entity, text: &str) {
+        self.store.text.insert(entity, String::from(text));
+    }
+
+    pub fn set_text_wrap(&mut self, entity: Entity, text_wrap: bool) {
+        self.store.text_wrap.insert(entity, text_wrap);
+    }
+
 
     pub fn set_all_stretch(&mut self, entity: Entity) {
         // self.set_left(entity, Units::Stretch(1.0));
