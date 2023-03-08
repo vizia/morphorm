@@ -3,7 +3,7 @@ use crate::{Cache, Node};
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
 pub fn print_node<N: Node>(
     node: &N,
-    cache: &impl Cache<CacheKey = N::CacheKey>,
+    cache: &impl Cache<Node = N>,
     tree: &N::Tree,
     is_root: bool,
     has_sibling: bool,
@@ -11,8 +11,6 @@ pub fn print_node<N: Node>(
 ) where
     N::CacheKey: Copy + std::fmt::Display,
 {
-    let entity = node.key();
-
     let fork_string = if is_root {
         "│"
     } else if has_sibling {
@@ -24,11 +22,11 @@ pub fn print_node<N: Node>(
         "{lines}{fork}{id}| {x:#3} {y:#3} {w:#3} {h:#3}│",
         lines = lines_string,
         fork = fork_string,
-        id = entity,
-        x = cache.posx(entity),
-        y = cache.posy(entity),
-        w = cache.width(entity),
-        h = cache.height(entity),
+        id = node.key(),
+        x = cache.posx(node),
+        y = cache.posy(node),
+        w = cache.width(node),
+        h = cache.height(node),
     );
     let bar = if is_root {
         ""

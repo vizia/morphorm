@@ -52,7 +52,7 @@ fn main() {
     world.set_content_main(node, move |store, _| content_width(node, store));
     world.set_content_cross(node, move |store, width| content_height(node, store, width));
 
-    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     render(world, root);
 }

@@ -18,7 +18,7 @@ fn stretch_cross_space_pixels_cross() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Stretch(1.0));
 
-    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 250.0, width: 100.0, height: 100.0 }));
 }
@@ -40,7 +40,7 @@ fn stretch_cross_space_percentage_cross() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Stretch(1.0));
 
-    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 300.0 }));
 }
@@ -62,7 +62,7 @@ fn stretch_cross_space_stretch_cross() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Stretch(1.0));
 
-    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 200.0, width: 100.0, height: 200.0 }));
 }
