@@ -44,11 +44,18 @@ pub trait Node: Sized + Clone {
     /// Returns the desired bottom-side space of the node.
     fn bottom(&self, store: &Self::Store) -> Option<Units>;
 
-    /// Returns the desired main-axis size given a computed cross-axis size.
-    fn content_main(&self, store: &Self::Store, cross: f32) -> Option<f32>;
+    // /// Returns the desired main-axis size given a computed cross-axis size.
+    // fn content_main(&self, store: &Self::Store, cross: f32) -> Option<f32>;
 
-    /// Returns the desired cross-axis size given a computed main-axis size.
-    fn content_cross(&self, store: &Self::Store, main: f32) -> Option<f32>;
+    // /// Returns the desired cross-axis size given a computed main-axis size.
+    // fn content_cross(&self, store: &Self::Store, main: f32) -> Option<f32>;
+
+    fn content_size(
+        &self,
+        store: &Self::Store,
+        parent_width: Option<f32>,
+        parent_height: Option<f32>,
+    ) -> Option<(f32, f32)>;
 
     // Child Spacing
 
@@ -189,6 +196,22 @@ pub(crate) trait NodeExt: Node {
 
     fn max_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         parent_layout_type.select_unwrap(store, |store| self.max_bottom(store), |store| self.max_right(store))
+    }
+
+    fn content_sizing(
+        &self,
+        store: &Self::Store,
+        parent_layout_type: LayoutType,
+        parent_main: Option<f32>,
+        parent_cross: Option<f32>,
+    ) -> Option<(f32, f32)> {
+        match parent_layout_type {
+            LayoutType::Row => self.content_size(store, parent_main, parent_cross),
+
+            LayoutType::Column => {
+                self.content_size(store, parent_cross, parent_main).map(|(width, height)| (height, width))
+            }
+        }
     }
 }
 

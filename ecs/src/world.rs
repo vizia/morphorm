@@ -7,6 +7,15 @@ use crate::tree::Tree;
 
 use rand::Rng;
 
+#[derive(Default, Debug, Clone, Copy)]
+pub enum TextWrap {
+    All,
+    Hard,
+    Soft,
+    #[default]
+    None,
+}
+
 /// An object which manages the state of an ECS application.
 #[derive(Default)]
 pub struct World {
@@ -159,19 +168,15 @@ impl World {
         self.store.max_bottom.insert(entity, value);
     }
 
-    pub fn set_content_main(&mut self, entity: Entity, content: impl Fn(&Store, f32) -> f32 + 'static) {
-        self.store.content_main.insert(entity, Box::new(content));
-    }
-
-    pub fn set_content_cross(&mut self, entity: Entity, content: impl Fn(&Store, f32) -> f32 + 'static) {
-        self.store.content_cross.insert(entity, Box::new(content));
+    pub fn set_content_size(&mut self, entity: Entity, content: impl Fn(&Store, Option<f32>, Option<f32>) -> (f32, f32) + 'static) {
+        self.store.content_size.insert(entity, Box::new(content));
     }
 
     pub fn set_text(&mut self, entity: Entity, text: &str) {
         self.store.text.insert(entity, String::from(text));
     }
 
-    pub fn set_text_wrap(&mut self, entity: Entity, text_wrap: bool) {
+    pub fn set_text_wrap(&mut self, entity: Entity, text_wrap: TextWrap) {
         self.store.text_wrap.insert(entity, text_wrap);
     }
 

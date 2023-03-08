@@ -1,7 +1,7 @@
 use morphorm::{LayoutType, PositionType, Units};
 use std::{collections::HashMap};
 
-use crate::entity::Entity;
+use crate::{entity::Entity, TextWrap};
 
 /// A storage struct representing a component store for an ECS.
 #[derive(Default)]
@@ -39,11 +39,10 @@ pub struct Store {
     pub col_between: HashMap<Entity, Units>,
     pub row_between: HashMap<Entity, Units>,
 
-    pub content_main: HashMap<Entity, Box<dyn Fn(&Self, f32) -> f32>>,
-    pub content_cross: HashMap<Entity, Box<dyn Fn(&Self, f32) -> f32>>,
+    pub content_size: HashMap<Entity, Box<dyn Fn(&Self, Option<f32>, Option<f32>) -> (f32, f32)>>,
 
     pub text: HashMap<Entity, String>,
-    pub text_wrap: HashMap<Entity, bool>,
+    pub text_wrap: HashMap<Entity, TextWrap>,
 
     pub text_context: femtovg::TextContext,
     pub font_id: Option<femtovg::FontId>,

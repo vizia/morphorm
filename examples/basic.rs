@@ -17,13 +17,13 @@ fn main() {
     world.set_width(node1, Units::Auto);
     world.set_height(node1, Units::Stretch(1.0));
     world.set_layout_type(node1, LayoutType::Row);
-    world.set_content_main(node1, |_, height| height);
+    world.set_content_size(node1, |_, _, height| (height.unwrap(), height.unwrap()));
 
     let node2 = world.add(Some(node));
     world.set_width(node2, Units::Stretch(1.0));
     world.set_height(node2, Units::Auto);
     world.set_layout_type(node2, LayoutType::Row);
-    world.set_content_cross(node2, |_, width| width * 3.0);
+    world.set_content_size(node2, |_, width, _| (width.unwrap(), width.unwrap() * 3.0));
 
     layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
