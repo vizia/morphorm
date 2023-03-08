@@ -131,32 +131,12 @@ where
 
     let num_children = node.children(tree).count();
 
-    // Apply content size.
-    // Note: content size is based on the layout type of the node and not the layout type of the parent.
-    if parent_layout_type == layout_type {
-        if main == Units::Auto && num_children == 0 {
-            if let Some(content_size) = node.content_main(store, computed_cross) {
-                computed_main = content_size;
-            }
-        }
-
-        if cross == Units::Auto && num_children == 0 {
-            if let Some(content_size) = node.content_cross(store, computed_main) {
-                computed_cross = content_size;
-            }
-        }
-    } else {
-        // When parent_layout_type != layout_type then cross becomes main and main becomes cross.
-        if cross == Units::Auto && num_children == 0 {
-            if let Some(content_size) = node.content_main(store, computed_main) {
-                computed_cross = content_size;
-            }
-        }
-
-        if main == Units::Auto && num_children == 0 {
-            if let Some(content_size) = node.content_cross(store, computed_cross) {
-                computed_main = content_size;
-            }
+    if (main == Auto || cross == Auto) && num_children == 0 {
+        let parent_main = if main == Auto { None } else { Some(computed_main) };
+        let parent_cross = if cross == Auto { None } else { Some(computed_cross) };
+        if let Some(content_size) = node.content_sizing(store, parent_layout_type, parent_main, parent_cross) {
+            computed_main = content_size.0;
+            computed_cross = content_size.1;
         }
     }
 

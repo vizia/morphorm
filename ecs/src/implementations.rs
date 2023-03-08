@@ -57,17 +57,9 @@ impl Node for Entity {
         store.bottom.get(self).copied()
     }
 
-    fn content_main(&self, store: &Store, cross: f32) -> Option<f32> {
-        if let Some(t) = store.content_main.get(self) {
-            Some((t)(store, cross))
-        } else {
-            None
-        }
-    }
-
-    fn content_cross(&self, store: &Store, main: f32) -> Option<f32> {
-        if let Some(t) = store.content_cross.get(self) {
-            Some((t)(store, main))
+    fn content_size(&self, store: &Store, width: Option<f32>, height: Option<f32>) -> Option<(f32, f32)> {
+        if let Some(t) = store.content_size.get(self) {
+            Some((t)(store, width, height))
         } else {
             None
         }
