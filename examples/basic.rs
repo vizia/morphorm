@@ -25,7 +25,7 @@ fn main() {
     world.set_layout_type(node2, LayoutType::Row);
     world.set_content_cross(node2, |_, width| width * 3.0);
 
-    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
     render(world, root);
 }

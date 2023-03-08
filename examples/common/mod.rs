@@ -67,7 +67,7 @@ pub fn render(mut world: World, root: Entity) {
                         }
                     };
 
-                    layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store);
+                    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -98,17 +98,17 @@ pub fn render(mut world: World, root: Entity) {
 fn draw_node<N: Node<CacheKey = Entity>>(
     node: &N,
     tree: &N::Tree,
-    cache: &impl Cache<CacheKey = N::CacheKey>,
+    cache: &impl Cache<Node = N>,
     store: &Store,
     parent_posx: f32,
     parent_posy: f32,
     font: FontId,
     canvas: &mut Canvas<OpenGl>,
 ) {
-    let posx = cache.posx(node.key());
-    let posy = cache.posy(node.key());
-    let width = cache.width(node.key());
-    let height = cache.height(node.key());
+    let posx = cache.posx(node);
+    let posy = cache.posy(node);
+    let width = cache.width(node);
+    let height = cache.height(node);
 
     let red = store.red.get(&node.key()).unwrap_or(&0u8);
     let green = store.green.get(&node.key()).unwrap_or(&0u8);

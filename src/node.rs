@@ -96,11 +96,11 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_width(store), self.min_height(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_width(store), |store| self.min_height(store))
     }
 
     fn max_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_width(store), self.max_height(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_width(store), |store| self.max_height(store))
     }
 
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
@@ -111,84 +111,84 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_height(store), self.min_width(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_height(store), |store| self.min_width(store))
     }
 
     fn max_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_height(store), self.max_width(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_height(store), |store| self.max_width(store))
     }
 
     fn main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.left(store), self.top(store))
+        parent_layout_type.select_unwrap(store, |store| self.left(store), |store| self.top(store))
     }
 
     fn main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.right(store), self.bottom(store))
+        parent_layout_type.select_unwrap(store, |store| self.right(store), |store| self.bottom(store))
     }
 
     fn cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.top(store), self.left(store))
+        parent_layout_type.select_unwrap(store, |store| self.top(store), |store| self.left(store))
     }
 
     fn cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.bottom(store), self.right(store))
+        parent_layout_type.select_unwrap(store, |store| self.bottom(store), |store| self.right(store))
     }
 
     fn child_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.child_left(store), self.child_top(store))
+        parent_layout_type.select_unwrap(store, |store| self.child_left(store), |store| self.child_top(store))
     }
 
     fn child_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.child_right(store), self.child_bottom(store))
+        parent_layout_type.select_unwrap(store, |store| self.child_right(store), |store| self.child_bottom(store))
     }
 
     fn child_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.child_top(store), self.child_left(store))
+        parent_layout_type.select_unwrap(store, |store| self.child_top(store), |store| self.child_left(store))
     }
 
     fn child_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.child_bottom(store), self.child_right(store))
+        parent_layout_type.select_unwrap(store, |store| self.child_bottom(store), |store| self.child_right(store))
     }
 
     fn main_between(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.col_between(store), self.row_between(store))
+        parent_layout_type.select_unwrap(store, |store| self.col_between(store), |store| self.row_between(store))
     }
 
     // Currently unused until wrapping is implemented
     fn cross_between(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.row_between(store), self.col_between(store))
+        parent_layout_type.select_unwrap(store, |store| self.row_between(store), |store| self.col_between(store))
     }
 
     fn min_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_left(store), self.min_top(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_left(store), |store| self.min_top(store))
     }
 
     fn max_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_left(store), self.max_top(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_left(store), |store| self.max_top(store))
     }
 
     fn min_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_right(store), self.min_bottom(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_right(store), |store| self.min_bottom(store))
     }
 
     fn max_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_right(store), self.max_bottom(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_right(store), |store| self.max_bottom(store))
     }
 
     fn min_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_top(store), self.min_left(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_top(store), |store| self.min_left(store))
     }
 
     fn max_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_top(store), self.max_left(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_top(store), |store| self.max_left(store))
     }
 
     fn min_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.min_bottom(store), self.min_right(store))
+        parent_layout_type.select_unwrap(store, |store| self.min_bottom(store), |store| self.min_right(store))
     }
 
     fn max_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select(self.max_bottom(store), self.max_right(store))
+        parent_layout_type.select_unwrap(store, |store| self.max_bottom(store), |store| self.max_right(store))
     }
 }
 

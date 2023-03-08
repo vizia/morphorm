@@ -194,69 +194,68 @@ pub struct LayoutCache {
 }
 
 impl Cache for LayoutCache {
-    type CacheKey = u32;
-
-    fn width(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    type Node = Widget;
+    fn width(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(&node.key()) {
             return rect.0;
         }
 
         0.0
     }
 
-    fn height(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn height(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(&node.key()) {
             return rect.1;
         }
 
         0.0
     }
 
-    fn posx(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn posx(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(&node.key()) {
             return rect.2;
         }
 
         0.0
     }
 
-    fn posy(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn posy(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(&node.key()) {
             return rect.3;
         }
 
         0.0
     }
 
-    fn set_width(&mut self, node: Self::CacheKey, width: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_width(&mut self, node: &Self::Node, width: f32) {
+        if let Some(rect) = self.rect.get_mut(&node.key()) {
             rect.0 = width;
         } else {
-            self.rect.insert(node, (width, 0.0, 0.0, 0.0));
+            self.rect.insert(node.key(), (width, 0.0, 0.0, 0.0));
         }
     }
 
-    fn set_height(&mut self, node: Self::CacheKey, height: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_height(&mut self, node: &Self::Node, height: f32) {
+        if let Some(rect) = self.rect.get_mut(&node.key()) {
             rect.1 = height;
         } else {
-            self.rect.insert(node, (0.0, height, 0.0, 0.0));
+            self.rect.insert(node.key(), (0.0, height, 0.0, 0.0));
         }
     }
 
-    fn set_posx(&mut self, node: Self::CacheKey, posx: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_posx(&mut self, node: &Self::Node, posx: f32) {
+        if let Some(rect) = self.rect.get_mut(&node.key()) {
             rect.2 = posx;
         } else {
-            self.rect.insert(node, (0.0, 0.0, posx, 0.0));
+            self.rect.insert(node.key(), (0.0, 0.0, posx, 0.0));
         }
     }
 
-    fn set_posy(&mut self, node: Self::CacheKey, posy: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_posy(&mut self, node: &Self::Node, posy: f32) {
+        if let Some(rect) = self.rect.get_mut(&node.key()) {
             rect.3 = posy;
         } else {
-            self.rect.insert(node, (0.0, 0.0, 0.0, posy));
+            self.rect.insert(node.key(), (0.0, 0.0, 0.0, posy));
         }
     }
 }
@@ -265,7 +264,7 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Pixels(600.0), Pixels(600.0));
     root.child.push(Widget::new(1, Pixels(400.0), Pixels(400.0)));
-    layout(&root, None, None, None, &mut cache, &(), &());
+    layout(&root, None, 600.0, 600.0, &mut cache, &(), &());
     render(cache, root);
 }
 
@@ -308,7 +307,7 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                     root.width = Units::Pixels(physical_size.width as f32);
                     root.height = Units::Pixels(physical_size.height as f32);
 
-                    layout(&root, None, None, None, &mut cache, &(), &());
+                    layout(&root, None, 600.0, 600.0, &mut cache, &(), &());
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
@@ -338,10 +337,10 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
 }
 
 fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, font: FontId) {
-    let posx = cache.posx(node.key());
-    let posy = cache.posy(node.key());
-    let width = cache.width(node.key());
-    let height = cache.height(node.key());
+    let posx = cache.posx(node);
+    let posy = cache.posy(node);
+    let width = cache.width(node);
+    let height = cache.height(node);
 
     let color = node.color;
 

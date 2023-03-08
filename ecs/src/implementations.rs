@@ -170,61 +170,62 @@ impl NodeCache {
     }
 }
 
-impl Cache for NodeCache {
-    type CacheKey = Entity;
+impl Cache for NodeCache 
+{
+    type Node = Entity;
 
-    fn width(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn width(&self, node: &Entity) -> f32 {
+        if let Some(rect) = self.rect.get(node) {
             return rect.width;
         }
 
         0.0
     }
 
-    fn height(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn height(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(node) {
             return rect.height;
         }
 
         0.0
     }
 
-    fn posx(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn posx(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(node) {
             return rect.posx;
         }
 
         0.0
     }
 
-    fn posy(&self, node: Self::CacheKey) -> f32 {
-        if let Some(rect) = self.rect.get(&node) {
+    fn posy(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(node) {
             return rect.posy;
         }
 
         0.0
     }
 
-    fn set_width(&mut self, node: Self::CacheKey, width: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_width(&mut self, node: &Self::Node, width: f32) {
+        if let Some(rect) = self.rect.get_mut(node) {
             rect.width = width;
         }
     }
 
-    fn set_height(&mut self, node: Self::CacheKey, height: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_height(&mut self, node: &Self::Node, height: f32) {
+        if let Some(rect) = self.rect.get_mut(node) {
             rect.height = height;
         }
     }
 
-    fn set_posx(&mut self, node: Self::CacheKey, posx: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_posx(&mut self, node: &Self::Node, posx: f32) {
+        if let Some(rect) = self.rect.get_mut(node) {
             rect.posx = posx;
         }
     }
 
-    fn set_posy(&mut self, node: Self::CacheKey, posy: f32) {
-        if let Some(rect) = self.rect.get_mut(&node) {
+    fn set_posy(&mut self, node: &Self::Node, posy: f32) {
+        if let Some(rect) = self.rect.get_mut(node) {
             rect.posy = posy;
         }
     }

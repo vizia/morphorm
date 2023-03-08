@@ -3,8 +3,8 @@
 
 use smallvec::SmallVec;
 
-use crate::Units::*;
 use crate::{Cache, LayoutType, Node, NodeExt, PositionType, Units};
+use crate::{CacheExt, Units::*};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
@@ -78,8 +78,8 @@ struct ChildNode<'a, N: Node> {
 /// # Arguments
 ///
 /// * `node` - Root node to start layout from.
-/// * `parent_layout_type` - The [`LayoutType`] of the parent of the `node`. If the `node` has no parent then pass `None`.
-/// * `parent_main` - The size of the parent of the `node` on its main axis. If the `node` has no parent then pass `None`.
+/// * `parent_layout_type` - The [`LayoutType`] of the parent of the `node`. If the `node` has no parent then pass the size of the node.
+/// * `parent_main` - The size of the parent of the `node` on its main axis. If the `node` has no parent then pass the size of the node.
 /// * `parent_cross` - The size of the parent of the `node` along its cross axis. If the `node` has no parent then pass `None`.
 /// * `cache` - A mutable reference to the [`Cache`].
 /// * `tree` - A mutable reference to the [`Tree`](crate::Node::Tree).
@@ -88,32 +88,21 @@ struct ChildNode<'a, N: Node> {
 /// # Example
 ///
 /// ```
-/// layout(&root, None, None, None, &mut cache, &tree, &store);
+/// layout(&root, None, 600.0, 600.0, &mut cache, &tree, &store);
 /// ```
 pub fn layout<N, C>(
     node: &N,
     parent_layout_type: Option<LayoutType>,
-    parent_main: Option<f32>,
-    parent_cross: Option<f32>,
+    parent_main: f32,
+    parent_cross: f32,
     cache: &mut C,
     tree: &<N as Node>::Tree,
     store: &<N as Node>::Store,
 ) -> Size
 where
     N: Node,
-    C: Cache<CacheKey = N::CacheKey>,
+    C: Cache<Node = N>,
 {
-    // NOTE: Due to the recursive nature of this function, any code written before the loop on the children is performed
-    // on the 'down' pass of the tree, and any code after the loop is performed on the 'up' phase.
-    // However, positioning of children need to happen after all children have a computed size, so it's placed after the loop
-    // causing the positioning to occur on the 'up' phase.
-    // This has the effect of positioning children relative to the parent and not absolutely. To account for this, the system in charge
-    // of rendering the nodes must also recursively traverse the tree and add the parent position to the node position.
-    // Unclear whether morphorm should provide that or whether the user should do that. At the moment it's on the user.
-    // See draw_node() in 'examples/common/mod.rs'.
-
-    // TODO: Min/Max constraints for stretch space and size
-
     // If `None` then `node` is a root node and the parent layout type is not important.
     let parent_layout_type = parent_layout_type.unwrap_or_default();
 
@@ -123,24 +112,6 @@ where
     // The desired main-axis and cross-axis sizes of the node.
     let main = node.main(store, parent_layout_type);
     let cross = node.cross(store, parent_layout_type);
-
-    // If the `node` is a root node then use its main as the parent_main.
-    let parent_main = if let Some(pm) = parent_main {
-        pm
-    } else if let Pixels(val) = main {
-        val
-    } else {
-        panic!("Root node must have pixels main size");
-    };
-
-    // If the `node` is a root node then use its cross as the parent_cross.
-    let parent_cross = if let Some(pc) = parent_cross {
-        pc
-    } else if let Pixels(val) = cross {
-        val
-    } else {
-        panic!("Root node must have pixels cross size");
-    };
 
     // Compute main-axis size.
     let mut computed_main = match main {
@@ -414,8 +385,7 @@ where
 
             // Compute size of fixed/auto children
             _ => {
-                let child_size =
-                    layout(child, Some(layout_type), Some(parent_main), Some(parent_cross), cache, tree, store);
+                let child_size = layout(child, Some(layout_type), parent_main, parent_cross, cache, tree, store);
 
                 computed_child_main = child_size.main;
                 computed_child_cross = child_size.cross;
@@ -477,8 +447,7 @@ where
                 let actual_cross = desired_cross.round();
                 child.cross_remainder = desired_cross - actual_cross;
 
-                let size =
-                    layout(child.node, Some(layout_type), Some(computed_main), Some(actual_cross), cache, tree, store);
+                let size = layout(child.node, Some(layout_type), computed_main, actual_cross, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
                 main_non_flex += size.main;
@@ -532,8 +501,7 @@ where
 
                 let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
 
-                let size =
-                    layout(item.node, Some(layout_type), Some(actual_main), Some(cross_size), cache, tree, store);
+                let size = layout(item.node, Some(layout_type), actual_main, cross_size, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
             }
@@ -546,36 +514,17 @@ where
         let child_position_type = child.node.position_type(store).unwrap_or_default();
 
         match child_position_type {
-            PositionType::SelfDirected => match layout_type {
-                LayoutType::Row => {
-                    cache.set_posx(child.node.key(), child.main_before);
-                    cache.set_posy(child.node.key(), child.cross_before);
-                }
-
-                LayoutType::Column => {
-                    cache.set_posy(child.node.key(), child.main_before);
-                    cache.set_posx(child.node.key(), child.cross_before);
-                }
-            },
+            PositionType::SelfDirected => {
+                cache.set_main_pos(child.node, layout_type, child.main_before);
+                cache.set_cross_pos(child.node, layout_type, child.cross_before);
+            }
 
             PositionType::ParentDirected => {
                 main_pos += child.main_before;
 
-                match layout_type {
-                    LayoutType::Row => {
-                        cache.set_posx(child.node.key(), main_pos);
-                        cache.set_posy(child.node.key(), child.cross_before);
-                        let child_width = cache.width(child.node.key());
-                        main_pos += child_width;
-                    }
-
-                    LayoutType::Column => {
-                        cache.set_posy(child.node.key(), main_pos);
-                        cache.set_posx(child.node.key(), child.cross_before);
-                        let child_height = cache.height(child.node.key());
-                        main_pos += child_height;
-                    }
-                }
+                cache.set_main_pos(child.node, layout_type, main_pos);
+                cache.set_cross_pos(child.node, layout_type, child.cross_before);
+                main_pos += cache.main(child.node, layout_type);
 
                 main_pos += child.main_after;
             }
@@ -584,11 +533,8 @@ where
 
     // Determine size of auto node from children
     if num_children != 0 {
-        let (main_sum, cross_max) = if parent_layout_type == layout_type {
-            (main_sum, cross_max)
-        } else {
-            (cross_max, main_sum)
-        };
+        let (main_sum, cross_max) =
+            if parent_layout_type == layout_type { (main_sum, cross_max) } else { (cross_max, main_sum) };
 
         if main == Auto {
             computed_main = main_sum;
@@ -600,17 +546,8 @@ where
     }
 
     // Set the computed size of the node in the cache.
-    match parent_layout_type {
-        LayoutType::Row => {
-            cache.set_width(node.key(), computed_main);
-            cache.set_height(node.key(), computed_cross);
-        }
-
-        LayoutType::Column => {
-            cache.set_height(node.key(), computed_main);
-            cache.set_width(node.key(), computed_cross);
-        }
-    }
+    cache.set_main(node, parent_layout_type, computed_main);
+    cache.set_cross(node, parent_layout_type, computed_cross);
 
     // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }
