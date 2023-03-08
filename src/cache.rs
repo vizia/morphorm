@@ -1,5 +1,4 @@
 pub trait Cache {
-
     type CacheKey;
 
     /// Returns the cached width of the given node.

@@ -1,7 +1,7 @@
 use femtovg::FontId;
 use glutin::event::{ElementState, VirtualKeyCode};
-pub use morphorm_ecs::*;
 pub use morphorm::*;
+pub use morphorm_ecs::*;
 
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -118,8 +118,6 @@ fn draw_node<N: Node<CacheKey = Entity>>(
     path.rect(parent_posx + posx, parent_posy + posy, width, height);
     let paint = Paint::color(Color::rgb(*red, *green, *blue));
     canvas.fill_path(&mut path, &paint);
-
-
 
     if let Some(text) = store.text.get(&node.key()) {
         let mut paint = Paint::color(Color::black());

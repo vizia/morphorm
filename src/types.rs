@@ -1,5 +1,5 @@
 /// The layout type determines how the nodes will position its parent-directed children.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LayoutType {
     /// Stack child elements horizontally.
     Row,
@@ -19,7 +19,7 @@ impl LayoutType {
 }
 
 /// The position type determines whether a node will be positioned in-line with its siblings or seperately.
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PositionType {
     /// Node is positioned relative to parent but ignores its siblings.
     SelfDirected,

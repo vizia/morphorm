@@ -1,4 +1,4 @@
-use glutin::event::{VirtualKeyCode, ElementState};
+use glutin::event::{ElementState, VirtualKeyCode};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -308,15 +308,7 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                     root.width = Units::Pixels(physical_size.width as f32);
                     root.height = Units::Pixels(physical_size.height as f32);
 
-                    layout(
-                        &root,
-                        None,
-                        None,
-                        None,
-                        &mut cache,
-                        &(),
-                        &(),
-                    );
+                    layout(&root, None, None, None, &mut cache, &(), &());
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 

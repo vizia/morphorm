@@ -28,9 +28,7 @@ fn wide_shallow_tree(c: &mut Criterion) {
                 build_shallow_tree(&mut world, Some(root), 3);
                 (world, root)
             },
-            |(mut world, root)| {
-                layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store)
-            },
+            |(mut world, root)| layout(&root, None, None, None, &mut world.cache, &world.tree, &world.store),
             criterion::BatchSize::SmallInput,
         )
     });
