@@ -11,7 +11,7 @@
 //! - `Node` represents a UI element which can be sized and positioned. The node itself could contain the desired layout properties, or the properties
 //!   can be provided by an external source (such as an ECS component store), which is provided by the `Store` associated type.
 //!
-//! - `Cache` represents a store for the output of the layout computation. The store is indexed by a key which is represented by the `CacheKey` 
+//! - `Cache` represents a store for the output of the layout computation. The store is indexed by a key which is represented by the `CacheKey`
 //! associated type on the `Node` trait.
 //!
 //! Once the appropriate traits have been implmented, layout can be performed on a particular node, recursing depth first down the visual tree, e.g.

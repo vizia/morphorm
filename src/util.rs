@@ -1,4 +1,4 @@
-use crate::{Node, Cache};
+use crate::{Cache, Node};
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the given root node.
 pub fn print_node<N: Node>(
@@ -8,8 +8,8 @@ pub fn print_node<N: Node>(
     is_root: bool,
     has_sibling: bool,
     lines_string: String,
-) 
-where N::CacheKey: Copy + std::fmt::Display
+) where
+    N::CacheKey: Copy + std::fmt::Display,
 {
     let entity = node.key();
 
@@ -26,7 +26,7 @@ where N::CacheKey: Copy + std::fmt::Display
         fork = fork_string,
         id = entity,
         x = cache.posx(entity),
-        y = cache.posx(entity),
+        y = cache.posy(entity),
         w = cache.width(entity),
         h = cache.height(entity),
     );
