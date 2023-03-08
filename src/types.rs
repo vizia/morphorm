@@ -9,7 +9,7 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
-    // Helper function for selecting between values depending on the layout type.
+    // Helper function for selecting between optional values depending on the layout type.
     pub(crate) fn select_unwrap<T: Default, S>(
         &self,
         s: S,
@@ -31,7 +31,7 @@ impl LayoutType {
     }
 }
 
-/// The position type determines whether a node will be positioned in-line with its siblings or seperately.
+/// The position type determines whether a node will be positioned in-line with its siblings or out-of-line / independently of its siblings.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PositionType {
     /// Node is positioned relative to parent but ignores its siblings.
@@ -47,10 +47,25 @@ pub enum Units {
     /// A number of logical pixels.
     Pixels(f32),
     /// A percentage of the parent dimension.
+    /// 
+    /// A percentage of the parent's width when applied to left, width, right properties.
+    /// A percentage of the parent's height when applied to top, height, bottom properties.
     Percentage(f32),
     /// A factor of the remaining free space.
+    /// 
+    /// The remaining free space is the parent space minus the space and size of any fixed-size nodes in that axis.
+    /// The remaining free space is then shared between any stretch nodes based on the ratio of their stretch factors.
+    /// 
+    /// For example, given two stretch nodes with factors of 1.0 and 2.0 respectively. The first will occupy 1/3 of the
+    /// remaining free space while the second will occupy 2/3 of the remaining free space. 
     Stretch(f32),
     /// Automatically determine the value.
+    /// 
+    /// When applied to space (left, right, top, bottom) the spacing will be overridden by the parent's child-space on the same side.
+    /// For example, a node with Auto left space with a parent which has Pixel(100.0) child-left space will get a left spacing of 100px.
+    /// 
+    /// When applied to size (width, height) Auto will either size to fit its children, or if there are no children
+    /// the node will be sized based on the [`content_size`](crate::Node::content_size) property of the node.
     #[default]
     Auto,
 }
@@ -66,22 +81,22 @@ impl Units {
         }
     }
 
-    /// Returns true if the value is in pixels
+    /// Returns true if the value is in pixels.
     pub fn is_pixels(&self) -> bool {
         matches!(self, Units::Pixels(_))
     }
 
-    /// Returns true if the value is a percentage
+    /// Returns true if the value is a percentage.
     pub fn is_percentage(&self) -> bool {
         matches!(self, Units::Percentage(_))
     }
 
-    /// Returns true if the value is a stretch factor
+    /// Returns true if the value is a stretch factor.
     pub fn is_stretch(&self) -> bool {
         matches!(self, Units::Stretch(_))
     }
 
-    /// Returns true if the value is auto
+    /// Returns true if the value is auto.
     pub fn is_auto(&self) -> bool {
         self == &Units::Auto
     }

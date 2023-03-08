@@ -70,7 +70,7 @@ struct ChildNode<'a, N: Node> {
     cross_after: f32,
 }
 
-/// Performs layout on a tree of nodes starting from a root node.
+/// Performs layout on the given node returning its computed size.
 ///
 /// The algorithm recurses down the tree, in depth-first order, and performs
 /// layout on every node starting from the input `node`.

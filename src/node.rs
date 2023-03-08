@@ -1,20 +1,30 @@
 use crate::{LayoutType, PositionType, Units};
 
+/// A `Node` represents a layout element which can be sized and positioned based on 
+/// a number of layout properties.
+/// 
+/// The getter methods in this trait allow for the layout function to retrieve the 
+/// layout properties of the node. The `Node` trait allows for its layout properties to optionally
+/// be stored externally from the node type itself by providing a `Store` associated type, a reference to
+/// which is passed to the layout property methods.
+/// 
+/// Similarly, the children of the node can be optionally stored externally using the `Tree` associated type,
+/// a reference to which is passed to the `children` method, which returns an iterator on the children of the node,
+/// the type of which is specified by the `ChildIter` associated type.
 pub trait Node: Sized + Clone {
-    /// A type representing a store where layout properties are stored.
+    /// A type representing a store where layout properties can be stored.
     type Store;
-    /// A type representing a tree structure where the children of the node are stored.
+    /// A type representing a tree structure where the children of the node can be stored.
     type Tree;
-    /// An type reresenting an iterator over the children of the node.
+    /// An type representing an iterator over the children of the node.
     type ChildIter<'t>: Iterator<Item = &'t Self>
     where
         Self: 't;
 
     /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
-    /// This type must be the same as the [`CacheKey`](crate::Cache::CacheKey) associated type on the [`Cache`](crate::Cache) trait.
     type CacheKey;
 
-    /// Returns a key which can be used to set/get computed layout data fron the [`cache`](crate::Cache).
+    /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
     fn key(&self) -> Self::CacheKey;
 
     /// Returns an iterator over the children of the node.
@@ -44,20 +54,13 @@ pub trait Node: Sized + Clone {
     /// Returns the desired bottom-side space of the node.
     fn bottom(&self, store: &Self::Store) -> Option<Units>;
 
-    // /// Returns the desired main-axis size given a computed cross-axis size.
-    // fn content_main(&self, store: &Self::Store, cross: f32) -> Option<f32>;
-
-    // /// Returns the desired cross-axis size given a computed main-axis size.
-    // fn content_cross(&self, store: &Self::Store, main: f32) -> Option<f32>;
-
+    /// Returns the width and height of the node if its desired width and/or desired height are auto.
     fn content_size(
         &self,
         store: &Self::Store,
         parent_width: Option<f32>,
         parent_height: Option<f32>,
     ) -> Option<(f32, f32)>;
-
-    // Child Spacing
 
     /// Returns the desired left-side child-space of the node.
     fn child_left(&self, store: &Self::Store) -> Option<Units>;
@@ -77,19 +80,40 @@ pub trait Node: Sized + Clone {
     /// Returns the desired space to be applied between the children of the node on the horizontal axis.
     fn col_between(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns the minimum width of the node.
     fn min_width(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the minimum height of the node.
     fn min_height(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the maximum width of the node.
     fn max_width(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the maximum height of the node.
     fn max_height(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns the minimum left-side space of the node.
     fn min_left(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the minimum right-side space of the node.
     fn min_right(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the minimum top-side space of the node.
     fn min_top(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the minimum bottom-side space of the node.
     fn min_bottom(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns the maximum left-side space of the node.
     fn max_left(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the maximum right-side space of the node.
     fn max_right(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the maximum top-side space of the node.
     fn max_top(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the maximum bottom-side space of the node.
     fn max_bottom(&self, store: &Self::Store) -> Option<Units>;
 }
 
