@@ -28,13 +28,13 @@ impl Tree {
             self.next_sibling[entity.index()] = None;
             self.prev_sibling[entity.index()] = None;
 
-            if self.first_child[parent.index()] == None {
+            if self.first_child[parent.index()].is_none() {
                 self.first_child[parent.index()] = Some(entity);
             } else {
                 let mut temp = self.first_child[parent.index()];
 
                 loop {
-                    if self.next_sibling[temp.unwrap().index()] == None {
+                    if self.next_sibling[temp.unwrap().index()].is_none() {
                         break;
                     }
 
@@ -89,19 +89,19 @@ impl Tree {
     }
 
     pub fn get_parent(&self, entity: &Entity) -> Option<&Entity> {
-        self.parent.get(entity.index()).map_or(None, |parent| parent.as_ref())
+        self.parent.get(entity.index()).and_then(|parent| parent.as_ref())
     }
 
     pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
-        self.first_child.get(entity.index()).map_or(None, |first_child| first_child.as_ref())
+        self.first_child.get(entity.index()).and_then(|first_child| first_child.as_ref())
     }
 
     pub fn get_next_sibling(&self, entity: &Entity) -> Option<&Entity> {
-        self.next_sibling.get(entity.index()).map_or(None, |prev_sibling| prev_sibling.as_ref())
+        self.next_sibling.get(entity.index()).and_then(|prev_sibling| prev_sibling.as_ref())
     }
 
     pub fn get_prev_sibling(&self, entity: &Entity) -> Option<Entity> {
-        self.prev_sibling.get(entity.index()).map_or(None, |next_sibling| *next_sibling)
+        self.prev_sibling.get(entity.index()).and_then(|next_sibling| *next_sibling)
     }
 }
 
@@ -128,7 +128,7 @@ impl<'a> DownwardIterator<'a> {
             self.current_node = None;
         }
 
-        return None;
+        None
     }
 }
 
@@ -155,7 +155,7 @@ impl<'a> Iterator for DownwardIterator<'a> {
             }
         }
 
-        return r;
+        r
     }
 }
 

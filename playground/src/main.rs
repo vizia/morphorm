@@ -79,6 +79,12 @@ pub struct AppData {
     child_bottom: morph::Units,
 }
 
+impl Default for AppData {
+    fn default() -> Self {
+        AppData::new()
+    }
+}
+
 impl AppData {
     pub fn new() -> Self {
         let mut world = ecs::World::default();
@@ -183,7 +189,7 @@ impl Model for AppData {
                     .selected_nodes
                     .as_ref()
                     .and_then(|nodes| nodes.last())
-                    .and_then(|selected| self.world.tree.get_parent(&selected))
+                    .and_then(|selected| self.world.tree.get_parent(selected))
                 {
                     self.world.add(Some(*parent))
                 } else {
@@ -205,7 +211,7 @@ impl Model for AppData {
                 if let Some(selected_nodes) = &self.selected_nodes {
                     for node in selected_nodes {
                         if *node != self.root_node {
-                            self.world.remove(&node);
+                            self.world.remove(node);
                         }
                     }
 

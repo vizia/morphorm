@@ -13,15 +13,15 @@ impl PropertiesPanel {
                 Label::new(cx, "Horizontal Axis").class("panel-title");
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "left", AppData::left, |val| AppEvent::SetLeft(val));
+                        unit_box(cx, "left", AppData::left, AppEvent::SetLeft);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "width", AppData::width, |val| AppEvent::SetWidth(val));
+                        unit_box(cx, "width", AppData::width, AppEvent::SetWidth);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "right", AppData::right, |val| AppEvent::SetRight(val));
+                        unit_box(cx, "right", AppData::right, AppEvent::SetRight);
                     });
                 })
                 .class("row");
@@ -32,15 +32,15 @@ impl PropertiesPanel {
                 Label::new(cx, "Vertical Axis").class("panel-title");
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "top", AppData::top, |val| AppEvent::SetTop(val));
+                        unit_box(cx, "top", AppData::top, AppEvent::SetTop);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "height", AppData::height, |val| AppEvent::SetHeight(val));
+                        unit_box(cx, "height", AppData::height, AppEvent::SetHeight);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "bottom", AppData::bottom, |val| AppEvent::SetBottom(val));
+                        unit_box(cx, "bottom", AppData::bottom, AppEvent::SetBottom);
                     });
                 })
                 .col_between(Pixels(10.0))
@@ -200,15 +200,15 @@ impl PropertiesPanel {
 
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "child-left", AppData::child_left, |val| AppEvent::SetChildLeft(val));
+                        unit_box(cx, "child-left", AppData::child_left, AppEvent::SetChildLeft);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "col", AppData::col_between, |val| AppEvent::SetColBetween(val));
+                        unit_box(cx, "col", AppData::col_between, AppEvent::SetColBetween);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "child-right", AppData::child_right, |val| AppEvent::SetChildRight(val));
+                        unit_box(cx, "child-right", AppData::child_right, AppEvent::SetChildRight);
                     });
                 })
                 .col_between(Pixels(10.0))
@@ -217,15 +217,15 @@ impl PropertiesPanel {
 
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "child-top", AppData::child_top, |val| AppEvent::SetChildTop(val));
+                        unit_box(cx, "child-top", AppData::child_top, AppEvent::SetChildTop);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "row", AppData::row_between, |val| AppEvent::SetRowBetween(val));
+                        unit_box(cx, "row", AppData::row_between, AppEvent::SetRowBetween);
                     });
 
                     VStack::new(cx, |cx| {
-                        unit_box(cx, "child-bottom", AppData::child_bottom, |val| AppEvent::SetChildBottom(val));
+                        unit_box(cx, "child-bottom", AppData::child_bottom, AppEvent::SetChildBottom);
                     });
                 })
                 .col_between(Pixels(10.0))
@@ -264,13 +264,13 @@ pub fn text_to_units(text: &str) -> Option<morph::Units> {
         "auto" => Some(morph::Units::Auto),
         t => {
             if let Some(tt) = t.strip_suffix("px") {
-                tt.parse::<f32>().ok().map(|v| morph::Units::Pixels(v))
-            } else if let Some(tt) = t.strip_suffix("%") {
-                tt.parse::<f32>().ok().map(|v| morph::Units::Percentage(v))
-            } else if let Some(tt) = t.strip_suffix("s") {
-                tt.parse::<f32>().ok().map(|v| morph::Units::Stretch(v))
+                tt.parse::<f32>().ok().map(morph::Units::Pixels)
+            } else if let Some(tt) = t.strip_suffix('%') {
+                tt.parse::<f32>().ok().map(morph::Units::Percentage)
+            } else if let Some(tt) = t.strip_suffix('s') {
+                tt.parse::<f32>().ok().map(morph::Units::Stretch)
             } else {
-                t.parse::<f32>().ok().map(|v| morph::Units::Pixels(v))
+                t.parse::<f32>().ok().map(morph::Units::Pixels)
             }
         }
     }
@@ -278,9 +278,9 @@ pub fn text_to_units(text: &str) -> Option<morph::Units> {
 
 pub fn print_units(units: morph::Units) -> String {
     match units {
-        morph::Units::Pixels(val) => format!("{}px", val),
-        morph::Units::Percentage(val) => format!("{}%", val),
-        morph::Units::Stretch(val) => format!("{}s", val),
-        morph::Units::Auto => format!("auto"),
+        morph::Units::Pixels(val) => format!("{val}px"),
+        morph::Units::Percentage(val) => format!("{val}%"),
+        morph::Units::Stretch(val) => format!("{val}s"),
+        morph::Units::Auto => String::from("auto"),
     }
 }
