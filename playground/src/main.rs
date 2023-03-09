@@ -180,7 +180,8 @@ impl Model for AppData {
 
             AppEvent::AddSiblingNode => {
                 let node = if let Some(parent) = self
-                    .selected_nodes.as_ref()
+                    .selected_nodes
+                    .as_ref()
                     .and_then(|nodes| nodes.last())
                     .and_then(|selected| self.world.tree.get_parent(&selected))
                 {
