@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 use crate::{entity::Entity, TextWrap};
 
+type ContentSizeType<S> = Box<dyn Fn(&S, Option<f32>, Option<f32>) -> (f32, f32)>;
+
 /// A storage struct representing a component store for an ECS.
 #[derive(Default)]
 pub struct Store {
@@ -39,7 +41,7 @@ pub struct Store {
     pub col_between: HashMap<Entity, Units>,
     pub row_between: HashMap<Entity, Units>,
 
-    pub content_size: HashMap<Entity, Box<dyn Fn(&Self, Option<f32>, Option<f32>) -> (f32, f32)>>,
+    pub content_size: HashMap<Entity, ContentSizeType<Self>>,
 
     pub text: HashMap<Entity, String>,
     pub text_wrap: HashMap<Entity, TextWrap>,

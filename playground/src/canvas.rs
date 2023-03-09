@@ -76,8 +76,7 @@ impl View for CanvasView {
                 &app_data.world.tree,
                 &app_data.world.cache,
                 &app_data.world.store,
-                bounds.x + 50.0,
-                bounds.y + 50.0,
+                (bounds.x + 50.0, bounds.y + 50.0),
                 canvas,
             )
 
@@ -115,12 +114,12 @@ fn select_node<'a, N: Node<CacheKey = ecs::Entity>>(
 
     if selected_child.is_none() {
         if mousex >= posx && mousex < posx + width && mousey >= posy && mousey < posy + height {
-            return Some(node);
+            Some(node)
         } else {
-            return None;
+            None
         }
     } else {
-        return selected_child;
+        selected_child
     }
 }
 
@@ -130,8 +129,7 @@ fn draw_node<N: Node<CacheKey = ecs::Entity>>(
     tree: &N::Tree,
     cache: &impl Cache<Node = N>,
     store: &Store,
-    parent_posx: f32,
-    parent_posy: f32,
+    parent_pos: (f32, f32),
     canvas: &mut Canvas,
 ) {
     let posx = cache.posx(node);
@@ -139,14 +137,12 @@ fn draw_node<N: Node<CacheKey = ecs::Entity>>(
     let width = cache.width(node);
     let height = cache.height(node);
 
-    // println!("{:?} {} {} {} {}", node.key(), posx, posy, width, height);
-
     let red = store.red.get(&node.key()).unwrap_or(&0u8);
     let green = store.green.get(&node.key()).unwrap_or(&0u8);
     let blue = store.blue.get(&node.key()).unwrap_or(&0u8);
 
     let mut path = vg::Path::new();
-    path.rect(parent_posx + posx, parent_posy + posy, width, height);
+    path.rect(parent_pos.0 + posx, parent_pos.1 + posy, width, height);
     let paint = vg::Paint::color(vg::Color::rgb(*red, *green, *blue));
     canvas.fill_path(&mut path, &paint);
 
@@ -194,6 +190,6 @@ fn draw_node<N: Node<CacheKey = ecs::Entity>>(
     // }
 
     for child in node.children(tree) {
-        draw_node(child, selected_nodes, tree, cache, store, posx + parent_posx, posy + parent_posy, canvas);
+        draw_node(child, selected_nodes, tree, cache, store, (posx + parent_pos.0, posy + parent_pos.1), canvas);
     }
 }
