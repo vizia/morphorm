@@ -154,6 +154,10 @@ impl NodeCache {
         self.rect.insert(entity, Default::default());
     }
 
+    pub fn remove(&mut self, entity: &Entity) {
+        self.rect.remove(entity);
+    }
+
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
         self.rect.get(&entity)
     }

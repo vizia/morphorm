@@ -23,6 +23,10 @@ treepanel {
     child-space: 1s;
 }
 
+.add_button.danger {
+    background-color: #bc1c1c;
+}
+
 properties {
     background-color: #1d1d1d;
     row-between: 1px;
@@ -94,4 +98,17 @@ button {
     width: 1s;
     border-radius: 2px;
     background-color: #565656;
+}
+
+.panel.align {
+    row-between: 4px;
+}
+
+.panel.align hstack {
+    col-between: 4px;
+}
+
+.panel.align button {
+    width: 22px;
+    height: 22px;
 }
