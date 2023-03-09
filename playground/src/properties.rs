@@ -49,59 +49,103 @@ impl PropertiesPanel {
             })
             .class("panel");
 
-            VStack::new(cx, |cx|{
+            VStack::new(cx, |cx| {
                 Label::new(cx, "Alignment").class("panel-title");
-                HStack::new(cx, |cx|{
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignTop);
-                        cx.emit(AppEvent::AlignLeft);
-                    }, |cx| Label::new(cx, ""));
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignTop);
+                            cx.emit(AppEvent::AlignLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignTop);
-                        cx.emit(AppEvent::AlignCenter);
-                    }, |cx| Label::new(cx, ""));
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignTop);
+                            cx.emit(AppEvent::AlignCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignTop);
-                        cx.emit(AppEvent::AlignRight);
-                    }, |cx| Label::new(cx, ""));
-                }).left(Stretch(1.0)).right(Stretch(1.0));
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignTop);
+                            cx.emit(AppEvent::AlignRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
 
-                HStack::new(cx, |cx|{
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignMiddle);
-                        cx.emit(AppEvent::AlignLeft);
-                    }, |cx| Label::new(cx, ""));
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignMiddle);
+                            cx.emit(AppEvent::AlignLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignMiddle);
-                        cx.emit(AppEvent::AlignCenter);
-                    }, |cx| Label::new(cx, ""));
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignMiddle);
+                            cx.emit(AppEvent::AlignCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignMiddle);
-                        cx.emit(AppEvent::AlignRight);
-                    }, |cx| Label::new(cx, ""));
-                }).left(Stretch(1.0)).right(Stretch(1.0));
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignMiddle);
+                            cx.emit(AppEvent::AlignRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
 
-                HStack::new(cx, |cx|{
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignBottom);
-                        cx.emit(AppEvent::AlignLeft);
-                    }, |cx| Label::new(cx, ""));
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignBottom);
+                            cx.emit(AppEvent::AlignLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignBottom);
-                        cx.emit(AppEvent::AlignCenter);
-                    }, |cx| Label::new(cx, ""));
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignBottom);
+                            cx.emit(AppEvent::AlignCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
 
-                    Button::new(cx, |cx| {
-                        cx.emit(AppEvent::AlignBottom);
-                        cx.emit(AppEvent::AlignRight);
-                    }, |cx| Label::new(cx, ""));
-                }).left(Stretch(1.0)).right(Stretch(1.0));
-            }).class("panel").class("align");
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignBottom);
+                            cx.emit(AppEvent::AlignRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
+            })
+            .class("panel")
+            .class("align");
 
             VStack::new(cx, |cx| {
                 Label::new(cx, "Child Layout").class("panel-title");
@@ -201,7 +245,12 @@ impl View for PropertiesPanel {
     }
 }
 
-fn unit_box(cx: &mut Context, label: &str, lens: impl Lens<Target = morph::Units>, event: impl 'static + Fn(morph::Units) -> AppEvent + Send + Sync) {
+fn unit_box(
+    cx: &mut Context,
+    label: &str,
+    lens: impl Lens<Target = morph::Units>,
+    event: impl 'static + Fn(morph::Units) -> AppEvent + Send + Sync,
+) {
     Label::new(cx, label).text_wrap(false);
     Textbox::new(cx, lens.map(|left| print_units(*left))).on_submit(move |cx, txt, _| {
         if let Some(val) = text_to_units(txt.as_ref()) {

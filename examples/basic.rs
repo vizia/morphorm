@@ -57,6 +57,5 @@ fn main() {
 
     layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
-
     render(world, root);
 }

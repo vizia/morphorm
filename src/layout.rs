@@ -206,20 +206,19 @@ where
 
         // Get space and size constraints.
         let child_min_cross_before = child.min_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
-        let child_max_cross_before = child.max_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_MAX);     
+        let child_max_cross_before = child.max_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
         let child_min_cross = child.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
-        let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX); 
+        let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
         let child_min_cross_after = child.min_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
-        let child_max_cross_after = child.max_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MAX); 
+        let child_max_cross_after = child.max_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
         let child_min_main_before = child.min_main_before(store, layout_type).to_px(parent_main, DEFAULT_MIN);
         let child_max_main_before = child.max_main_before(store, layout_type).to_px(parent_main, DEFAULT_MAX);
 
         let child_min_main_after = child.min_main_after(store, layout_type).to_px(parent_main, DEFAULT_MIN);
         let child_max_main_after = child.max_main_after(store, layout_type).to_px(parent_main, DEFAULT_MAX);
-
 
         // Apply parent overrides to auto child space.
         if child_main_before == Units::Auto {
@@ -245,19 +244,19 @@ where
 
         // Sum flex factors on the cross axis of the child node.
         let mut child_cross_flex_sum = 0.0;
-        
+
         if let Stretch(factor) = child_cross_before {
             child_cross_flex_sum += factor;
         }
-        
+
         if let Stretch(factor) = child_cross {
             child_cross_flex_sum += factor;
         }
-        
+
         if let Stretch(factor) = child_cross_after {
             child_cross_flex_sum += factor;
         }
-        
+
         // Sum flex factors on the main axis of the child node.
         let mut child_main_flex_sum = 0.0;
 
@@ -280,7 +279,7 @@ where
             stretch_nodes.push(StretchNode {
                 node: child,
                 index,
-                factor: factor,
+                factor,
                 min: DEFAULT_MIN,
                 max: DEFAULT_MAX,
                 axis: Axis::Main,
@@ -301,31 +300,34 @@ where
         }
 
         // Compute fixed-size child cross_before.
-        let computed_child_cross_before = child_cross_before.to_px(parent_cross, 0.0).clamp(child_min_cross_before, child_max_cross_before);
+        let computed_child_cross_before =
+            child_cross_before.to_px(parent_cross, 0.0).clamp(child_min_cross_before, child_max_cross_before);
 
         // Compute fixed-size child_cross.
         let mut computed_child_cross = child_cross.to_px(parent_cross, 0.0).clamp(child_min_cross, child_max_cross);
 
-        // Compute fixed-size child cross_after.       
-        let computed_child_cross_after = child_cross_after.to_px(parent_cross, 0.0).clamp(child_min_cross_after, child_max_cross_after);
+        // Compute fixed-size child cross_after.
+        let computed_child_cross_after =
+            child_cross_after.to_px(parent_cross, 0.0).clamp(child_min_cross_after, child_max_cross_after);
 
         // Compute fixed-size child main_before.
-        let computed_child_main_before = child_main_before.to_px(parent_main, 0.0).clamp(child_min_main_before, child_max_main_before);
-        
+        let computed_child_main_before =
+            child_main_before.to_px(parent_main, 0.0).clamp(child_min_main_before, child_max_main_before);
+
         // Compute fixed-size child main_after.
-        let computed_child_main_after = child_main_after.to_px(parent_main, 0.0).clamp(child_min_main_after, child_max_main_after);
+        let computed_child_main_after =
+            child_main_after.to_px(parent_main, 0.0).clamp(child_min_main_after, child_max_main_after);
 
         // Compute sized-size child main.
         let mut computed_child_main = 0.0;
 
         if !child_main.is_stretch() && !child_cross.is_stretch() {
-            let child_size =
-                layout(child, Some(layout_type), parent_main, parent_cross, cache, tree, store);
-    
+            let child_size = layout(child, Some(layout_type), parent_main, parent_cross, cache, tree, store);
+
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
         }
-        
+
         // Total computed size on the cross-axis of the child.
         let child_cross_non_flex = computed_child_cross_before + computed_child_cross + computed_child_cross_after;
 
@@ -433,7 +435,7 @@ where
                 let computed_child_cross = children[item.index].cross;
                 let child_cross = item.node.cross(store, layout_type);
                 let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
-                
+
                 let size = layout(item.node, Some(layout_type), actual_main, cross_size, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
