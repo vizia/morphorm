@@ -18,6 +18,7 @@ pub enum AppEvent {
 
     AddChildNode,
     AddSiblingNode,
+    DeleteNodes,
     SelectNode(Option<ecs::Entity>),
     MultiSelectNode(ecs::Entity),
 
@@ -197,6 +198,18 @@ impl Model for AppData {
 
                 cx.emit(AppEvent::SelectNode(Some(node)));
                 cx.emit(AppEvent::Relayout);
+            }
+
+            AppEvent::DeleteNodes => {
+                if let Some(selected_nodes) = &self.selected_nodes {
+                    for node in selected_nodes {
+                        if *node != self.root_node {
+                            self.world.remove(&node);
+                        }
+                    }
+
+                    cx.emit(AppEvent::Relayout);
+                }
             }
 
             AppEvent::SelectNode(selected) => {

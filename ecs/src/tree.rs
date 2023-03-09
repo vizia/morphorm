@@ -51,10 +51,41 @@ impl Tree {
         }
     }
 
-    pub fn flatten(&self) -> Vec<Entity> {
-        let iterator = DownwardIterator { tree: &self, current_node: Some(&Entity(0)) };
+    pub fn remove(&mut self, entity: &Entity) {
+        // Check if the entity to be removed exists in the tree
+        let entity_index = entity.0;
 
-        iterator.map(|item| *item).collect::<Vec<_>>()
+        if entity_index >= self.parent.len() {
+            return;
+        }
+
+        // If the entity was is the first child of its parent then set its next sibling to be the new first child.
+        if let Some(parent) = self.get_parent(entity).copied() {
+            if self.get_prev_sibling(entity).is_none() {
+                self.first_child[parent.index()] = self.get_next_sibling(entity).copied();
+            }
+        }
+
+        // Set the next sibling of the previous sibling of the entity to the next sibling of the entity.
+        // from:    [PS] -> [E] -> [NS]
+        // to:      [PS] -> [NS]
+        // where:   PS - Previous Sibling, E - I, NS - Next Sibling
+        if let Some(prev_sibling) = self.get_prev_sibling(entity) {
+            self.next_sibling[prev_sibling.index()] = self.get_next_sibling(entity).copied();
+        }
+
+        // Set the previous sibling of the next sibling of the entity to the previous sibling of the entity.
+        // from:    [PS] <- [E] <- [NS]
+        // to:      [PS] <- [NS]
+        // where:   PS - Previous Sibling, E - I, NS - Next Sibling
+        if let Some(next_sibling) = self.get_next_sibling(entity).copied() {
+            self.prev_sibling[next_sibling.index()] = self.get_prev_sibling(entity);
+        }
+
+        // Set the next sibling, previous sibling and parent of the removed entity to None
+        self.next_sibling[entity_index] = None;
+        self.prev_sibling[entity_index] = None;
+        self.parent[entity_index] = None;
     }
 
     pub fn get_parent(&self, entity: &Entity) -> Option<&Entity> {
@@ -69,7 +100,7 @@ impl Tree {
         self.next_sibling.get(entity.index()).map_or(None, |prev_sibling| prev_sibling.as_ref())
     }
 
-    pub fn get_prev_sibling(&self, entity: Entity) -> Option<Entity> {
+    pub fn get_prev_sibling(&self, entity: &Entity) -> Option<Entity> {
         self.prev_sibling.get(entity.index()).map_or(None, |next_sibling| *next_sibling)
     }
 }

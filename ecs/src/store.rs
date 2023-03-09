@@ -51,3 +51,41 @@ pub struct Store {
     pub green: HashMap<Entity, u8>,
     pub blue: HashMap<Entity, u8>,
 }
+
+impl Store {
+    pub fn remove(&mut self, entity: &Entity) {
+        self.visible.remove(entity);
+        self.layout_type.remove(entity);
+        self.position_type.remove(entity);
+        self.left.remove(entity);
+        self.right.remove(entity);
+        self.top.remove(entity);
+        self.bottom.remove(entity);
+        self.min_left.remove(entity);
+        self.max_left.remove(entity);
+        self.min_right.remove(entity);
+        self.max_right.remove(entity);
+        self.min_top.remove(entity);
+        self.max_top.remove(entity);
+        self.min_bottom.remove(entity);
+        self.max_bottom.remove(entity);
+        self.width.remove(entity);
+        self.height.remove(entity);
+        self.min_width.remove(entity);
+        self.max_width.remove(entity);
+        self.min_height.remove(entity);
+        self.max_height.remove(entity);
+        self.child_left.remove(entity);
+        self.child_right.remove(entity);
+        self.child_top.remove(entity);
+        self.child_bottom.remove(entity);
+        self.col_between.remove(entity);
+        self.row_between.remove(entity);
+        self.content_size.remove(entity);
+        self.text.remove(entity);
+        self.text_wrap.remove(entity);
+        self.red.remove(entity);
+        self.green.remove(entity);
+        self.blue.remove(entity);
+    }
+}

@@ -11,6 +11,8 @@ impl TreePanel {
             Button::new(cx, |cx| cx.emit(AppEvent::AddChildNode), |cx| Label::new(cx, "Add Child")).class("add_button");
             Button::new(cx, |cx| cx.emit(AppEvent::AddSiblingNode), |cx| Label::new(cx, "Add Sibling"))
                 .class("add_button");
+            Button::new(cx, |cx| cx.emit(AppEvent::DeleteNodes), |cx| Label::new(cx, "Delete Nodes"))
+                .class("add_button").class("danger");
         })
     }
 }

@@ -13,39 +13,16 @@ impl PropertiesPanel {
                 Label::new(cx, "Horizontal Axis").class("panel-title");
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "left");
-                        Textbox::new(cx, AppData::left.map(|left| print_units(*left))).on_submit(|cx, txt, _| {
-                            if let Some(val) = text_to_units(txt.as_ref()) {
-                                cx.emit(AppEvent::SetLeft(val));
-                            }
-                        });
+                        unit_box(cx, "left", AppData::left, |val| AppEvent::SetLeft(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "width");
-                        Textbox::new(cx, AppData::width.map(|width| print_units(*width))).on_submit(|cx, txt, _| {
-                            if let Some(val) = text_to_units(txt.as_ref()) {
-                                cx.emit(AppEvent::SetWidth(val));
-                            }
-                        });
+                        unit_box(cx, "width", AppData::width, |val| AppEvent::SetWidth(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "right");
-                        Textbox::new(cx, AppData::right.map(|right| print_units(*right))).on_submit(|cx, txt, _| {
-                            if let Some(val) = text_to_units(txt.as_ref()) {
-                                cx.emit(AppEvent::SetRight(val));
-                            }
-                        });
+                        unit_box(cx, "right", AppData::right, |val| AppEvent::SetRight(val));
                     });
-                })
-                .class("row");
-
-                HStack::new(cx, |cx| {
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignLeft), |cx| Label::new(cx, "Align Left"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignCenter), |cx| Label::new(cx, "Align Center"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignRight), |cx| Label::new(cx, "Align Right"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::FillWidth), |cx| Label::new(cx, "Fill Width"));
                 })
                 .class("row");
             })
@@ -55,49 +32,76 @@ impl PropertiesPanel {
                 Label::new(cx, "Vertical Axis").class("panel-title");
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "top");
-                        Textbox::new(cx, AppData::top.map(|left| print_units(*left))).on_submit(|cx, txt, _| {
-                            if let Some(val) = text_to_units(txt.as_ref()) {
-                                cx.emit(AppEvent::SetTop(val));
-                            }
-                        });
+                        unit_box(cx, "top", AppData::top, |val| AppEvent::SetTop(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "height");
-                        Textbox::new(cx, AppData::height.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetHeight(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "height", AppData::height, |val| AppEvent::SetHeight(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "bottom");
-                        Textbox::new(cx, AppData::bottom.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetBottom(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "bottom", AppData::bottom, |val| AppEvent::SetBottom(val));
                     });
                 })
                 .col_between(Pixels(10.0))
                 .height(Auto)
                 .class("row");
-
-                HStack::new(cx, |cx| {
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignTop), |cx| Label::new(cx, "Align Top"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignMiddle), |cx| Label::new(cx, "Align Middle"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::AlignBottom), |cx| Label::new(cx, "Align Bottom"));
-                    Button::new(cx, |cx| cx.emit(AppEvent::FillHeight), |cx| Label::new(cx, "Fill Height"));
-                })
-                .class("row");
             })
             .class("panel");
+
+            VStack::new(cx, |cx|{
+                Label::new(cx, "Alignment").class("panel-title");
+                HStack::new(cx, |cx|{
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignTop);
+                        cx.emit(AppEvent::AlignLeft);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignTop);
+                        cx.emit(AppEvent::AlignCenter);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignTop);
+                        cx.emit(AppEvent::AlignRight);
+                    }, |cx| Label::new(cx, ""));
+                }).left(Stretch(1.0)).right(Stretch(1.0));
+
+                HStack::new(cx, |cx|{
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignMiddle);
+                        cx.emit(AppEvent::AlignLeft);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignMiddle);
+                        cx.emit(AppEvent::AlignCenter);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignMiddle);
+                        cx.emit(AppEvent::AlignRight);
+                    }, |cx| Label::new(cx, ""));
+                }).left(Stretch(1.0)).right(Stretch(1.0));
+
+                HStack::new(cx, |cx|{
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignBottom);
+                        cx.emit(AppEvent::AlignLeft);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignBottom);
+                        cx.emit(AppEvent::AlignCenter);
+                    }, |cx| Label::new(cx, ""));
+
+                    Button::new(cx, |cx| {
+                        cx.emit(AppEvent::AlignBottom);
+                        cx.emit(AppEvent::AlignRight);
+                    }, |cx| Label::new(cx, ""));
+                }).left(Stretch(1.0)).right(Stretch(1.0));
+            }).class("panel").class("align");
 
             VStack::new(cx, |cx| {
                 Label::new(cx, "Child Layout").class("panel-title");
@@ -152,36 +156,15 @@ impl PropertiesPanel {
 
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "child-left").text_wrap(false);
-                        Textbox::new(cx, AppData::child_left.map(|left| print_units(*left))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetChildLeft(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "child-left", AppData::child_left, |val| AppEvent::SetChildLeft(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "col").text_wrap(false);
-                        Textbox::new(cx, AppData::col_between.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetColBetween(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "col", AppData::col_between, |val| AppEvent::SetColBetween(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "child-right").text_wrap(false);
-                        Textbox::new(cx, AppData::child_right.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetChildRight(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "child-right", AppData::child_right, |val| AppEvent::SetChildRight(val));
                     });
                 })
                 .col_between(Pixels(10.0))
@@ -190,36 +173,15 @@ impl PropertiesPanel {
 
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "child-top").text_wrap(false);
-                        Textbox::new(cx, AppData::child_top.map(|left| print_units(*left))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetChildTop(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "child-top", AppData::child_top, |val| AppEvent::SetChildTop(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "row").text_wrap(false);
-                        Textbox::new(cx, AppData::row_between.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetRowBetween(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "row", AppData::row_between, |val| AppEvent::SetRowBetween(val));
                     });
 
                     VStack::new(cx, |cx| {
-                        Label::new(cx, "child-bottom").text_wrap(false);
-                        Textbox::new(cx, AppData::child_bottom.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, _| {
-                                if let Some(val) = text_to_units(txt.as_ref()) {
-                                    cx.emit(AppEvent::SetChildBottom(val));
-                                }
-                            },
-                        );
+                        unit_box(cx, "child-bottom", AppData::child_bottom, |val| AppEvent::SetChildBottom(val));
                     });
                 })
                 .col_between(Pixels(10.0))
@@ -237,6 +199,15 @@ impl View for PropertiesPanel {
     fn element(&self) -> Option<&'static str> {
         Some("properties")
     }
+}
+
+fn unit_box(cx: &mut Context, label: &str, lens: impl Lens<Target = morph::Units>, event: impl 'static + Fn(morph::Units) -> AppEvent + Send + Sync) {
+    Label::new(cx, label).text_wrap(false);
+    Textbox::new(cx, lens.map(|left| print_units(*left))).on_submit(move |cx, txt, _| {
+        if let Some(val) = text_to_units(txt.as_ref()) {
+            cx.emit(event(val));
+        }
+    });
 }
 
 pub fn text_to_units(text: &str) -> Option<morph::Units> {
