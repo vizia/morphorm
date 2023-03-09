@@ -1,7 +1,6 @@
 use vizia::{fonts::icons_names::DOWN, prelude::*};
 
 use morphorm as morph;
-use morphorm_ecs as ecs;
 
 use crate::{AppData, AppEvent};
 
@@ -15,7 +14,7 @@ impl PropertiesPanel {
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "left");
-                        Textbox::new(cx, AppData::left.map(|left| print_units(*left))).on_submit(|cx, txt, flag| {
+                        Textbox::new(cx, AppData::left.map(|left| print_units(*left))).on_submit(|cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
                                 cx.emit(AppEvent::SetLeft(val));
                             }
@@ -24,7 +23,7 @@ impl PropertiesPanel {
 
                     VStack::new(cx, |cx| {
                         Label::new(cx, "width");
-                        Textbox::new(cx, AppData::width.map(|width| print_units(*width))).on_submit(|cx, txt, flag| {
+                        Textbox::new(cx, AppData::width.map(|width| print_units(*width))).on_submit(|cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
                                 cx.emit(AppEvent::SetWidth(val));
                             }
@@ -33,7 +32,7 @@ impl PropertiesPanel {
 
                     VStack::new(cx, |cx| {
                         Label::new(cx, "right");
-                        Textbox::new(cx, AppData::right.map(|right| print_units(*right))).on_submit(|cx, txt, flag| {
+                        Textbox::new(cx, AppData::right.map(|right| print_units(*right))).on_submit(|cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
                                 cx.emit(AppEvent::SetRight(val));
                             }
@@ -57,7 +56,7 @@ impl PropertiesPanel {
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "top");
-                        Textbox::new(cx, AppData::top.map(|left| print_units(*left))).on_submit(|cx, txt, flag| {
+                        Textbox::new(cx, AppData::top.map(|left| print_units(*left))).on_submit(|cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
                                 cx.emit(AppEvent::SetTop(val));
                             }
@@ -67,7 +66,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "height");
                         Textbox::new(cx, AppData::height.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetHeight(val));
                                 }
@@ -78,7 +77,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "bottom");
                         Textbox::new(cx, AppData::bottom.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetBottom(val));
                                 }
@@ -155,7 +154,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "child-left").text_wrap(false);
                         Textbox::new(cx, AppData::child_left.map(|left| print_units(*left))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetChildLeft(val));
                                 }
@@ -166,7 +165,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "col").text_wrap(false);
                         Textbox::new(cx, AppData::col_between.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetColBetween(val));
                                 }
@@ -177,7 +176,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "child-right").text_wrap(false);
                         Textbox::new(cx, AppData::child_right.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetChildRight(val));
                                 }
@@ -193,7 +192,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "child-top").text_wrap(false);
                         Textbox::new(cx, AppData::child_top.map(|left| print_units(*left))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetChildTop(val));
                                 }
@@ -204,7 +203,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "row").text_wrap(false);
                         Textbox::new(cx, AppData::row_between.map(|width| print_units(*width))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetRowBetween(val));
                                 }
@@ -215,7 +214,7 @@ impl PropertiesPanel {
                     VStack::new(cx, |cx| {
                         Label::new(cx, "child-bottom").text_wrap(false);
                         Textbox::new(cx, AppData::child_bottom.map(|right| print_units(*right))).on_submit(
-                            |cx, txt, flag| {
+                            |cx, txt, _| {
                                 if let Some(val) = text_to_units(txt.as_ref()) {
                                     cx.emit(AppEvent::SetChildBottom(val));
                                 }
@@ -229,7 +228,7 @@ impl PropertiesPanel {
             })
             .class("panel");
 
-            VStack::new(cx, |cx| {}).height(Stretch(1.0)).class("panel");
+            Element::new(cx).height(Stretch(1.0)).class("panel");
         })
     }
 }

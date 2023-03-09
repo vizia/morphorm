@@ -13,7 +13,7 @@ pub struct CanvasView {}
 
 impl CanvasView {
     pub fn new(cx: &mut Context) -> Handle<Self> {
-        Self {}.build(cx, |cx| {})
+        Self {}.build(cx, |_| {})
     }
 }
 
