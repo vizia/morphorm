@@ -19,10 +19,7 @@ impl Node for Entity {
 
     fn children<'t>(&self, tree: &'t Tree) -> Self::ChildIter<'t> {
         let current_node = tree.get_first_child(self);
-        ChildIterator {
-            tree,
-            current_node,
-        }
+        ChildIterator { tree, current_node }
     }
 
     fn layout_type(&self, store: &Store) -> Option<LayoutType> {
@@ -104,7 +101,7 @@ impl Node for Entity {
     fn max_height(&self, store: &Store) -> Option<Units> {
         store.max_height.get(self).copied()
     }
-    
+
     fn min_left(&self, store: &Store) -> Option<Units> {
         store.min_left.get(self).copied()
     }
@@ -162,8 +159,7 @@ impl NodeCache {
     }
 }
 
-impl Cache for NodeCache 
-{
+impl Cache for NodeCache {
     type Node = Entity;
 
     fn width(&self, node: &Entity) -> f32 {

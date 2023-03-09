@@ -47,23 +47,23 @@ pub enum Units {
     /// A number of logical pixels.
     Pixels(f32),
     /// A percentage of the parent dimension.
-    /// 
+    ///
     /// A percentage of the parent's width when applied to left, width, right properties.
     /// A percentage of the parent's height when applied to top, height, bottom properties.
     Percentage(f32),
     /// A factor of the remaining free space.
-    /// 
+    ///
     /// The remaining free space is the parent space minus the space and size of any fixed-size nodes in that axis.
     /// The remaining free space is then shared between any stretch nodes based on the ratio of their stretch factors.
-    /// 
+    ///
     /// For example, given two stretch nodes with factors of 1.0 and 2.0 respectively. The first will occupy 1/3 of the
-    /// remaining free space while the second will occupy 2/3 of the remaining free space. 
+    /// remaining free space while the second will occupy 2/3 of the remaining free space.
     Stretch(f32),
     /// Automatically determine the value.
-    /// 
+    ///
     /// When applied to space (left, right, top, bottom) the spacing will be overridden by the parent's child-space on the same side.
     /// For example, a node with Auto left space with a parent which has Pixel(100.0) child-left space will get a left spacing of 100px.
-    /// 
+    ///
     /// When applied to size (width, height) Auto will either size to fit its children, or if there are no children
     /// the node will be sized based on the [`content_size`](crate::Node::content_size) property of the node.
     #[default]

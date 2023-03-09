@@ -1,5 +1,5 @@
 use morphorm::{LayoutType, PositionType, Units};
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{entity::Entity, TextWrap};
 
