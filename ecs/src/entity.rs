@@ -2,7 +2,6 @@
 
 use std::fmt::Display;
 
-
 /// An ID type used to set/get data from a store.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity(pub usize);

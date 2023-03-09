@@ -1,0 +1,97 @@
+/* * {
+    border-width: 1px;
+    border-color: red;
+} */
+
+:root {
+    background-color: #1d1d1d;
+    color: #e6e6e6;
+    font-size: 12.0;
+}
+
+treepanel {
+    background-color: #3e3e3e;
+    child-space: 8px;
+    row-between: 4px;
+}
+
+.add_button {
+    width: 1s;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #1c8fbc;
+    child-space: 1s;
+}
+
+properties {
+    background-color: #1d1d1d;
+    row-between: 1px;
+}
+
+.panel {
+    width: 1s;
+    height: auto;
+    child-space: 8px;
+    row-between: 8px;
+    background-color: #3e3e3e;
+}
+
+dropdown {
+    width: 1s;
+    height: 22px;
+    background-color: #2b2b2b;
+}
+/* 
+dropdown .header {
+    width: 1s;
+    height: 1s;
+    background-color: #2b2b2b;
+} */
+
+dropdown > popup {
+    background-color: #2b2b2b;
+    outer-shadow: 0 3 5 #00000055;
+}
+
+textbox {
+    width: 1s;
+    height: 22px;
+    background-color: #2b2b2b;
+    child-top: 1s;
+    child-bottom: 1s;
+}
+
+textbox:checked .textbox_content {
+    caret-color: #f0f0f0;
+    selection-color: #4871ae88;
+}
+
+
+.panel textbox .textbox_content {
+    child-left: 1s;
+    child-right: 1s;
+}
+
+.panel label {
+    width: 1s;
+    height: 22px;
+    child-space: 1s;
+}
+
+.panel label.panel-title {
+    color: #acacac;
+    font-weight: bold;
+    font-size: 14.0;
+    child-left: 0px;
+}
+
+.panel .row {
+    height: auto;
+    col-between: 8px;
+}
+
+button {
+    width: 1s;
+    border-radius: 2px;
+    background-color: #565656;
+}

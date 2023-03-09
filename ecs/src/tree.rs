@@ -1,4 +1,3 @@
-
 use crate::entity::Entity;
 
 /// A type representing a tree of entities.
@@ -21,7 +20,7 @@ impl Tree {
                 self.parent.resize(entity.index() + 1, None);
                 self.first_child.resize(entity.index() + 1, None);
                 self.next_sibling.resize(entity.index() + 1, None);
-                self.prev_sibling.resize(entity.index() + 1, None); 
+                self.prev_sibling.resize(entity.index() + 1, None);
             }
 
             self.parent[entity.index()] = Some(parent);
@@ -53,12 +52,13 @@ impl Tree {
     }
 
     pub fn flatten(&self) -> Vec<Entity> {
-        let iterator = DownwardIterator {
-            tree: &self,
-            current_node: Some(&Entity(0)),
-        };
+        let iterator = DownwardIterator { tree: &self, current_node: Some(&Entity(0)) };
 
         iterator.map(|item| *item).collect::<Vec<_>>()
+    }
+
+    pub fn get_parent(&self, entity: &Entity) -> Option<&Entity> {
+        self.parent.get(entity.index()).map_or(None, |parent| parent.as_ref())
     }
 
     pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
@@ -86,8 +86,7 @@ impl<'a> DownwardIterator<'a> {
         if let Some(current) = self.current_node {
             let mut temp = Some(current);
             while temp.is_some() {
-                if let Some(sibling) = &self.tree.next_sibling[temp.unwrap().index()]
-                {
+                if let Some(sibling) = &self.tree.next_sibling[temp.unwrap().index()] {
                     self.current_node = Some(sibling);
                     return r;
                 } else {
@@ -105,7 +104,6 @@ impl<'a> DownwardIterator<'a> {
 impl<'a> Iterator for DownwardIterator<'a> {
     type Item = &'a Entity;
     fn next(&mut self) -> Option<&'a Entity> {
-
         let r = self.current_node;
 
         if let Some(current) = self.current_node {
@@ -183,11 +181,10 @@ impl<'a> Iterator for ChildIterator<'a> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::entity::{Entity, EntityManager};
     use super::Tree;
+    use crate::entity::{Entity, EntityManager};
 
     #[test]
     fn add_entity() {
@@ -198,7 +195,5 @@ mod tests {
         assert_eq!(root, Entity(0));
 
         tree.add(root, None);
-
-        
     }
 }

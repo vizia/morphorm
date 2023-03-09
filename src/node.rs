@@ -1,13 +1,13 @@
 use crate::{LayoutType, PositionType, Units};
 
-/// A `Node` represents a layout element which can be sized and positioned based on 
+/// A `Node` represents a layout element which can be sized and positioned based on
 /// a number of layout properties.
-/// 
-/// The getter methods in this trait allow for the layout function to retrieve the 
+///
+/// The getter methods in this trait allow for the layout function to retrieve the
 /// layout properties of the node. The `Node` trait allows for its layout properties to optionally
 /// be stored externally from the node type itself by providing a `Store` associated type, a reference to
 /// which is passed to the layout property methods.
-/// 
+///
 /// Similarly, the children of the node can be optionally stored externally using the `Tree` associated type,
 /// a reference to which is passed to the `children` method, which returns an iterator on the children of the node,
 /// the type of which is specified by the `ChildIter` associated type.

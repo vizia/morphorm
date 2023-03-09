@@ -1,0 +1,9 @@
+[package]
+name = "playground"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vizia = {git = "https://github.com/vizia/vizia"}
+morphorm-ecs = {path = "../ecs"}
+morphorm = {path = ".."}

@@ -121,13 +121,15 @@ where
         Auto => 0.0,
     };
 
-    // Cross-axis size is determined by the parent.
-    let mut computed_cross = match cross {
-        Pixels(val) => val,
-        Percentage(val) => (parent_cross * (val / 100.0)).round(),
-        Stretch(_) => parent_cross,
-        Auto => 0.0,
-    };
+    let mut computed_cross = parent_cross;
+
+    // // Cross-axis size is determined by the parent.
+    // let mut computed_cross = match cross {
+    //     Pixels(val) => val,
+    //     Percentage(val) => (parent_cross * (val / 100.0)).round(),
+    //     Stretch(_) => parent_cross,
+    //     Auto => 0.0,
+    // };
 
     let num_children = node.children(tree).count();
 
@@ -145,10 +147,10 @@ where
     let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
     computed_main = computed_main.clamp(min_main, max_main);
 
-    // Apply cross-axis size constraints for pixels and percentage.
-    let min_cross = node.min_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MIN);
-    let max_cross = node.max_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MAX);
-    computed_cross = computed_cross.clamp(min_cross, max_cross);
+    // // Apply cross-axis size constraints for pixels and percentage.
+    // let min_cross = node.min_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MIN);
+    // let max_cross = node.max_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MAX);
+    // computed_cross = computed_cross.clamp(min_cross, max_cross);
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
@@ -346,7 +348,7 @@ where
         computed_child_main_after = computed_child_main_after.clamp(child_min_main_after, child_max_main_after);
 
         match (child_main, child_cross) {
-            (Stretch(main_factor), _) => {
+            (Stretch(main_factor), Stretch(cross_factor)) => {
                 child_main_flex_sum += main_factor;
 
                 stretch_nodes.push(StretchNode {
@@ -357,6 +359,33 @@ where
                     max: DEFAULT_MAX,
                     axis: Axis::Main,
                 });
+
+                child_cross_flex_sum += cross_factor;
+            }
+
+            (Stretch(main_factor), child_cross) => {
+                child_main_flex_sum += main_factor;
+
+                stretch_nodes.push(StretchNode {
+                    node: child,
+                    index,
+                    factor: main_factor,
+                    min: DEFAULT_MIN,
+                    max: DEFAULT_MAX,
+                    axis: Axis::Main,
+                });
+
+                match child_cross {
+                    Units::Pixels(val) => computed_child_cross = val,
+                    Units::Percentage(val) => computed_child_cross = (parent_cross * (val / 100.0)).round(),
+                    Units::Auto => computed_child_cross = 0.0,
+                    _ => {}
+                }
+
+                // Apply cross-axis size constraints for pixels and percentage.
+                let child_min_cross = child.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
+                let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+                computed_child_cross = computed_child_cross.clamp(child_min_cross, child_max_cross);
             }
 
             (_, Stretch(cross_factor)) => {
@@ -364,8 +393,21 @@ where
             }
 
             // Compute size of fixed/auto children
-            _ => {
-                let child_size = layout(child, Some(layout_type), parent_main, parent_cross, cache, tree, store);
+            (_, child_cross) => {
+                match child_cross {
+                    Units::Pixels(val) => computed_child_cross = val,
+                    Units::Percentage(val) => computed_child_cross = (parent_cross * (val / 100.0)).round(),
+                    Units::Auto => computed_child_cross = 0.0,
+                    _ => {}
+                }
+
+                // Apply cross-axis size constraints for pixels and percentage.
+                let child_min_cross = child.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
+                let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+                computed_child_cross = computed_child_cross.clamp(child_min_cross, child_max_cross);
+
+                let child_size =
+                    layout(child, Some(layout_type), parent_main, computed_child_cross, cache, tree, store);
 
                 computed_child_main = child_size.main;
                 computed_child_cross = child_size.cross;
@@ -421,12 +463,13 @@ where
             child.cross_before = actual_cross;
         }
 
-        if !child.node.main(store, layout_type).is_stretch() {
-            if let Stretch(factor) = child_cross {
-                let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
-                let actual_cross = desired_cross.round();
-                child.cross_remainder = desired_cross - actual_cross;
+        if let Stretch(factor) = child_cross {
+            let desired_cross = factor * cross_px_per_flex + child.cross_remainder;
+            let actual_cross = desired_cross.round();
+            child.cross_remainder = desired_cross - actual_cross;
 
+            child.cross = actual_cross;
+            if !child.node.main(store, layout_type).is_stretch() {
                 let size = layout(child.node, Some(layout_type), computed_main, actual_cross, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
@@ -478,10 +521,10 @@ where
                 let child_cross = item.node.cross(store, layout_type);
                 let computed_child_cross =
                     parent_cross - children[item.index].cross_before - children[item.index].cross_after;
+                let computed_child_cross = children[item.index].cross;
+                // let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
 
-                let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
-
-                let size = layout(item.node, Some(layout_type), actual_main, cross_size, cache, tree, store);
+                let size = layout(item.node, Some(layout_type), actual_main, computed_child_cross, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
             }

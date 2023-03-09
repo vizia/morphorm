@@ -1,4 +1,4 @@
-use morphorm::{Units, LayoutType, PositionType};
+use morphorm::{LayoutType, PositionType, Units};
 
 use crate::entity::{Entity, EntityManager};
 use crate::implementations::NodeCache;
@@ -168,7 +168,11 @@ impl World {
         self.store.max_bottom.insert(entity, value);
     }
 
-    pub fn set_content_size(&mut self, entity: Entity, content: impl Fn(&Store, Option<f32>, Option<f32>) -> (f32, f32) + 'static) {
+    pub fn set_content_size(
+        &mut self,
+        entity: Entity,
+        content: impl Fn(&Store, Option<f32>, Option<f32>) -> (f32, f32) + 'static,
+    ) {
         self.store.content_size.insert(entity, Box::new(content));
     }
 
@@ -180,7 +184,6 @@ impl World {
         self.store.text_wrap.insert(entity, text_wrap);
     }
 
-
     pub fn set_all_stretch(&mut self, entity: Entity) {
         // self.set_left(entity, Units::Stretch(1.0));
         // self.set_top(entity, Units::Stretch(1.0));
@@ -189,5 +192,4 @@ impl World {
         self.set_width(entity, Units::Stretch(1.0));
         self.set_height(entity, Units::Stretch(1.0));
     }
-
 }
