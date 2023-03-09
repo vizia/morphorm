@@ -28,6 +28,21 @@ fn main() {
 
     // layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
 
+    // let mut world = World::default();
+
+    // let root = world.add(None);
+    // world.set_width(root, Units::Pixels(600.0));
+    // world.set_height(root, Units::Pixels(600.0));
+
+    // world.set_layout_type(root, LayoutType::Row);
+
+    // let node = world.add(Some(root));
+    // world.set_width(node, Units::Pixels(100.0));
+    // world.set_height(node, Units::Pixels(400.0));
+    // world.set_max_height(node, Units::Percentage(50.0));
+
+    // layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+
     let mut world = World::default();
 
     let root = world.add(None);
@@ -37,11 +52,11 @@ fn main() {
     world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
-    world.set_width(node, Units::Pixels(100.0));
-    world.set_height(node, Units::Pixels(400.0));
-    world.set_max_height(node, Units::Percentage(50.0));
+    world.set_width(node, Units::Stretch(1.0));
+    world.set_height(node, Units::Percentage(25.0));
 
     layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+
 
     render(world, root);
 }
