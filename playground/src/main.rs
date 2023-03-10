@@ -91,6 +91,12 @@ impl AppData {
         let root_node = world.add(None);
         world.set_width(root_node, morph::Units::Pixels(600.0));
         world.set_height(root_node, morph::Units::Pixels(600.0));
+        world.set_child_left(root_node, morph::Units::Stretch(1.0));
+        world.set_child_right(root_node, morph::Units::Stretch(1.0));
+        world.set_child_top(root_node, morph::Units::Stretch(1.0));
+        world.set_child_bottom(root_node, morph::Units::Stretch(1.0));
+        world.set_col_between(root_node, morph::Units::Stretch(1.0));
+        world.set_row_between(root_node, morph::Units::Stretch(1.0));
 
         root_node.layout(&mut world.cache, &world.tree, &world.store);
 
@@ -113,13 +119,13 @@ impl AppData {
             layout_type: morph::LayoutType::Column,
             layout_type_list: vec!["Row", "Column"],
 
-            child_left: morph::Units::Auto,
-            col_between: morph::Units::Auto,
-            child_right: morph::Units::Auto,
+            child_left: morph::Units::Stretch(1.0),
+            col_between: morph::Units::Stretch(1.0),
+            child_right: morph::Units::Stretch(1.0),
 
-            child_top: morph::Units::Auto,
-            row_between: morph::Units::Auto,
-            child_bottom: morph::Units::Auto,
+            child_top: morph::Units::Stretch(1.0),
+            row_between: morph::Units::Stretch(1.0),
+            child_bottom: morph::Units::Stretch(1.0),
         }
     }
 
@@ -167,10 +173,16 @@ impl Model for AppData {
 
                 self.world.set_width(node, morph::Units::Pixels(100.0));
                 self.world.set_height(node, morph::Units::Pixels(100.0));
-                self.world.set_left(node, morph::Units::Stretch(1.0));
-                self.world.set_right(node, morph::Units::Stretch(1.0));
-                self.world.set_top(node, morph::Units::Stretch(1.0));
-                self.world.set_bottom(node, morph::Units::Stretch(1.0));
+                self.world.set_left(node, morph::Units::Auto);
+                self.world.set_right(node, morph::Units::Auto);
+                self.world.set_top(node, morph::Units::Auto);
+                self.world.set_bottom(node, morph::Units::Auto);
+                self.world.set_child_left(node, morph::Units::Stretch(1.0));
+                self.world.set_child_right(node, morph::Units::Stretch(1.0));
+                self.world.set_child_top(node, morph::Units::Stretch(1.0));
+                self.world.set_child_bottom(node, morph::Units::Stretch(1.0));
+                self.world.set_col_between(node, morph::Units::Stretch(1.0));
+                self.world.set_row_between(node, morph::Units::Stretch(1.0));
 
                 cx.emit(AppEvent::SelectNode(Some(node)));
                 cx.emit(AppEvent::Relayout);
@@ -190,10 +202,16 @@ impl Model for AppData {
 
                 self.world.set_width(node, morph::Units::Pixels(100.0));
                 self.world.set_height(node, morph::Units::Pixels(100.0));
+                self.world.set_left(node, morph::Units::Auto);
+                self.world.set_right(node, morph::Units::Auto);
+                self.world.set_top(node, morph::Units::Auto);
+                self.world.set_bottom(node, morph::Units::Auto);
                 self.world.set_left(node, morph::Units::Stretch(1.0));
                 self.world.set_right(node, morph::Units::Stretch(1.0));
                 self.world.set_top(node, morph::Units::Stretch(1.0));
                 self.world.set_bottom(node, morph::Units::Stretch(1.0));
+                self.world.set_col_between(node, morph::Units::Stretch(1.0));
+                self.world.set_row_between(node, morph::Units::Stretch(1.0));
 
                 cx.emit(AppEvent::SelectNode(Some(node)));
                 cx.emit(AppEvent::Relayout);

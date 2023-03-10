@@ -353,9 +353,18 @@ where
         let child_cross_free_space = parent_cross.max(cross_max) - child.cross_non_flex;
         let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
 
-        let child_cross_before = child.node.cross_before(store, layout_type);
+        let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
-        let child_cross_after = child.node.cross_after(store, layout_type);
+        let mut child_cross_after = child.node.cross_after(store, layout_type);
+
+        // Apply parent overrides
+        if child_cross_before == Units::Auto {
+            child_cross_before = node_child_cross_before;
+        }
+
+        if child_cross_after == Units::Auto {
+            child_cross_after = node_child_cross_after;
+        }
 
         let mut child_cross_remainder = 0.0f32;
 
