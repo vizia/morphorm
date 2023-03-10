@@ -105,7 +105,8 @@ fn select_node<'a, N: Node<CacheKey = ecs::Entity>>(
     let height = cache.height(node);
 
     let mut selected_child = None;
-    for child in node.children(tree) {
+    let children = node.children(tree).collect::<Vec<_>>();
+    for child in children.into_iter().rev() {
         selected_child = select_node(child, tree, cache, posx, posy, mousex, mousey);
         if selected_child.is_some() {
             break;
