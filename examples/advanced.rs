@@ -265,7 +265,7 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Pixels(600.0), Pixels(600.0));
     root.child.push(Widget::new(1, Pixels(400.0), Pixels(400.0)));
-    layout(&root, None, 600.0, 600.0, &mut cache, &(), &());
+    root.layout(&mut cache, &(), &());
     render(cache, root);
 }
 
@@ -308,7 +308,7 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                     root.width = Units::Pixels(physical_size.width as f32);
                     root.height = Units::Pixels(physical_size.height as f32);
 
-                    layout(&root, None, 600.0, 600.0, &mut cache, &(), &());
+                    root.layout(&mut cache, &(), &());
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 

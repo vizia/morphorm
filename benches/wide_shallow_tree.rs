@@ -34,7 +34,7 @@ fn wide_shallow_tree(c: &mut Criterion) {
                 build_shallow_tree(&mut world, Some(root), 6);
                 (world, root)
             },
-            |(mut world, root)| layout(&root, None, 1000.0, 1000.0, &mut world.cache, &world.tree, &world.store),
+            |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store),
             criterion::BatchSize::SmallInput,
         )
     });
@@ -51,7 +51,7 @@ fn narrow_deep_tree(c: &mut Criterion) {
                 build_deep_tree(&mut world, Some(root), 3);
                 (world, root)
             },
-            |(mut world, root)| layout(&root, None, 1000.0, 1000.0, &mut world.cache, &world.tree, &world.store),
+            |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store),
             criterion::BatchSize::SmallInput,
         )
     });

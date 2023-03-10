@@ -101,3 +101,12 @@ impl Units {
         self == &Units::Auto
     }
 }
+
+/// A type which represents the computed size of a node after [`layout`].
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
+pub struct Size {
+    /// The computed size on the main axis.
+    pub main: f32,
+    /// The computed size on the cross axis.
+    pub cross: f32,
+}

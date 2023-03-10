@@ -1,4 +1,4 @@
-use crate::{LayoutType, PositionType, Units};
+use crate::{layout, Cache, types::*};
 
 /// A `Node` represents a layout element which can be sized and positioned based on
 /// a number of layout properties.
@@ -23,6 +23,26 @@ pub trait Node: Sized + Clone {
 
     /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
     type CacheKey;
+
+    fn layout<C: Cache<Node = Self>>(&self, cache: &mut C, tree: &Self::Tree, store: &Self::Store) -> Size {
+        let width = self
+            .width(store)
+            .and_then(|w| match w {
+                Units::Pixels(px) => Some(px),
+                _ => panic!("Root node must have fixed size."),
+            })
+            .expect("Failed to get width for node");
+
+        let height = self
+            .width(store)
+            .and_then(|w| match w {
+                Units::Pixels(px) => Some(px),
+                _ => panic!("Root node must have fixed size."),
+            })
+            .expect("Failed to get height for node");
+
+        layout(self, LayoutType::Column, height, width, cache, tree, store)
+    }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
     fn key(&self) -> Self::CacheKey;
