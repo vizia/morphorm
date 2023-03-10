@@ -41,6 +41,7 @@ pub enum AppEvent {
     FillHeight,
 
     SetLayoutType(&'static str),
+    SetPositionType(&'static str),
 
     SetChildLeft(morph::Units),
     SetColBetween(morph::Units),
@@ -69,6 +70,9 @@ pub struct AppData {
 
     layout_type: morph::LayoutType,
     layout_type_list: Vec<&'static str>,
+
+    position_type: morph::PositionType,
+    position_type_list: Vec<&'static str>,
 
     child_left: morph::Units,
     col_between: morph::Units,
@@ -119,6 +123,9 @@ impl AppData {
             layout_type: morph::LayoutType::Column,
             layout_type_list: vec!["Row", "Column"],
 
+            position_type: morph::PositionType::ParentDirected,
+            position_type_list: vec!["Parent Directed", "Self Directed"],
+
             child_left: morph::Units::Stretch(1.0),
             col_between: morph::Units::Stretch(1.0),
             child_right: morph::Units::Stretch(1.0),
@@ -145,6 +152,7 @@ impl AppData {
         self.row_between = self.world.store.row_between.get(node).copied().unwrap_or_default();
 
         self.layout_type = self.world.store.layout_type.get(node).copied().unwrap_or_default();
+        self.position_type = self.world.store.position_type.get(node).copied().unwrap_or_default();
     }
 }
 
@@ -326,6 +334,20 @@ impl Model for AppData {
                         };
                         self.world.set_layout_type(*selected, layout_type);
                         self.layout_type = layout_type;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetPositionType(position_type) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        let position_type = match *position_type {
+                            "Parent Directed" => morph::PositionType::ParentDirected,
+                            _ => morph::PositionType::SelfDirected,
+                        };
+                        self.world.set_position_type(*selected, position_type);
+                        self.position_type = position_type;
                     }
                     cx.emit(AppEvent::Relayout);
                 }

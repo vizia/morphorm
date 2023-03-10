@@ -10,7 +10,57 @@ impl PropertiesPanel {
     pub fn new(cx: &mut Context) -> Handle<Self> {
         Self {}.build(cx, |cx| {
             VStack::new(cx, |cx| {
-                Label::new(cx, "Horizontal Axis").class("panel-title");
+                Label::new(cx, "Space and Size").class("panel-title");
+
+                HStack::new(cx, |cx| {
+                    Label::new(cx, "Position Type").width(Auto);
+                    Dropdown::new(
+                        cx,
+                        move |cx|
+                        // A Label and an Icon
+                        HStack::new(cx, move |cx|{
+                            Label::new(cx, AppData::position_type.map(|position_type| match position_type {
+                                morph::PositionType::ParentDirected => "Parent Directed",
+                                morph::PositionType::SelfDirected => "Self Directed",
+                            })).width(Auto);
+                            Label::new(cx, DOWN).class("icon").width(Auto);
+                        })
+                        .child_left(Pixels(5.0))
+                        .child_right(Pixels(5.0))
+                        .col_between(Stretch(1.0)),
+                        move |cx| {
+                            List::new(cx, AppData::position_type_list, |cx, _, item| {
+                                Label::new(cx, item)
+                                    .width(Stretch(1.0))
+                                    .child_top(Stretch(1.0))
+                                    .child_bottom(Stretch(1.0))
+                                    .child_left(Pixels(5.0))
+                                    .bind(
+                                        AppData::position_type.map(|position_type| match position_type {
+                                            morph::PositionType::ParentDirected => "Parent Directed",
+                                            morph::PositionType::SelfDirected => "Self Directed",
+                                        }),
+                                        move |handle, selected| {
+                                            if item.get(handle.cx) == selected.get(handle.cx) {
+                                                handle.background_color(Color::from("#4871ae"));
+                                            } else {
+                                                handle.background_color(Color::transparent());
+                                            }
+                                        },
+                                    )
+                                    .on_press(move |cx| {
+                                        cx.emit(AppEvent::SetPositionType(item.get(cx)));
+                                        cx.emit(PopupEvent::Close);
+                                    });
+                            });
+                        },
+                    )
+                    .width(Stretch(1.0));
+                })
+                .col_between(Pixels(10.0))
+                .height(Auto)
+                .class("row");
+
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
                         unit_box(cx, "left", AppData::left, AppEvent::SetLeft);
@@ -25,11 +75,7 @@ impl PropertiesPanel {
                     });
                 })
                 .class("row");
-            })
-            .class("panel");
 
-            VStack::new(cx, |cx| {
-                Label::new(cx, "Vertical Axis").class("panel-title");
                 HStack::new(cx, |cx| {
                     VStack::new(cx, |cx| {
                         unit_box(cx, "top", AppData::top, AppEvent::SetTop);
