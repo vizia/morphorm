@@ -92,7 +92,7 @@ impl AppData {
         world.set_width(root_node, morph::Units::Pixels(600.0));
         world.set_height(root_node, morph::Units::Pixels(600.0));
 
-        layout(&root_node, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+        root_node.layout(&mut world.cache, &world.tree, &world.store);
 
         Self {
             canvas_width: 600.0,
@@ -146,15 +146,7 @@ impl Model for AppData {
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|app_event, _| match app_event {
             AppEvent::Relayout => {
-                layout(
-                    &self.root_node,
-                    None,
-                    self.canvas_height,
-                    self.canvas_width,
-                    &mut self.world.cache,
-                    &self.world.tree,
-                    &self.world.store,
-                );
+                self.root_node.layout(&mut self.world.cache, &self.world.tree, &self.world.store);
                 cx.needs_redraw();
             }
 

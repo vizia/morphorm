@@ -3,20 +3,11 @@
 
 use smallvec::SmallVec;
 
-use crate::{Cache, LayoutType, Node, NodeExt, PositionType, Units};
+use crate::{Cache, LayoutType, Node, NodeExt, PositionType, Size, Units};
 use crate::{CacheExt, Units::*};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
-
-/// A type which represents the computed size of a node after [`layout`].
-#[derive(Default, Debug, Copy, Clone, PartialEq)]
-pub struct Size {
-    /// The computed size on the main axis.
-    pub main: f32,
-    /// The computed size on the cross axis.
-    pub cross: f32,
-}
 
 #[derive(Debug, Clone, Copy)]
 enum Axis {
@@ -87,9 +78,9 @@ struct ChildNode<'a, N: Node> {
 /// ```
 /// layout(&root, None, 600.0, 600.0, &mut cache, &tree, &store);
 /// ```
-pub fn layout<N, C>(
+pub(crate) fn layout<N, C>(
     node: &N,
-    parent_layout_type: Option<LayoutType>,
+    parent_layout_type: LayoutType,
     parent_main: f32,
     parent_cross: f32,
     cache: &mut C,
@@ -100,9 +91,6 @@ where
     N: Node,
     C: Cache<Node = N>,
 {
-    // If `None` then `node` is a root node and the parent layout type is not important.
-    let parent_layout_type = parent_layout_type.unwrap_or_default();
-
     // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
 
@@ -322,7 +310,7 @@ where
         let mut computed_child_main = 0.0;
 
         if !child_main.is_stretch() && !child_cross.is_stretch() {
-            let child_size = layout(child, Some(layout_type), parent_main, parent_cross, cache, tree, store);
+            let child_size = layout(child, layout_type, parent_main, parent_cross, cache, tree, store);
 
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
@@ -391,7 +379,7 @@ where
             child.cross = actual_cross;
 
             if !child.node.main(store, layout_type).is_stretch() {
-                let size = layout(child.node, Some(layout_type), computed_main, actual_cross, cache, tree, store);
+                let size = layout(child.node, layout_type, computed_main, actual_cross, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
                 main_non_flex += size.main;
@@ -436,7 +424,7 @@ where
                 let child_cross = item.node.cross(store, layout_type);
                 let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
 
-                let size = layout(item.node, Some(layout_type), actual_main, cross_size, cache, tree, store);
+                let size = layout(item.node, layout_type, actual_main, cross_size, cache, tree, store);
                 cross_max = cross_max.max(size.cross);
                 main_sum += size.main;
             }

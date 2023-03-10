@@ -26,7 +26,7 @@ fn main() {
     // // world.set_layout_type(node2, LayoutType::Row);
     // // world.set_content_size(node2, |_, width, _| (width.unwrap(), width.unwrap() * 3.0));
 
-    // layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    // root.layout(&mut world.cache, &world.tree, &world.store);
 
     // let mut world = World::default();
 
@@ -41,7 +41,7 @@ fn main() {
     // world.set_height(node, Units::Pixels(400.0));
     // world.set_max_height(node, Units::Percentage(50.0));
 
-    // layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    // root.layout(&mut world.cache, &world.tree, &world.store);
 
     let mut world = World::default();
 
@@ -55,7 +55,7 @@ fn main() {
     world.set_width(node, Units::Stretch(1.0));
     world.set_height(node, Units::Percentage(25.0));
 
-    layout(&root, None, 600.0, 600.0, &mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store);
 
     render(world, root);
 }
