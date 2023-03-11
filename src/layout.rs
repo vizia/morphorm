@@ -384,7 +384,7 @@ where
     }
 
     // Calculate free space on the main-axis.
-    let free_main_space = (parent_main - main_non_flex).max(0.0);
+    let free_main_space = parent_main - main_non_flex;
     let main_px_per_flex = free_main_space / main_flex_sum;
     let mut remainder: f32 = 0.0;
 
