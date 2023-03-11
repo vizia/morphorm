@@ -214,10 +214,10 @@ impl Model for AppData {
                 self.world.set_right(node, morph::Units::Auto);
                 self.world.set_top(node, morph::Units::Auto);
                 self.world.set_bottom(node, morph::Units::Auto);
-                self.world.set_left(node, morph::Units::Stretch(1.0));
-                self.world.set_right(node, morph::Units::Stretch(1.0));
-                self.world.set_top(node, morph::Units::Stretch(1.0));
-                self.world.set_bottom(node, morph::Units::Stretch(1.0));
+                self.world.set_child_left(node, morph::Units::Stretch(1.0));
+                self.world.set_child_right(node, morph::Units::Stretch(1.0));
+                self.world.set_child_top(node, morph::Units::Stretch(1.0));
+                self.world.set_child_bottom(node, morph::Units::Stretch(1.0));
                 self.world.set_col_between(node, morph::Units::Stretch(1.0));
                 self.world.set_row_between(node, morph::Units::Stretch(1.0));
 
