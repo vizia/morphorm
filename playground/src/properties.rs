@@ -280,6 +280,104 @@ impl PropertiesPanel {
             })
             .class("panel");
 
+            VStack::new(cx, |cx| {
+                Label::new(cx, "Child Alignment").class("panel-title");
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildTop);
+                            cx.emit(AppEvent::AlignChildLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildTop);
+                            cx.emit(AppEvent::AlignChildCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildTop);
+                            cx.emit(AppEvent::AlignChildRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
+
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildMiddle);
+                            cx.emit(AppEvent::AlignChildLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildMiddle);
+                            cx.emit(AppEvent::AlignChildCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildMiddle);
+                            cx.emit(AppEvent::AlignChildRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
+
+                HStack::new(cx, |cx| {
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildBottom);
+                            cx.emit(AppEvent::AlignChildLeft);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildBottom);
+                            cx.emit(AppEvent::AlignChildCenter);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+
+                    Button::new(
+                        cx,
+                        |cx| {
+                            cx.emit(AppEvent::AlignChildBottom);
+                            cx.emit(AppEvent::AlignChildRight);
+                        },
+                        |cx| Label::new(cx, ""),
+                    );
+                })
+                .left(Stretch(1.0))
+                .right(Stretch(1.0));
+            })
+            .class("panel")
+            .class("align");
+
             Element::new(cx).height(Stretch(1.0)).class("panel");
         })
     }
