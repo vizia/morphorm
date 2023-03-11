@@ -138,7 +138,7 @@ where
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
-    let (parent_main, parent_cross) = if parent_layout_type == layout_type {
+    let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
         (computed_main, computed_cross)
     } else {
         (computed_cross, computed_main)
@@ -306,7 +306,7 @@ where
         let computed_child_main_after =
             child_main_after.to_px(parent_main, 0.0).clamp(child_min_main_after, child_max_main_after);
 
-        // Compute sized-size child main.
+        // Compute fixed-size child main.
         let mut computed_child_main = 0.0;
 
         if !child_main.is_stretch() && !child_cross.is_stretch() {
@@ -325,13 +325,9 @@ where
         if child_position_type == PositionType::ParentDirected {
             main_non_flex += child_main_non_flex;
             main_flex_sum += child_main_flex_sum;
-
             main_sum += child_main_non_flex;
-        } else {
-            main_sum = main_sum.max(child_main_non_flex);
+            cross_max = cross_max.max(child_cross_non_flex);
         }
-
-        cross_max = cross_max.max(child_cross_non_flex);
 
         children.push(ChildNode {
             node: child,
@@ -348,9 +344,14 @@ where
         });
     }
 
+    // Determine cross-size of auto node from children.
+    if num_children != 0 && node.cross(store, layout_type) == Auto {
+        parent_cross = cross_max;
+    }
+
     // Compute flexible space and size on the cross-axis.
     for child in children.iter_mut() {
-        let child_cross_free_space = parent_cross.max(cross_max) - child.cross_non_flex;
+        let child_cross_free_space = parent_cross - child.cross_non_flex;
         let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
 
         let mut child_cross_before = child.node.cross_before(store, layout_type);
@@ -389,11 +390,19 @@ where
 
             if !child.node.main(store, layout_type).is_stretch() {
                 let size = layout(child.node, layout_type, computed_main, actual_cross, cache, tree, store);
-                cross_max = cross_max.max(size.cross);
-                main_sum += size.main;
-                main_non_flex += size.main;
+                let child_position_type = child.node.position_type(store).unwrap_or_default();
+                child.main_non_flex += size.main;
+                if child_position_type == PositionType::ParentDirected {
+                    cross_max = cross_max.max(size.cross);
+                    main_sum += size.main;
+                    main_non_flex += size.main;
+                }
             }
         }
+    }
+
+    if num_children != 0 && node.main(store, layout_type) == Auto {
+        parent_main = parent_main.max(main_sum);
     }
 
     // Calculate free space on the main-axis.
@@ -406,7 +415,7 @@ where
         let child_position_type = item.node.position_type(store).unwrap_or_default();
 
         let actual_main = if child_position_type == PositionType::SelfDirected {
-            let child_main_free_space = (parent_main.max(main_sum) - children[item.index].main_non_flex).max(0.0);
+            let child_main_free_space = (parent_main - children[item.index].main_non_flex).max(0.0);
             let px_per_flex = child_main_free_space / children[item.index].main_flex_sum;
             let desired_main = item.factor * px_per_flex + children[item.index].main_remainder;
             let actual_main = desired_main.round();

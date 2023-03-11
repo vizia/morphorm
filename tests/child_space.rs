@@ -203,7 +203,6 @@ fn percentage_child_right_pixels_size() {
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
 
-
 #[test]
 fn stretch_child_right_pixels_size() {
     let mut world = World::default();
@@ -281,7 +280,6 @@ fn percentage_child_bottom_pixels_size() {
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 150.0 }));
 }
-
 
 #[test]
 fn stretch_child_bottom_pixels_size() {

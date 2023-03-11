@@ -201,13 +201,13 @@ fn auto_width_pixels_child_self_directed() {
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Column);
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 }
 
 #[test]
@@ -236,13 +236,13 @@ fn auto_width_pixels_children_self_directed() {
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Column);
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 }
 
 #[test]
@@ -272,13 +272,13 @@ fn auto_width_pixels_children_self_directed_with_pixels_left() {
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Column);
 
     root.layout(&mut world.cache, &world.tree, &world.store);
 
-    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 150.0 }));
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 150.0 }));
 }
 
 #[test]

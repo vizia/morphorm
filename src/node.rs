@@ -1,4 +1,4 @@
-use crate::{layout, Cache, types::*};
+use crate::{layout, types::*, Cache};
 
 /// A `Node` represents a layout element which can be sized and positioned based on
 /// a number of layout properties.
