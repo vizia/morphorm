@@ -46,9 +46,18 @@ pub enum AppEvent {
     SetChildLeft(morph::Units),
     SetColBetween(morph::Units),
     SetChildRight(morph::Units),
+
+    AlignChildLeft,
+    AlignChildCenter,
+    AlignChildRight,
+
     SetChildTop(morph::Units),
     SetRowBetween(morph::Units),
     SetChildBottom(morph::Units),
+
+    AlignChildTop,
+    AlignChildMiddle,
+    AlignChildBottom,
 }
 
 #[derive(Lens)]
@@ -416,9 +425,9 @@ impl Model for AppData {
             AppEvent::AlignLeft => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        self.world.set_left(*selected, morph::Units::Auto);
+                        self.world.set_left(*selected, morph::Units::Pixels(0.0));
                         self.world.set_right(*selected, morph::Units::Stretch(1.0));
-                        self.left = morph::Units::Auto;
+                        self.left = morph::Units::Pixels(0.0);
                         self.right = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
@@ -428,9 +437,9 @@ impl Model for AppData {
             AppEvent::AlignRight => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        self.world.set_right(*selected, morph::Units::Auto);
+                        self.world.set_right(*selected, morph::Units::Pixels(0.0));
                         self.world.set_left(*selected, morph::Units::Stretch(1.0));
-                        self.right = morph::Units::Auto;
+                        self.right = morph::Units::Pixels(0.0);
                         self.left = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
@@ -452,11 +461,11 @@ impl Model for AppData {
             AppEvent::FillWidth => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        self.world.set_right(*selected, morph::Units::Auto);
-                        self.world.set_left(*selected, morph::Units::Auto);
+                        self.world.set_right(*selected, morph::Units::Pixels(0.0));
+                        self.world.set_left(*selected, morph::Units::Pixels(0.0));
                         self.world.set_width(*selected, morph::Units::Stretch(1.0));
-                        self.right = morph::Units::Auto;
-                        self.left = morph::Units::Auto;
+                        self.right = morph::Units::Pixels(0.0);
+                        self.left = morph::Units::Pixels(0.0);
                         self.width = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
@@ -466,9 +475,9 @@ impl Model for AppData {
             AppEvent::AlignTop => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        self.world.set_top(*selected, morph::Units::Auto);
+                        self.world.set_top(*selected, morph::Units::Pixels(0.0));
                         self.world.set_bottom(*selected, morph::Units::Stretch(1.0));
-                        self.top = morph::Units::Auto;
+                        self.top = morph::Units::Pixels(0.0);
                         self.bottom = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
@@ -478,9 +487,9 @@ impl Model for AppData {
             AppEvent::AlignBottom => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        self.world.set_bottom(*selected, morph::Units::Auto);
+                        self.world.set_bottom(*selected, morph::Units::Pixels(0.0));
                         self.world.set_top(*selected, morph::Units::Stretch(1.0));
-                        self.bottom = morph::Units::Auto;
+                        self.bottom = morph::Units::Pixels(0.0);
                         self.top = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
@@ -508,6 +517,78 @@ impl Model for AppData {
                         self.bottom = morph::Units::Auto;
                         self.top = morph::Units::Auto;
                         self.height = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildLeft => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_left(*selected, morph::Units::Pixels(0.0));
+                        self.world.set_child_right(*selected, morph::Units::Stretch(1.0));
+                        self.child_left = morph::Units::Auto;
+                        self.child_right = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildRight => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_right(*selected, morph::Units::Pixels(0.0));
+                        self.world.set_child_left(*selected, morph::Units::Stretch(1.0));
+                        self.child_right = morph::Units::Auto;
+                        self.child_left = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildCenter => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_left(*selected, morph::Units::Stretch(1.0));
+                        self.world.set_child_right(*selected, morph::Units::Stretch(1.0));
+                        self.child_left = morph::Units::Stretch(1.0);
+                        self.child_right = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildTop => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_top(*selected, morph::Units::Pixels(0.0));
+                        self.world.set_child_bottom(*selected, morph::Units::Stretch(1.0));
+                        self.child_top = morph::Units::Auto;
+                        self.child_bottom = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildBottom => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_bottom(*selected, morph::Units::Pixels(0.0));
+                        self.world.set_child_top(*selected, morph::Units::Stretch(1.0));
+                        self.child_bottom = morph::Units::Auto;
+                        self.child_top = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::AlignChildMiddle => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_child_top(*selected, morph::Units::Stretch(1.0));
+                        self.world.set_child_bottom(*selected, morph::Units::Stretch(1.0));
+                        self.child_top = morph::Units::Stretch(1.0);
+                        self.child_bottom = morph::Units::Stretch(1.0);
                     }
                     cx.emit(AppEvent::Relayout);
                 }
