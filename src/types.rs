@@ -61,8 +61,8 @@ pub enum Units {
     Stretch(f32),
     /// Automatically determine the value.
     ///
-    /// When applied to space (left, right, top, bottom) the spacing will be overridden by the parent's child-space on the same side.
-    /// For example, a node with Auto left space with a parent which has Pixel(100.0) child-left space will get a left spacing of 100px.
+    /// When applied to space (left, right, top, bottom) the spacing may be overridden by the parent's child-space on the same side.
+    /// For example, a node in a column with `Auto` left space, with a parent which has Pixel(100.0) child-left space, will get a left spacing of 100px.
     ///
     /// When applied to size (width, height) Auto will either size to fit its children, or if there are no children
     /// the node will be sized based on the [`content_size`](crate::Node::content_size) property of the node.
@@ -102,7 +102,7 @@ impl Units {
     }
 }
 
-/// A type which represents the computed size of a node after [`layout`].
+/// A type which represents the computed size of a node after [`layout`](crate::Node::layout).
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Size {
     /// The computed size on the main axis.

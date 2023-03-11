@@ -1,3 +1,5 @@
+// Part of a very simple ECS for demonstration purposes only.
+
 use morphorm::{LayoutType, PositionType, Units};
 use std::collections::HashMap;
 

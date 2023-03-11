@@ -1,3 +1,4 @@
+/// A very simple ECS for demonstration of the [morphorm layout library](https://github.com/vizia/morphorm).
 pub mod entity;
 pub use entity::*;
 

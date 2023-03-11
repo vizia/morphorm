@@ -1,3 +1,5 @@
+// Part of a very simple ECS for demonstration purposes only.
+
 use std::collections::HashMap;
 
 use morphorm::*;
@@ -10,7 +12,6 @@ impl Node for Entity {
     type Store = Store;
     type Tree = Tree;
     type ChildIter<'t> = ChildIterator<'t>;
-
     type CacheKey = Entity;
 
     fn key(&self) -> Self::CacheKey {
@@ -141,7 +142,7 @@ pub struct Rect {
 
 #[derive(Default)]
 pub struct NodeCache {
-    // Computed Outputs
+    // Computed size and position of nodes.
     pub rect: HashMap<Entity, Rect>,
 }
 
