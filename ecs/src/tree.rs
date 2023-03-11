@@ -1,3 +1,5 @@
+// Part of a very simple ECS for demonstration purposes only.
+
 use crate::entity::Entity;
 
 /// A type representing a tree of entities.
@@ -10,6 +12,7 @@ pub struct Tree {
 }
 
 impl Tree {
+    /// Adds an entity to the tree with the given parent. A `None` parent means the node is a root node.
     pub fn add(&mut self, entity: Entity, parent: Option<Entity>) {
         if let Some(parent) = parent {
             if parent.index() >= self.parent.len() {
@@ -52,9 +55,8 @@ impl Tree {
     }
 
     pub fn remove(&mut self, entity: &Entity) {
-        // Check if the entity to be removed exists in the tree
+        // Check if the entity to be removed exists in the tree.
         let entity_index = entity.0;
-
         if entity_index >= self.parent.len() {
             return;
         }
@@ -69,7 +71,7 @@ impl Tree {
         // Set the next sibling of the previous sibling of the entity to the next sibling of the entity.
         // from:    [PS] -> [E] -> [NS]
         // to:      [PS] -> [NS]
-        // where:   PS - Previous Sibling, E - I, NS - Next Sibling
+        // where:   PS - Previous Sibling, E - Entity, NS - Next Sibling
         if let Some(prev_sibling) = self.get_prev_sibling(entity) {
             self.next_sibling[prev_sibling.index()] = self.get_next_sibling(entity).copied();
         }
@@ -77,29 +79,33 @@ impl Tree {
         // Set the previous sibling of the next sibling of the entity to the previous sibling of the entity.
         // from:    [PS] <- [E] <- [NS]
         // to:      [PS] <- [NS]
-        // where:   PS - Previous Sibling, E - I, NS - Next Sibling
+        // where:   PS - Previous Sibling, E - Entity, NS - Next Sibling
         if let Some(next_sibling) = self.get_next_sibling(entity).copied() {
             self.prev_sibling[next_sibling.index()] = self.get_prev_sibling(entity);
         }
 
-        // Set the next sibling, previous sibling and parent of the removed entity to None
+        // Set the next sibling, previous sibling and parent of the removed entity to None.
         self.next_sibling[entity_index] = None;
         self.prev_sibling[entity_index] = None;
         self.parent[entity_index] = None;
     }
 
+    /// Returns the parent of the given entity if it exists.
     pub fn get_parent(&self, entity: &Entity) -> Option<&Entity> {
         self.parent.get(entity.index()).and_then(|parent| parent.as_ref())
     }
 
+    /// Returns the first child of the given entity if it exists.
     pub fn get_first_child(&self, entity: &Entity) -> Option<&Entity> {
         self.first_child.get(entity.index()).and_then(|first_child| first_child.as_ref())
     }
 
+    /// Returns the next sibling of the given entity if it exists.
     pub fn get_next_sibling(&self, entity: &Entity) -> Option<&Entity> {
         self.next_sibling.get(entity.index()).and_then(|prev_sibling| prev_sibling.as_ref())
     }
 
+    /// Returns the previous sibling of the given entity if it exists.
     pub fn get_prev_sibling(&self, entity: &Entity) -> Option<Entity> {
         self.prev_sibling.get(entity.index()).and_then(|next_sibling| *next_sibling)
     }
@@ -158,40 +164,6 @@ impl<'a> Iterator for DownwardIterator<'a> {
         r
     }
 }
-
-// pub struct UpwardIterator<'a> {
-//     tree: &'a Tree,
-//     current_node: Option<Entity>,
-// }
-
-// impl<'a> Iterator for UpwardIterator<'a> {
-//     type Item = Entity;
-
-//     // TODO - Needs Testing
-//     fn next(&mut self) -> Option<Entity> {
-
-//         let r = self.current_node;
-
-//         if let Some(current) = self.current_node {
-
-//             if let Some(prev_sibling) = self.tree.prev_sibling[current.index()] {
-//                 let mut temp = Some(prev_sibling);
-//                 while temp.is_some() {
-//                     if let Some(last_child) = self.tree.get_last_child(temp.unwrap()) {
-//                         temp = Some(last_child);
-//                     } else {
-//                         self.current_node = Some(prev_sibling);
-//                         return r;
-//                     }
-//                 }
-//             } else {
-//                 self.current_node = self.tree.get_parent(current);
-//             }
-//         }
-
-//         return r;
-//     }
-// }
 
 /// An iterator for iterating the children of an entity.
 pub struct ChildIterator<'a> {

@@ -5,8 +5,9 @@ use crate::{LayoutType, Node};
 ///
 /// The `Node` associated type, which implements the [`Node`](crate::Node) trait, provides
 /// a [`CacheKey'](crate::Node::CacheKey) associated type which can be used as key for storage types
-/// within the cache if the `Node` type itself cannot be used.
+/// within the cache if the `Node` type itself cannot be used. For example, as the key to a hashmap.
 pub trait Cache {
+    /// A type which represents a layout node and implments the [`Node`](crate::Node) trait.
     type Node: Node;
     /// Returns the cached width of the given node.
     fn width(&self, node: &Self::Node) -> f32;
@@ -29,22 +30,27 @@ pub trait Cache {
 
 /// Helper trait for getting/setting node size/position in a direction agnostic way.
 pub(crate) trait CacheExt: Cache {
+    /// Returns the computed main size of the `node` from the cache. Width for a row parent layout and height for a column parent layout.
     fn main(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
         parent_layout_type.select(node, |node| self.width(node), |node| self.height(node))
     }
 
+    /// Returns the computed cross size of the `node` from the cache. Height for a row parent layout and width for a column parent layout.
     fn cross(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
         parent_layout_type.select(node, |node| self.height(node), |node| self.width(node))
     }
 
+    /// Returns the computed main position of the `node` from the cache. Posx for a row parent layout and posy for a column parent layout.
     fn main_pos(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
         parent_layout_type.select(node, |node| self.posx(node), |node| self.posy(node))
     }
 
+    /// Returns the computed cross position of the `node` from the cache. Posy for a row parent layout and posx for a column parent layout.
     fn cross_pos(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
         parent_layout_type.select(node, |node| self.posy(node), |node| self.posx(node))
     }
 
+    /// Set the computed main size of the `node` in the cache. Width for a row parent layout and height for a column parent playout.
     fn set_main(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main: f32) {
         match parent_layout_type {
             LayoutType::Row => self.set_width(node, main),
@@ -52,6 +58,7 @@ pub(crate) trait CacheExt: Cache {
         }
     }
 
+    /// Set the computed cross size of the `node` in the cache. Height for a row parent layout and width for a column parent playout.
     fn set_cross(&mut self, node: &Self::Node, parent_layout_type: LayoutType, cross: f32) {
         match parent_layout_type {
             LayoutType::Row => self.set_height(node, cross),
@@ -59,6 +66,7 @@ pub(crate) trait CacheExt: Cache {
         }
     }
 
+    /// Set the computed main position of the `node` in the cache. Posx for a row parent layout and posy for a column parent playout.
     fn set_main_pos(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main_pos: f32) {
         match parent_layout_type {
             LayoutType::Row => self.set_posx(node, main_pos),
@@ -66,6 +74,7 @@ pub(crate) trait CacheExt: Cache {
         }
     }
 
+    /// Set the computed cross position of the `node` in the cache. Posy for a row parent layout and posx for a column parent playout.
     fn set_cross_pos(&mut self, node: &Self::Node, parent_layout_type: LayoutType, cross_pos: f32) {
         match parent_layout_type {
             LayoutType::Row => self.set_posy(node, cross_pos),
