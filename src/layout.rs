@@ -62,9 +62,9 @@ struct ChildNode<'a, N: Node> {
 /// # Arguments
 ///
 /// * `node` - Root node to start layout from.
-/// * `parent_layout_type` - The [`LayoutType`] of the parent of the `node`. If the `node` has no parent then pass the size of the node.
+/// * `parent_layout_type` - The [`LayoutType`] of the parent of the `node`.
 /// * `parent_main` - The size of the parent of the `node` on its main axis. If the `node` has no parent then pass the size of the node.
-/// * `parent_cross` - The size of the parent of the `node` along its cross axis. If the `node` has no parent then pass `None`.
+/// * `cross_size` - The size of the `node` along its cross axis.
 /// * `cache` - A mutable reference to the [`Cache`].
 /// * `tree` - A mutable reference to the [`Tree`](crate::Node::Tree).
 /// * `store` - A mutable reference to the [`Store`](crate::Node::Store).
@@ -72,13 +72,13 @@ struct ChildNode<'a, N: Node> {
 /// # Example
 ///
 /// ```
-/// layout(&root, None, 600.0, 600.0, &mut cache, &tree, &store);
+/// layout(&root, LayoutType::Column, 600.0, 600.0, &mut cache, &tree, &store);
 /// ```
 pub(crate) fn layout<N, C>(
     node: &N,
     parent_layout_type: LayoutType,
     parent_main: f32,
-    parent_cross: f32,
+    cross_size: f32,
     cache: &mut C,
     tree: &<N as Node>::Tree,
     store: &<N as Node>::Store,
@@ -102,13 +102,8 @@ where
         Auto => 0.0,
     };
 
-    // Compute the cross-axis size.
-    let mut computed_cross = match cross {
-        Pixels(val) => val,
-        Percentage(val) => (parent_cross * (val / 100.0)).round(),
-        Stretch(_) => parent_cross,
-        Auto => 0.0,
-    };
+    // Cross size is determined by the parent.
+    let mut computed_cross = cross_size;
 
     // Get the total number of children of the node.
     let num_children = node.children(tree).count();
@@ -128,10 +123,7 @@ where
     let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
     computed_main = computed_main.clamp(min_main, max_main);
 
-    // Apply cross-axis size constraints for pixels and percentage.
-    let min_cross = node.min_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MIN);
-    let max_cross = node.max_cross(store, parent_layout_type).to_px(parent_cross, DEFAULT_MAX);
-    computed_cross = computed_cross.clamp(min_cross, max_cross);
+    // TODO: Figure out how to constrain content size on cross axis.
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
@@ -140,9 +132,6 @@ where
     } else {
         (computed_cross, computed_main)
     };
-
-    // Sum of all non-flexible space and size on the main-axis of the node.
-    let mut main_non_flex = 0.0;
 
     // Sum of all space and size flex factors on the main-axis of the node.
     let mut main_flex_sum = 0.0;
@@ -286,7 +275,7 @@ where
 
         // Compute fixed-size child main.
         if !child_main.is_stretch() && !child_cross.is_stretch() {
-            let child_size = layout(child, layout_type, parent_main, parent_cross, cache, tree, store);
+            let child_size = layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store);
 
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
@@ -299,7 +288,6 @@ where
         let child_main_non_flex = computed_child_main_before + computed_child_main + computed_child_main_after;
 
         if child_position_type == PositionType::ParentDirected {
-            main_non_flex += child_main_non_flex;
             main_flex_sum += child_main_flex_sum;
             main_sum += child_main_non_flex;
             cross_max = cross_max.max(child_cross_non_flex);
@@ -372,7 +360,6 @@ where
                 if child_position_type == PositionType::ParentDirected {
                     cross_max = cross_max.max(size.cross);
                     main_sum += size.main;
-                    main_non_flex += size.main;
                 }
             }
         }
@@ -384,7 +371,7 @@ where
     }
 
     // Calculate free space on the main-axis.
-    let free_main_space = parent_main - main_non_flex;
+    let free_main_space = parent_main - main_sum;
     let main_px_per_flex = free_main_space / main_flex_sum;
     let mut remainder: f32 = 0.0;
 
@@ -393,7 +380,7 @@ where
         let child_position_type = item.node.position_type(store).unwrap_or_default();
 
         let actual_main = if child_position_type == PositionType::SelfDirected {
-            let child_main_free_space = (parent_main - children[item.index].main_non_flex).max(0.0);
+            let child_main_free_space = parent_main - children[item.index].main_non_flex;
             let px_per_flex = child_main_free_space / children[item.index].main_flex_sum;
             let desired_main = item.factor * px_per_flex + children[item.index].main_remainder;
             let actual_main = desired_main.round();
@@ -417,10 +404,7 @@ where
 
             Axis::Main => {
                 let computed_child_cross = children[item.index].cross;
-                let child_cross = item.node.cross(store, layout_type);
-                let cross_size = if child_cross.is_stretch() { computed_child_cross } else { parent_cross };
-
-                let size = layout(item.node, layout_type, actual_main, cross_size, cache, tree, store);
+                let size = layout(item.node, layout_type, actual_main, computed_child_cross, cache, tree, store);
                 if child_position_type == PositionType::ParentDirected {
                     cross_max = cross_max.max(size.cross);
                     main_sum += size.main;
@@ -436,18 +420,13 @@ where
 
         match child_position_type {
             PositionType::SelfDirected => {
-                cache.set_main_pos(child.node, layout_type, child.main_before);
-                cache.set_cross_pos(child.node, layout_type, child.cross_before);
+                cache.set_pos(child.node, layout_type, child.main_before, child.cross_before);
             }
 
             PositionType::ParentDirected => {
                 main_pos += child.main_before;
-
-                cache.set_main_pos(child.node, layout_type, main_pos);
-                cache.set_cross_pos(child.node, layout_type, child.cross_before);
-                main_pos += cache.main(child.node, layout_type);
-
-                main_pos += child.main_after;
+                cache.set_pos(child.node, layout_type, main_pos, child.cross_before);
+                main_pos += cache.main(child.node, layout_type) + child.main_after;
             }
         };
     }
@@ -467,8 +446,7 @@ where
     }
 
     // Set the computed size of the node in the cache.
-    cache.set_main(node, parent_layout_type, computed_main);
-    cache.set_cross(node, parent_layout_type, computed_cross);
+    cache.set_size(node, parent_layout_type, computed_main, computed_cross);
 
     // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }

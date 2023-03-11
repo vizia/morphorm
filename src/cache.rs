@@ -66,6 +66,12 @@ pub(crate) trait CacheExt: Cache {
         }
     }
 
+    /// Set the computed size of the `node` in the cache.
+    fn set_size(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main: f32, cross: f32) {
+        self.set_main(node, parent_layout_type, main);
+        self.set_cross(node, parent_layout_type, cross);
+    }
+
     /// Set the computed main position of the `node` in the cache. Posx for a row parent layout and posy for a column parent playout.
     fn set_main_pos(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main_pos: f32) {
         match parent_layout_type {
@@ -80,6 +86,12 @@ pub(crate) trait CacheExt: Cache {
             LayoutType::Row => self.set_posy(node, cross_pos),
             LayoutType::Column => self.set_posx(node, cross_pos),
         }
+    }
+
+    /// Set the computed position of the `node` in the cache.
+    fn set_pos(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main_pos: f32, cross_pos: f32) {
+        self.set_main_pos(node, parent_layout_type, main_pos);
+        self.set_cross_pos(node, parent_layout_type, cross_pos);
     }
 }
 
