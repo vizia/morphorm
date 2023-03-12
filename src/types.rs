@@ -81,6 +81,28 @@ impl Units {
         }
     }
 
+    pub fn to_px_clamped(&self, parent_value: f32, default: f32, min: Units, max: Units) -> f32 {
+        let min = min.to_px(parent_value, f32::MIN);
+        let max = max.to_px(parent_value, f32::MAX);
+        match self {
+            Units::Pixels(pixels) => pixels.clamp(min, max),
+            Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).clamp(min, max),
+            Units::Stretch(_) => default.clamp(min, max),
+            Units::Auto => default,
+        }
+    }
+
+    pub fn clamp(&self, min: Units, max: Units) -> Self {
+        match (self, min, max) {
+            (Units::Pixels(val), Units::Pixels(min), Units::Pixels(max)) => Units::Pixels(val.min(max).max(min)),
+            (Units::Percentage(val), Units::Percentage(min), Units::Percentage(max)) => {
+                Units::Percentage(val.min(max).max(min))
+            }
+            (Units::Stretch(val), Units::Stretch(min), Units::Stretch(max)) => Units::Stretch(val.min(max).max(min)),
+            _ => *self,
+        }
+    }
+
     /// Returns true if the value is in pixels.
     pub fn is_pixels(&self) -> bool {
         matches!(self, Units::Pixels(_))
