@@ -1,7 +1,7 @@
 use morphorm::*;
 use morphorm_ecs::*;
 
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 // Helper function for building a tree of nodes.
 fn build_tree(world: &mut World, parent: Option<Entity>, children_per_node: usize, depth: usize) {
@@ -20,7 +20,10 @@ fn morphorm_benchmarks(c: &mut Criterion) {
 
     // 3 - 1000, 4 - 10,000, 5 - 100,000, 6 - 1,000,000
     for depth in [3, 4, 5, 6].iter() {
-        let benchmark_id = BenchmarkId::new(format!("Wide Shallow. 10 children per node, depth: {depth}. Total nodes: {}.", 10u32.pow(*depth as u32)), depth);
+        let benchmark_id = BenchmarkId::new(
+            format!("Wide Shallow. 10 children per node, depth: {depth}. Total nodes: {}.", 10u32.pow(*depth as u32)),
+            depth,
+        );
         group.bench_with_input(benchmark_id, depth, |b, &depth| {
             b.iter_batched(
                 || {
@@ -44,7 +47,10 @@ fn morphorm_benchmarks(c: &mut Criterion) {
 
     // 10 - 1024, 13 - 8192, 17 - 131,072, 20 - 1,048,576
     for depth in [10, 13, 17, 20].iter() {
-        let benchmark_id = BenchmarkId::new(format!("Narrow Deep. 2 children per node, depth: {depth}. Total nodes: {}.", 2u32.pow(*depth as u32)), depth);
+        let benchmark_id = BenchmarkId::new(
+            format!("Narrow Deep. 2 children per node, depth: {depth}. Total nodes: {}.", 2u32.pow(*depth as u32)),
+            depth,
+        );
         group.bench_with_input(benchmark_id, depth, |b, &depth| {
             b.iter_batched(
                 || {
@@ -62,7 +68,6 @@ fn morphorm_benchmarks(c: &mut Criterion) {
     }
 
     group.finish()
-
 }
 
 criterion_group!(benches, morphorm_benchmarks);

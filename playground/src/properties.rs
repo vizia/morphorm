@@ -96,6 +96,43 @@ impl PropertiesPanel {
             .class("panel");
 
             VStack::new(cx, |cx| {
+                Label::new(cx, "Space and Size Constraints").class("panel-title");
+
+                HStack::new(cx, |cx| {
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "min-left", AppData::min_left, AppEvent::SetMinLeft);
+                    });
+
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "min-width", AppData::min_width, AppEvent::SetMinWidth);
+                    });
+
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "min-right", AppData::min_right, AppEvent::SetMinRight);
+                    });
+                })
+                .class("row");
+
+                HStack::new(cx, |cx| {
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "max-left", AppData::max_left, AppEvent::SetMaxLeft);
+                    });
+
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "max-width", AppData::max_width, AppEvent::SetMaxWidth);
+                    });
+
+                    VStack::new(cx, |cx| {
+                        unit_box(cx, "max-right", AppData::max_right, AppEvent::SetMaxRight);
+                    });
+                })
+                .col_between(Pixels(10.0))
+                .height(Auto)
+                .class("row");
+            })
+            .class("panel");
+
+            VStack::new(cx, |cx| {
                 Label::new(cx, "Alignment").class("panel-title");
                 HStack::new(cx, |cx| {
                     Button::new(

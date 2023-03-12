@@ -58,6 +58,13 @@ pub enum AppEvent {
     AlignChildTop,
     AlignChildMiddle,
     AlignChildBottom,
+
+    SetMinLeft(morph::Units),
+    SetMinWidth(morph::Units),
+    SetMinRight(morph::Units),
+    SetMaxLeft(morph::Units),
+    SetMaxWidth(morph::Units),
+    SetMaxRight(morph::Units),
 }
 
 #[derive(Lens)]
@@ -90,6 +97,13 @@ pub struct AppData {
     child_top: morph::Units,
     row_between: morph::Units,
     child_bottom: morph::Units,
+
+    min_left: morph::Units,
+    min_width: morph::Units,
+    min_right: morph::Units,
+    max_left: morph::Units,
+    max_width: morph::Units,
+    max_right: morph::Units,
 }
 
 impl Default for AppData {
@@ -142,6 +156,13 @@ impl AppData {
             child_top: morph::Units::Stretch(1.0),
             row_between: morph::Units::Stretch(1.0),
             child_bottom: morph::Units::Stretch(1.0),
+
+            min_left: morph::Units::Auto,
+            min_width: morph::Units::Auto,
+            min_right: morph::Units::Auto,
+            max_left: morph::Units::Auto,
+            max_width: morph::Units::Auto,
+            max_right: morph::Units::Auto,
         }
     }
 
@@ -162,6 +183,13 @@ impl AppData {
 
         self.layout_type = self.world.store.layout_type.get(node).copied().unwrap_or_default();
         self.position_type = self.world.store.position_type.get(node).copied().unwrap_or_default();
+
+        self.min_left = self.world.store.min_left.get(node).copied().unwrap_or_default();
+        self.min_width = self.world.store.min_width.get(node).copied().unwrap_or_default();
+        self.min_right = self.world.store.min_right.get(node).copied().unwrap_or_default();
+        self.max_left = self.world.store.max_left.get(node).copied().unwrap_or_default();
+        self.max_width = self.world.store.max_width.get(node).copied().unwrap_or_default();
+        self.max_right = self.world.store.max_right.get(node).copied().unwrap_or_default();
     }
 }
 
@@ -589,6 +617,66 @@ impl Model for AppData {
                         self.world.set_child_bottom(*selected, morph::Units::Stretch(1.0));
                         self.child_top = morph::Units::Stretch(1.0);
                         self.child_bottom = morph::Units::Stretch(1.0);
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMinLeft(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_min_left(*selected, *value);
+                        self.min_left = *value;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMinWidth(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_min_width(*selected, *value);
+                        self.min_width = *value;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMinRight(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_min_right(*selected, *value);
+                        self.min_right = *value;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMaxLeft(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_max_left(*selected, *value);
+                        self.max_left = *value;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMaxWidth(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_max_width(*selected, *value);
+                        self.max_width = *value;
+                    }
+                    cx.emit(AppEvent::Relayout);
+                }
+            }
+
+            AppEvent::SetMaxRight(value) => {
+                if let Some(nodes) = &self.selected_nodes {
+                    for selected in nodes {
+                        self.world.set_max_right(*selected, *value);
+                        self.max_right = *value;
                     }
                     cx.emit(AppEvent::Relayout);
                 }

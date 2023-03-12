@@ -26,6 +26,10 @@ struct StretchNode<'a, N: Node> {
     factor: f32,
 
     axis: Axis,
+
+    violation: f32,
+
+    frozen: bool,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -237,31 +241,62 @@ where
         if let Stretch(factor) = child_main_before {
             child_main_flex_sum += factor;
 
-            stretch_nodes.push(StretchNode { node: child, index, factor, axis: Axis::MainBefore });
+            stretch_nodes.push(StretchNode {
+                node: child,
+                index,
+                factor,
+                axis: Axis::MainBefore,
+                violation: 0.0,
+                frozen: false,
+            });
         }
 
         if let Stretch(factor) = child_main {
             child_main_flex_sum += factor;
 
-            stretch_nodes.push(StretchNode { node: child, index, factor, axis: Axis::Main });
+            stretch_nodes.push(StretchNode {
+                node: child,
+                index,
+                factor,
+                axis: Axis::Main,
+                violation: 0.0,
+                frozen: false,
+            });
         }
 
         if let Stretch(factor) = child_main_after {
             child_main_flex_sum += factor;
 
-            stretch_nodes.push(StretchNode { node: child, index, factor, axis: Axis::MainAfter });
+            stretch_nodes.push(StretchNode {
+                node: child,
+                index,
+                factor,
+                axis: Axis::MainAfter,
+                violation: 0.0,
+                frozen: false,
+            });
         }
 
         // Compute fixed-size child cross_before.
-        let computed_child_cross_before =
-            child_cross_before.to_px(parent_cross, 0.0).clamp(child_min_cross_before, child_max_cross_before);
+        let computed_child_cross_before = if !child_cross_before.is_stretch() {
+            child_cross_before.to_px(parent_cross, 0.0).clamp(child_min_cross_before, child_max_cross_before)
+        } else {
+            0.0
+        };
 
         // Compute fixed-size child_cross.
-        let mut computed_child_cross = child_cross.to_px(parent_cross, 0.0).clamp(child_min_cross, child_max_cross);
+        let mut computed_child_cross = 0.0f32;
+
+        if !child_cross.is_stretch() {
+            computed_child_cross = child_cross.to_px(parent_cross, 0.0).clamp(child_min_cross, child_max_cross);
+        }
 
         // Compute fixed-size child cross_after.
-        let computed_child_cross_after =
-            child_cross_after.to_px(parent_cross, 0.0).clamp(child_min_cross_after, child_max_cross_after);
+        let computed_child_cross_after = if !child_cross_after.is_stretch() {
+            child_cross_after.to_px(parent_cross, 0.0).clamp(child_min_cross_after, child_max_cross_after)
+        } else {
+            0.0
+        };
 
         // Compute fixed-size child main_before.
         let computed_child_main_before =
@@ -314,10 +349,7 @@ where
     }
 
     // Compute flexible space and size on the cross-axis.
-    for child in children.iter_mut() {
-        let child_cross_free_space = parent_cross - child.cross_non_flex;
-        let cross_px_per_flex = child_cross_free_space / child.cross_flex_sum;
-
+    for (index, child) in children.iter_mut().enumerate() {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
         let mut child_cross_after = child.node.cross_after(store, layout_type);
@@ -331,29 +363,133 @@ where
             child_cross_after = node_child_cross_after;
         }
 
-        let mut child_cross_remainder = 0.0f32;
-
+        // Collect stretch cross items.
+        let mut cross_axis = SmallVec::<[StretchNode<N>; 3]>::new();
         if let Stretch(factor) = child_cross_before {
-            let desired_cross = factor * cross_px_per_flex + child_cross_remainder;
-            let actual_cross = desired_cross.round();
-            child_cross_remainder = desired_cross - actual_cross;
-            child.cross_before = actual_cross;
+            cross_axis.push(StretchNode {
+                node: child.node,
+                index,
+                factor,
+                axis: Axis::MainBefore,
+                violation: 0.0,
+                frozen: false,
+            });
         }
-
-        if let Stretch(factor) = child_cross_after {
-            let desired_cross = factor * cross_px_per_flex + child_cross_remainder;
-            let actual_cross = desired_cross.round();
-            child_cross_remainder = desired_cross - actual_cross;
-            child.cross_after = actual_cross;
-        }
-
         if let Stretch(factor) = child_cross {
-            let desired_cross = factor * cross_px_per_flex + child_cross_remainder;
-            let actual_cross = desired_cross.round();
-            child.cross = actual_cross;
+            cross_axis.push(StretchNode {
+                node: child.node,
+                index,
+                factor,
+                axis: Axis::Main,
+                violation: 0.0,
+                frozen: false,
+            });
+        }
+        if let Stretch(factor) = child_cross_after {
+            cross_axis.push(StretchNode {
+                node: child.node,
+                index,
+                factor,
+                axis: Axis::MainAfter,
+                violation: 0.0,
+                frozen: false,
+            });
+        }
 
+        loop {
+            // If all stretch items are frozen, exit the loop.
+            if cross_axis.iter().all(|item| item.frozen) {
+                break;
+            }
+
+            // Compute free space in the cross axis.
+            let child_cross_free_space = parent_cross - child.cross_non_flex;
+
+            // Total size violation in the cross axis.
+            let mut total_violation = 0.0;
+
+            for item in cross_axis.iter_mut().filter(|item| !item.frozen) {
+                match item.axis {
+                    // TODO - Refactor to reduce this code duplication.
+                    Axis::MainBefore => {
+                        let actual_cross = (item.factor * child_cross_free_space / child.cross_flex_sum).round();
+
+                        let child_min_cross_before =
+                            item.node.min_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
+                        let child_max_cross_before =
+                            item.node.max_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+
+                        let clamped = actual_cross.clamp(child_min_cross_before, child_max_cross_before);
+                        item.violation = clamped - actual_cross;
+                        total_violation += clamped - actual_cross;
+
+                        child.cross_before = clamped;
+                    }
+
+                    Axis::Main => {
+                        let actual_cross = (item.factor * child_cross_free_space / child.cross_flex_sum).round();
+
+                        let child_min_cross = item.node.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
+                        let child_max_cross = item.node.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+
+                        let clamped = actual_cross.clamp(child_min_cross, child_max_cross);
+                        item.violation = clamped - actual_cross;
+                        total_violation += clamped - actual_cross;
+
+                        child.cross = clamped;
+                    }
+
+                    Axis::MainAfter => {
+                        let actual_cross = (item.factor * child_cross_free_space / child.cross_flex_sum).round();
+
+                        let child_min_cross_after =
+                            item.node.min_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
+                        let child_max_cross_after =
+                            item.node.max_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+
+                        let clamped = actual_cross.clamp(child_min_cross_after, child_max_cross_after);
+                        item.violation = clamped - actual_cross;
+                        total_violation += clamped - actual_cross;
+
+                        child.cross_after = clamped;
+                    }
+                }
+            }
+
+            for item in cross_axis.iter_mut().filter(|item| !item.frozen) {
+                // Freeze over-stretched items.
+                item.frozen = match total_violation {
+                    v if v > 0.0 => item.violation > 0.0,
+                    v if v < 0.0 => item.violation < 0.0,
+                    _ => true,
+                };
+
+                // If the item is frozen, adjust the used_space and sum of cross stretch factors.
+                if item.frozen {
+                    match item.axis {
+                        Axis::MainBefore => child.cross_non_flex += child.cross_before,
+                        Axis::Main => child.cross_non_flex += child.cross,
+                        Axis::MainAfter => child.cross_non_flex += child.cross_after,
+                    }
+                    child.cross_flex_sum -= item.factor;
+                }
+            }
+
+            let child_position_type = child.node.position_type(store).unwrap_or_default();
+            if child_position_type == PositionType::ParentDirected {
+                cross_max = cross_max.max(child.cross_non_flex);
+            }
+
+            // Determine cross-size of auto node from children.
+            if num_children != 0 && node.cross(store, layout_type) == Auto {
+                parent_cross = cross_max;
+            }
+        }
+
+        if let Stretch(_) = child_cross {
             if !child.node.main(store, layout_type).is_stretch() {
-                let size = layout(child.node, layout_type, computed_main, actual_cross, cache, tree, store);
+                let size = layout(child.node, layout_type, computed_main, child.cross, cache, tree, store);
+
                 child.main_non_flex += size.main;
 
                 let child_position_type = child.node.position_type(store).unwrap_or_default();
@@ -396,10 +532,16 @@ where
         match item.axis {
             Axis::MainBefore => {
                 children[item.index].main_before = actual_main;
+                if child_position_type == PositionType::ParentDirected {
+                    main_sum += actual_main;
+                }
             }
 
             Axis::MainAfter => {
                 children[item.index].main_after = actual_main;
+                if child_position_type == PositionType::ParentDirected {
+                    main_sum += actual_main;
+                }
             }
 
             Axis::Main => {
