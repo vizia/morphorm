@@ -54,7 +54,7 @@ pub fn render(mut world: World, root: Entity) {
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(physical_size) => {
                     windowed_context.resize(*physical_size);
-                    let layout_type = world.store.layout_type.get(&root).cloned().unwrap_or_default();
+                    let layout_type = world.store.layout_type.get(root).cloned().unwrap_or_default();
                     match layout_type {
                         LayoutType::Row => {
                             world.set_width(root, Units::Pixels(physical_size.width as f32));
@@ -110,16 +110,16 @@ fn draw_node<N: Node<CacheKey = Entity>>(
     let width = cache.width(node);
     let height = cache.height(node);
 
-    let red = store.red.get(&node.key()).unwrap_or(&0u8);
-    let green = store.green.get(&node.key()).unwrap_or(&0u8);
-    let blue = store.blue.get(&node.key()).unwrap_or(&0u8);
+    let red = store.red.get(node.key()).unwrap_or(&0u8);
+    let green = store.green.get(node.key()).unwrap_or(&0u8);
+    let blue = store.blue.get(node.key()).unwrap_or(&0u8);
 
     let mut path = Path::new();
     path.rect(parent_posx + posx, parent_posy + posy, width, height);
     let paint = Paint::color(Color::rgb(*red, *green, *blue));
     canvas.fill_path(&mut path, &paint);
 
-    if let Some(text) = store.text.get(&node.key()) {
+    if let Some(text) = store.text.get(node.key()) {
         let mut paint = Paint::color(Color::black());
         paint.set_font_size(48.0);
         paint.set_text_align(Align::Left);

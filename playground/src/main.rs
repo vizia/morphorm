@@ -166,7 +166,7 @@ impl AppData {
         }
     }
 
-    fn sync(&mut self, node: &ecs::Entity) {
+    fn sync(&mut self, node: ecs::Entity) {
         self.left = self.world.store.left.get(node).copied().unwrap_or_default();
         self.right = self.world.store.right.get(node).copied().unwrap_or_default();
         self.top = self.world.store.top.get(node).copied().unwrap_or_default();
@@ -266,7 +266,7 @@ impl Model for AppData {
                 if let Some(selected_nodes) = &self.selected_nodes {
                     for node in selected_nodes {
                         if *node != self.root_node {
-                            self.world.remove(node);
+                            self.world.remove(*node);
                         }
                     }
 
@@ -278,7 +278,7 @@ impl Model for AppData {
                 if let Some(node) = selected {
                     self.selected_nodes = Some(vec![*node]);
 
-                    self.sync(node);
+                    self.sync(*node);
                 } else {
                     self.selected_nodes = None;
                 }
@@ -297,7 +297,7 @@ impl Model for AppData {
                     self.selected_nodes = Some(vec![*node]);
                 }
 
-                self.sync(node);
+                self.sync(*node);
 
                 cx.needs_redraw();
             }

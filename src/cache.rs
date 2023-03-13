@@ -30,26 +30,6 @@ pub trait Cache {
 
 /// Helper trait for getting/setting node size/position in a direction agnostic way.
 pub(crate) trait CacheExt: Cache {
-    /// Returns the computed main size of the `node` from the cache. Width for a row parent layout and height for a column parent layout.
-    fn main(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
-        parent_layout_type.select(node, |node| self.width(node), |node| self.height(node))
-    }
-
-    /// Returns the computed cross size of the `node` from the cache. Height for a row parent layout and width for a column parent layout.
-    fn cross(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
-        parent_layout_type.select(node, |node| self.height(node), |node| self.width(node))
-    }
-
-    /// Returns the computed main position of the `node` from the cache. Posx for a row parent layout and posy for a column parent layout.
-    fn main_pos(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
-        parent_layout_type.select(node, |node| self.posx(node), |node| self.posy(node))
-    }
-
-    /// Returns the computed cross position of the `node` from the cache. Posy for a row parent layout and posx for a column parent layout.
-    fn cross_pos(&self, node: &Self::Node, parent_layout_type: LayoutType) -> f32 {
-        parent_layout_type.select(node, |node| self.posy(node), |node| self.posx(node))
-    }
-
     /// Set the computed main size of the `node` in the cache. Width for a row parent layout and height for a column parent playout.
     fn set_main(&mut self, node: &Self::Node, parent_layout_type: LayoutType, main: f32) {
         match parent_layout_type {

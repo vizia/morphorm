@@ -138,9 +138,9 @@ fn draw_node<N: Node<CacheKey = ecs::Entity>>(
     let width = cache.width(node);
     let height = cache.height(node);
 
-    let red = store.red.get(&node.key()).unwrap_or(&0u8);
-    let green = store.green.get(&node.key()).unwrap_or(&0u8);
-    let blue = store.blue.get(&node.key()).unwrap_or(&0u8);
+    let red = store.red.get(node.key()).unwrap_or(&0u8);
+    let green = store.green.get(node.key()).unwrap_or(&0u8);
+    let blue = store.blue.get(node.key()).unwrap_or(&0u8);
 
     let mut path = vg::Path::new();
     path.rect(parent_pos.0 + posx, parent_pos.1 + posy, width, height);

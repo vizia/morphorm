@@ -153,7 +153,6 @@ where
     // List of child nodes for the current node.
     let mut children = SmallVec::<[ChildNode<N>; 32]>::with_capacity(num_children);
 
-
     // List of stretch nodes for the current node.
     // A stretch node is any flexible space/size. e.g. main_before, main, and main_after are separate stretch nodes
     let mut stretch_nodes = SmallVec::<[StretchItem; 32]>::new();

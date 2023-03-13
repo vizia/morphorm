@@ -2,9 +2,17 @@
 
 use std::fmt::Display;
 
+use slotmap::{Key, KeyData};
+
 /// An ID type used to set/get data from a store.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Entity(pub usize);
+
+impl Default for Entity {
+    fn default() -> Self {
+        Entity(usize::MAX)
+    }
+}
 
 impl Entity {
     pub fn index(&self) -> usize {
@@ -28,5 +36,25 @@ impl EntityManager {
     pub fn create(&mut self) -> Entity {
         self.count += 1;
         Entity(self.count - 1)
+    }
+}
+
+unsafe impl Key for Entity {
+    fn data(&self) -> slotmap::KeyData {
+        KeyData::from_ffi(self.0 as u64)
+    }
+
+    fn null() -> Self {
+        Entity::default()
+    }
+
+    fn is_null(&self) -> bool {
+        self.0 == usize::MAX
+    }
+}
+
+impl From<KeyData> for Entity {
+    fn from(value: KeyData) -> Self {
+        Entity(value.as_ffi() as usize)
     }
 }
