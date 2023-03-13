@@ -9,3 +9,4 @@ license = "MIT"
 morphorm = {version = "0.5.0", path = "../"}
 femtovg = {version = "0.4.0", default-features = false}
 rand = "0.8.4"
+slotmap = "1.0.6"

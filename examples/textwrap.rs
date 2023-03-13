@@ -86,14 +86,14 @@ fn main() {
 }
 
 fn content_size(node: Entity, store: &Store, width: Option<f32>, height: Option<f32>) -> (f32, f32) {
-    let text = store.text.get(&node).unwrap();
+    let text = store.text.get(node).unwrap();
     let mut paint = femtovg::Paint::color(femtovg::Color::black());
     paint.set_font_size(48.0);
     paint.set_text_align(femtovg::Align::Left);
     paint.set_text_baseline(femtovg::Baseline::Top);
     paint.set_font(&vec![store.font_id.unwrap()]);
     // let should_wrap = store.text_wrap.get(&node).copied().unwrap_or_default();
-    let text_wrap = store.text_wrap.get(&node).copied().unwrap_or_default();
+    let text_wrap = store.text_wrap.get(node).copied().unwrap_or_default();
 
     let max_width = if let Some(width) = width {
         width

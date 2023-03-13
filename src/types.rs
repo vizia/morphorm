@@ -21,14 +21,6 @@ impl LayoutType {
             LayoutType::Column => second(s).unwrap_or_default(),
         }
     }
-
-    // Helper function for selecting between values depending on the layout type.
-    pub(crate) fn select<T: Default, N>(&self, n: N, first: impl FnOnce(N) -> T, second: impl FnOnce(N) -> T) -> T {
-        match self {
-            LayoutType::Row => first(n),
-            LayoutType::Column => second(n),
-        }
-    }
 }
 
 /// The position type determines whether a node will be positioned in-line with its siblings or out-of-line / independently of its siblings.

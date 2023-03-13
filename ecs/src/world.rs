@@ -45,10 +45,10 @@ impl World {
     }
 
     /// Remove a node from the world.
-    pub fn remove(&mut self, entity: &Entity) {
+    pub fn remove(&mut self, entity: Entity) {
         self.store.remove(entity);
         self.cache.remove(entity);
-        self.tree.remove(entity);
+        self.tree.remove(&entity);
     }
 
     /// Set the desired layout type of the given entity.

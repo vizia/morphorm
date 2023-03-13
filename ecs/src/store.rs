@@ -1,63 +1,62 @@
 // Part of a very simple ECS for demonstration purposes only.
 
-use morphorm::{LayoutType, PositionType, Units};
-use std::collections::HashMap;
-
 use crate::{entity::Entity, TextWrap};
+use morphorm::{LayoutType, PositionType, Units};
+use slotmap::{SecondaryMap, SlotMap};
 
 type ContentSizeType<S> = Box<dyn Fn(&S, Option<f32>, Option<f32>) -> (f32, f32)>;
 
 /// A storage struct representing a component store for an ECS.
 #[derive(Default)]
 pub struct Store {
-    pub visible: HashMap<Entity, bool>,
+    pub visible: SlotMap<Entity, bool>,
 
-    pub layout_type: HashMap<Entity, LayoutType>,
-    pub position_type: HashMap<Entity, PositionType>,
+    pub layout_type: SecondaryMap<Entity, LayoutType>,
+    pub position_type: SecondaryMap<Entity, PositionType>,
 
-    pub left: HashMap<Entity, Units>,
-    pub right: HashMap<Entity, Units>,
-    pub top: HashMap<Entity, Units>,
-    pub bottom: HashMap<Entity, Units>,
+    pub left: SecondaryMap<Entity, Units>,
+    pub right: SecondaryMap<Entity, Units>,
+    pub top: SecondaryMap<Entity, Units>,
+    pub bottom: SecondaryMap<Entity, Units>,
 
-    pub min_left: HashMap<Entity, Units>,
-    pub max_left: HashMap<Entity, Units>,
-    pub min_right: HashMap<Entity, Units>,
-    pub max_right: HashMap<Entity, Units>,
-    pub min_top: HashMap<Entity, Units>,
-    pub max_top: HashMap<Entity, Units>,
-    pub min_bottom: HashMap<Entity, Units>,
-    pub max_bottom: HashMap<Entity, Units>,
+    pub min_left: SecondaryMap<Entity, Units>,
+    pub max_left: SecondaryMap<Entity, Units>,
+    pub min_right: SecondaryMap<Entity, Units>,
+    pub max_right: SecondaryMap<Entity, Units>,
+    pub min_top: SecondaryMap<Entity, Units>,
+    pub max_top: SecondaryMap<Entity, Units>,
+    pub min_bottom: SecondaryMap<Entity, Units>,
+    pub max_bottom: SecondaryMap<Entity, Units>,
 
-    pub width: HashMap<Entity, Units>,
-    pub height: HashMap<Entity, Units>,
-    pub min_width: HashMap<Entity, Units>,
-    pub max_width: HashMap<Entity, Units>,
-    pub min_height: HashMap<Entity, Units>,
-    pub max_height: HashMap<Entity, Units>,
+    pub width: SecondaryMap<Entity, Units>,
+    pub height: SecondaryMap<Entity, Units>,
+    pub min_width: SecondaryMap<Entity, Units>,
+    pub max_width: SecondaryMap<Entity, Units>,
+    pub min_height: SecondaryMap<Entity, Units>,
+    pub max_height: SecondaryMap<Entity, Units>,
 
-    pub child_left: HashMap<Entity, Units>,
-    pub child_right: HashMap<Entity, Units>,
-    pub child_top: HashMap<Entity, Units>,
-    pub child_bottom: HashMap<Entity, Units>,
-    pub col_between: HashMap<Entity, Units>,
-    pub row_between: HashMap<Entity, Units>,
+    pub child_left: SecondaryMap<Entity, Units>,
+    pub child_right: SecondaryMap<Entity, Units>,
+    pub child_top: SecondaryMap<Entity, Units>,
+    pub child_bottom: SecondaryMap<Entity, Units>,
+    pub col_between: SecondaryMap<Entity, Units>,
+    pub row_between: SecondaryMap<Entity, Units>,
 
-    pub content_size: HashMap<Entity, ContentSizeType<Self>>,
+    pub content_size: SecondaryMap<Entity, ContentSizeType<Self>>,
 
-    pub text: HashMap<Entity, String>,
-    pub text_wrap: HashMap<Entity, TextWrap>,
+    pub text: SecondaryMap<Entity, String>,
+    pub text_wrap: SecondaryMap<Entity, TextWrap>,
 
     pub text_context: femtovg::TextContext,
     pub font_id: Option<femtovg::FontId>,
 
-    pub red: HashMap<Entity, u8>,
-    pub green: HashMap<Entity, u8>,
-    pub blue: HashMap<Entity, u8>,
+    pub red: SecondaryMap<Entity, u8>,
+    pub green: SecondaryMap<Entity, u8>,
+    pub blue: SecondaryMap<Entity, u8>,
 }
 
 impl Store {
-    pub fn remove(&mut self, entity: &Entity) {
+    pub fn remove(&mut self, entity: Entity) {
         self.visible.remove(entity);
         self.layout_type.remove(entity);
         self.position_type.remove(entity);

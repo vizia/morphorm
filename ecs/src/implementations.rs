@@ -1,8 +1,7 @@
 // Part of a very simple ECS for demonstration purposes only.
 
-use std::collections::HashMap;
-
 use morphorm::*;
+use slotmap::SecondaryMap;
 
 use crate::entity::Entity;
 use crate::store::Store;
@@ -24,111 +23,111 @@ impl Node for Entity {
     }
 
     fn layout_type(&self, store: &Store) -> Option<LayoutType> {
-        store.layout_type.get(self).copied()
+        store.layout_type.get(*self).copied()
     }
 
     fn position_type(&self, store: &Store) -> Option<PositionType> {
-        store.position_type.get(self).copied()
+        store.position_type.get(*self).copied()
     }
 
     fn width(&self, store: &Store) -> Option<Units> {
-        store.width.get(self).copied()
+        store.width.get(*self).copied()
     }
 
     fn height(&self, store: &Store) -> Option<Units> {
-        store.height.get(self).copied()
+        store.height.get(*self).copied()
     }
 
     fn left(&self, store: &Store) -> Option<Units> {
-        store.left.get(self).copied()
+        store.left.get(*self).copied()
     }
 
     fn right(&self, store: &Store) -> Option<Units> {
-        store.right.get(self).copied()
+        store.right.get(*self).copied()
     }
 
     fn top(&self, store: &Store) -> Option<Units> {
-        store.top.get(self).copied()
+        store.top.get(*self).copied()
     }
 
     fn bottom(&self, store: &Store) -> Option<Units> {
-        store.bottom.get(self).copied()
+        store.bottom.get(*self).copied()
     }
 
     fn content_size(&self, store: &Store, width: Option<f32>, height: Option<f32>) -> Option<(f32, f32)> {
-        store.content_size.get(self).map(|t| (t)(store, width, height))
+        store.content_size.get(*self).map(|t| (t)(store, width, height))
     }
 
     fn child_left(&self, store: &Store) -> Option<Units> {
-        store.child_left.get(self).copied()
+        store.child_left.get(*self).copied()
     }
 
     fn child_right(&self, store: &Store) -> Option<Units> {
-        store.child_right.get(self).copied()
+        store.child_right.get(*self).copied()
     }
 
     fn child_top(&self, store: &Store) -> Option<Units> {
-        store.child_top.get(self).copied()
+        store.child_top.get(*self).copied()
     }
 
     fn child_bottom(&self, store: &Store) -> Option<Units> {
-        store.child_bottom.get(self).copied()
+        store.child_bottom.get(*self).copied()
     }
 
     fn row_between(&self, store: &Store) -> Option<Units> {
-        store.row_between.get(self).copied()
+        store.row_between.get(*self).copied()
     }
 
     fn col_between(&self, store: &Store) -> Option<Units> {
-        store.col_between.get(self).copied()
+        store.col_between.get(*self).copied()
     }
 
     fn min_width(&self, store: &Store) -> Option<Units> {
-        store.min_width.get(self).copied()
+        store.min_width.get(*self).copied()
     }
 
     fn max_width(&self, store: &Store) -> Option<Units> {
-        store.max_width.get(self).copied()
+        store.max_width.get(*self).copied()
     }
 
     fn min_height(&self, store: &Store) -> Option<Units> {
-        store.min_height.get(self).copied()
+        store.min_height.get(*self).copied()
     }
 
     fn max_height(&self, store: &Store) -> Option<Units> {
-        store.max_height.get(self).copied()
+        store.max_height.get(*self).copied()
     }
 
     fn min_left(&self, store: &Store) -> Option<Units> {
-        store.min_left.get(self).copied()
+        store.min_left.get(*self).copied()
     }
 
     fn max_left(&self, store: &Store) -> Option<Units> {
-        store.max_left.get(self).copied()
+        store.max_left.get(*self).copied()
     }
 
     fn min_right(&self, store: &Store) -> Option<Units> {
-        store.min_right.get(self).copied()
+        store.min_right.get(*self).copied()
     }
 
     fn max_right(&self, store: &Store) -> Option<Units> {
-        store.max_right.get(self).copied()
+        store.max_right.get(*self).copied()
     }
 
     fn min_top(&self, store: &Store) -> Option<Units> {
-        store.min_top.get(self).copied()
+        store.min_top.get(*self).copied()
     }
 
     fn max_top(&self, store: &Store) -> Option<Units> {
-        store.max_top.get(self).copied()
+        store.max_top.get(*self).copied()
     }
 
     fn min_bottom(&self, store: &Store) -> Option<Units> {
-        store.min_bottom.get(self).copied()
+        store.min_bottom.get(*self).copied()
     }
 
     fn max_bottom(&self, store: &Store) -> Option<Units> {
-        store.max_bottom.get(self).copied()
+        store.max_bottom.get(*self).copied()
     }
 }
 
@@ -143,7 +142,7 @@ pub struct Rect {
 #[derive(Default)]
 pub struct NodeCache {
     // Computed size and position of nodes.
-    pub rect: HashMap<Entity, Rect>,
+    pub rect: SecondaryMap<Entity, Rect>,
 }
 
 impl NodeCache {
@@ -151,20 +150,20 @@ impl NodeCache {
         self.rect.insert(entity, Default::default());
     }
 
-    pub fn remove(&mut self, entity: &Entity) {
+    pub fn remove(&mut self, entity: Entity) {
         self.rect.remove(entity);
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
-        self.rect.get(&entity)
+        self.rect.get(entity)
     }
 }
 
 impl Cache for NodeCache {
     type Node = Entity;
 
-    fn width(&self, node: &Entity) -> f32 {
-        if let Some(rect) = self.rect.get(node) {
+    fn width(&self, node: &Self::Node) -> f32 {
+        if let Some(rect) = self.rect.get(*node) {
             return rect.width;
         }
 
@@ -172,7 +171,7 @@ impl Cache for NodeCache {
     }
 
     fn height(&self, node: &Self::Node) -> f32 {
-        if let Some(rect) = self.rect.get(node) {
+        if let Some(rect) = self.rect.get(*node) {
             return rect.height;
         }
 
@@ -180,7 +179,7 @@ impl Cache for NodeCache {
     }
 
     fn posx(&self, node: &Self::Node) -> f32 {
-        if let Some(rect) = self.rect.get(node) {
+        if let Some(rect) = self.rect.get(*node) {
             return rect.posx;
         }
 
@@ -188,7 +187,7 @@ impl Cache for NodeCache {
     }
 
     fn posy(&self, node: &Self::Node) -> f32 {
-        if let Some(rect) = self.rect.get(node) {
+        if let Some(rect) = self.rect.get(*node) {
             return rect.posy;
         }
 
@@ -196,25 +195,25 @@ impl Cache for NodeCache {
     }
 
     fn set_width(&mut self, node: &Self::Node, width: f32) {
-        if let Some(rect) = self.rect.get_mut(node) {
+        if let Some(rect) = self.rect.get_mut(*node) {
             rect.width = width;
         }
     }
 
     fn set_height(&mut self, node: &Self::Node, height: f32) {
-        if let Some(rect) = self.rect.get_mut(node) {
+        if let Some(rect) = self.rect.get_mut(*node) {
             rect.height = height;
         }
     }
 
     fn set_posx(&mut self, node: &Self::Node, posx: f32) {
-        if let Some(rect) = self.rect.get_mut(node) {
+        if let Some(rect) = self.rect.get_mut(*node) {
             rect.posx = posx;
         }
     }
 
     fn set_posy(&mut self, node: &Self::Node, posy: f32) {
-        if let Some(rect) = self.rect.get_mut(node) {
+        if let Some(rect) = self.rect.get_mut(*node) {
             rect.posy = posy;
         }
     }

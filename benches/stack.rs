@@ -5,16 +5,19 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
 // Helper function for building a tree of nodes.
 fn build_tree(world: &mut World, parent: Option<Entity>, children_per_node: usize, depth: usize) -> Entity {
-    if (depth + 1) > 0 {
-        let node = world.add(parent);
-        if parent.is_none() {
-            world.set_width(node, Units::Pixels(1000.0));
-            world.set_height(node, Units::Pixels(1000.0));
-        } else {
-            world.set_all_stretch(node);
-        }
+    let node = world.add(parent);
+    if parent.is_none() {
+        world.set_width(node, Units::Pixels(1000.0));
+        world.set_height(node, Units::Pixels(1000.0));
+    } else {
+        world.set_all_stretch(node);
+    }
+
+    let depth = depth.saturating_sub(1);
+
+    if depth > 0 {
         for _ in 0..children_per_node {
-            build_tree(world, Some(node), children_per_node, depth - 1);
+            build_tree(world, Some(node), children_per_node, depth);
         }
 
         return node;
@@ -25,10 +28,11 @@ fn build_tree(world: &mut World, parent: Option<Entity>, children_per_node: usiz
 
 // TODO: There's almost certainly a formula for this geometric series.
 fn compute_node_count(children_per_node: usize, depth: usize, node_count: &mut usize) -> usize {
-    if (depth + 1) > 0 {
-        *node_count += 1;
+    *node_count += 1;
+    let depth = depth.saturating_sub(1);
+    if depth > 0 {
         for _ in 0..children_per_node {
-            compute_node_count(children_per_node, depth - 1, node_count);
+            compute_node_count(children_per_node, depth, node_count);
         }
     }
 
@@ -41,12 +45,12 @@ fn morphorm_benchmarks(c: &mut Criterion) {
 
     let children_per_node = 10;
 
-    // 3 - 1111, 4 - 11,111, 5 - 111,111, 6 - 1,111,111
-    for depth in [2, 3, 4, 5, 6].iter() {
+    // 3 - 111, 4 - 1,111, 5 - 11,111, 6 - 111,111 7 - 1,111,111
+    for depth in [4, 5, 6, 7].iter() {
         let benchmark_id = BenchmarkId::new(
             format!(
                 "Wide Shallow Bench. {children_per_node} children per node, depth: {depth}. Total nodes: {}.",
-                compute_node_count(10, *depth, &mut 0)
+                compute_node_count(children_per_node, *depth, &mut 0)
             ),
             depth,
         );
@@ -71,11 +75,11 @@ fn morphorm_benchmarks(c: &mut Criterion) {
     let children_per_node = 2;
 
     // 10 - 1023, 12 - 8191, 16 - 131,071, 19 - 1,048,575
-    for depth in [9, 12, 16, 19].iter() {
+    for depth in [10, 13, 17, 20].iter() {
         let benchmark_id = BenchmarkId::new(
             format!(
                 "Narrow Deep Bench. {children_per_node} children per node, depth: {depth}. Total nodes: {}.",
-                compute_node_count(2, *depth, &mut 0)
+                compute_node_count(children_per_node, *depth, &mut 0)
             ),
             depth,
         );
@@ -103,7 +107,7 @@ fn morphorm_benchmarks(c: &mut Criterion) {
     let benchmark_id = BenchmarkId::new(
         format!(
             "Super Deep Bench. {children_per_node} child per node, depth: {depth}. Total nodes: {}.",
-            compute_node_count(1, depth, &mut 0)
+            compute_node_count(children_per_node, depth, &mut 0)
         ),
         depth,
     );
