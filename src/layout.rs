@@ -151,11 +151,12 @@ where
     let mut cross_max = 0.0f32;
 
     // List of child nodes for the current node.
-    let mut children = SmallVec::<[ChildNode<N>; 3]>::with_capacity(num_children);
+    let mut children = SmallVec::<[ChildNode<N>; 32]>::with_capacity(num_children);
+
 
     // List of stretch nodes for the current node.
     // A stretch node is any flexible space/size. e.g. main_before, main, and main_after are separate stretch nodes
-    let mut stretch_nodes = SmallVec::<[StretchItem; 9]>::new();
+    let mut stretch_nodes = SmallVec::<[StretchItem; 32]>::new();
 
     // Parent overrides for child auto space.
     let node_child_main_before = node.child_main_before(store, layout_type);
@@ -440,14 +441,15 @@ where
         }
 
         if child_cross.is_stretch() && !child.node.main(store, layout_type).is_stretch() {
-            let size = layout(child.node, layout_type, computed_main, child.cross, cache, tree, store);
+            let child_size = layout(child.node, layout_type, computed_main, child.cross, cache, tree, store);
 
-            child.main_non_flex += size.main;
+            child.main_non_flex += child_size.main;
+            child.main = child_size.main;
 
             let child_position_type = child.node.position_type(store).unwrap_or_default();
             if child_position_type == PositionType::ParentDirected {
-                cross_max = cross_max.max(size.cross);
-                main_sum += size.main;
+                cross_max = cross_max.max(child_size.cross);
+                main_sum += child_size.main;
             }
         }
     }
@@ -499,9 +501,10 @@ where
                     main_flex_sum -= item.factor;
 
                     if item.item_type == ItemType::Size {
-                        let size = layout(child.node, layout_type, child.main, child.cross, cache, tree, store);
-                        cross_max = cross_max.max(size.cross);
-                        main_sum += size.main - child.main;
+                        let child_size = layout(child.node, layout_type, child.main, child.cross, cache, tree, store);
+                        cross_max = cross_max.max(child_size.cross);
+                        main_sum += child_size.main - child.main;
+                        child.main = child_size.main;
                     }
                 }
             }
@@ -602,7 +605,8 @@ where
         }
 
         if let Stretch(_) = child_main {
-            layout(child.node, layout_type, child.main, child.cross, cache, tree, store);
+            let child_size = layout(child.node, layout_type, child.main, child.cross, cache, tree, store);
+            child.main = child_size.main;
         }
     }
 
@@ -619,7 +623,7 @@ where
             PositionType::ParentDirected => {
                 main_pos += child.main_before;
                 cache.set_pos(child.node, layout_type, main_pos, child.cross_before);
-                main_pos += cache.main(child.node, layout_type) + child.main_after;
+                main_pos += child.main + child.main_after;
             }
         };
     }
