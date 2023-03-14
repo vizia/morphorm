@@ -162,6 +162,15 @@ impl NodeCache {
 impl Cache for NodeCache {
     type Node = Entity;
 
+    fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32) {
+        if let Some(rect) = self.rect.get_mut(*node) {
+            rect.posx = posx;
+            rect.posy = posy;
+            rect.width = width;
+            rect.height = height;
+        }
+    }
+
     fn width(&self, node: &Self::Node) -> f32 {
         if let Some(rect) = self.rect.get(*node) {
             return rect.width;
@@ -192,29 +201,5 @@ impl Cache for NodeCache {
         }
 
         0.0
-    }
-
-    fn set_width(&mut self, node: &Self::Node, width: f32) {
-        if let Some(rect) = self.rect.get_mut(*node) {
-            rect.width = width;
-        }
-    }
-
-    fn set_height(&mut self, node: &Self::Node, height: f32) {
-        if let Some(rect) = self.rect.get_mut(*node) {
-            rect.height = height;
-        }
-    }
-
-    fn set_posx(&mut self, node: &Self::Node, posx: f32) {
-        if let Some(rect) = self.rect.get_mut(*node) {
-            rect.posx = posx;
-        }
-    }
-
-    fn set_posy(&mut self, node: &Self::Node, posy: f32) {
-        if let Some(rect) = self.rect.get_mut(*node) {
-            rect.posy = posy;
-        }
     }
 }

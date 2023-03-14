@@ -196,6 +196,18 @@ pub struct LayoutCache {
 
 impl Cache for LayoutCache {
     type Node = Widget;
+
+    fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32) {
+        if let Some(rect) = self.rect.get_mut(&node.key()) {
+            rect.0 = width;
+            rect.1 = height;
+            rect.2 = posx;
+            rect.3 = posy;
+        } else {
+            self.rect.insert(node.key(), (width, height, posx, posy));
+        }
+    }
+
     fn width(&self, node: &Self::Node) -> f32 {
         if let Some(rect) = self.rect.get(&node.key()) {
             return rect.0;
@@ -226,38 +238,6 @@ impl Cache for LayoutCache {
         }
 
         0.0
-    }
-
-    fn set_width(&mut self, node: &Self::Node, width: f32) {
-        if let Some(rect) = self.rect.get_mut(&node.key()) {
-            rect.0 = width;
-        } else {
-            self.rect.insert(node.key(), (width, 0.0, 0.0, 0.0));
-        }
-    }
-
-    fn set_height(&mut self, node: &Self::Node, height: f32) {
-        if let Some(rect) = self.rect.get_mut(&node.key()) {
-            rect.1 = height;
-        } else {
-            self.rect.insert(node.key(), (0.0, height, 0.0, 0.0));
-        }
-    }
-
-    fn set_posx(&mut self, node: &Self::Node, posx: f32) {
-        if let Some(rect) = self.rect.get_mut(&node.key()) {
-            rect.2 = posx;
-        } else {
-            self.rect.insert(node.key(), (0.0, 0.0, posx, 0.0));
-        }
-    }
-
-    fn set_posy(&mut self, node: &Self::Node, posy: f32) {
-        if let Some(rect) = self.rect.get_mut(&node.key()) {
-            rect.3 = posy;
-        } else {
-            self.rect.insert(node.key(), (0.0, 0.0, 0.0, posy));
-        }
     }
 }
 
