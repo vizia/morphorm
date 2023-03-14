@@ -425,7 +425,7 @@ where
                             child.cross = item.computed;
                             if !child.node.main(store, layout_type).is_stretch() {
                                 let child_size =
-                                    layout(child.node, layout_type, computed_main, child.cross, cache, tree, store);
+                                    layout(child.node, layout_type, parent_main, child.cross, cache, tree, store);
                                 child.main = child_size.main;
 
                                 if child_position_type == PositionType::ParentDirected {
