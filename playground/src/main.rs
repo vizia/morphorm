@@ -1,6 +1,7 @@
 use morphorm as morph;
 use morphorm::*;
 use morphorm_ecs as ecs;
+use slotmap::SecondaryMap;
 use vizia::prelude::*;
 
 mod tree_panel;
@@ -11,6 +12,8 @@ use canvas::*;
 
 mod properties;
 use properties::*;
+
+mod icons;
 
 pub enum AppEvent {
     Relayout,
@@ -72,9 +75,14 @@ pub struct AppData {
     canvas_width: f32,
     canvas_height: f32,
 
+    tree_changed: usize,
+
     world: ecs::World,
     root_node: ecs::Entity,
     selected_nodes: Option<Vec<ecs::Entity>>,
+    hovered_node: Option<ecs::Entity>,
+
+    collapsed: SecondaryMap<ecs::Entity, bool>,
 
     left: morph::Units,
     width: morph::Units,
@@ -131,9 +139,14 @@ impl AppData {
             canvas_width: 600.0,
             canvas_height: 600.0,
 
+            tree_changed: 0,
+
             world,
             root_node,
             selected_nodes: Some(vec![root_node]),
+            hovered_node: None,
+
+            collapsed: SecondaryMap::new(),
 
             left: morph::Units::Auto,
             width: morph::Units::Pixels(600.0),
@@ -229,6 +242,8 @@ impl Model for AppData {
                 self.world.set_col_between(node, morph::Units::Stretch(1.0));
                 self.world.set_row_between(node, morph::Units::Stretch(1.0));
 
+                self.tree_changed += 1;
+
                 cx.emit(AppEvent::SelectNode(Some(node)));
                 cx.emit(AppEvent::Relayout);
             }
@@ -258,6 +273,8 @@ impl Model for AppData {
                 self.world.set_col_between(node, morph::Units::Stretch(1.0));
                 self.world.set_row_between(node, morph::Units::Stretch(1.0));
 
+                self.tree_changed += 1;
+
                 cx.emit(AppEvent::SelectNode(Some(node)));
                 cx.emit(AppEvent::Relayout);
             }
@@ -269,6 +286,8 @@ impl Model for AppData {
                             self.world.remove(*node);
                         }
                     }
+
+                    self.tree_changed += 1;
 
                     cx.emit(AppEvent::Relayout);
                 }
@@ -688,6 +707,7 @@ impl Model for AppData {
 fn main() {
     Application::new(|cx| {
         cx.add_stylesheet("playground/src/theme.css").expect("Failed to find stylesheet");
+        cx.add_fonts_mem(&[include_bytes!("tabler-icons.ttf")]);
         AppData::new().build(cx);
         HStack::new(cx, |cx| {
             // Treeview

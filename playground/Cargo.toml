@@ -7,3 +7,4 @@ edition = "2021"
 vizia = {git = "https://github.com/vizia/vizia"}
 morphorm-ecs = {path = "../ecs"}
 morphorm = {path = ".."}
+slotmap = "1.0.6"
