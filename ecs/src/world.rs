@@ -51,6 +51,13 @@ impl World {
         self.tree.remove(&entity);
     }
 
+    pub fn clear(&mut self) {
+        self.entity_manager.reset();
+        self.store.clear();
+        self.cache.clear();
+        self.tree.clear();
+    }
+
     /// Set the desired layout type of the given entity.
     pub fn set_layout_type(&mut self, entity: Entity, value: LayoutType) {
         self.store.layout_type.insert(entity, value);

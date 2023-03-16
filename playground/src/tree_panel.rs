@@ -35,13 +35,13 @@ impl TreePanel {
             VStack::new(cx, |cx| {
                 Binding::new(cx, AppData::tree_changed, |cx, _| {
                     let children = if let Some(data) = cx.data::<AppData>() {
-                        data.root_node.children(&data.world.tree).map(|c| *c).collect::<Vec<_>>()
+                        data.root_node.children(&data.world.tree).copied().collect::<Vec<_>>()
                     } else {
                         panic!();
                     };
                     for child in children.iter() {
                         let subchildren = if let Some(data) = cx.data::<AppData>() {
-                            child.children(&data.world.tree).map(|c| *c).collect::<Vec<_>>()
+                            child.children(&data.world.tree).copied().collect::<Vec<_>>()
                         } else {
                             vec![]
                         };
@@ -90,7 +90,7 @@ fn build_tree(cx: &mut Context, node: morphorm_ecs::Entity, children: Vec<morpho
     }));
     for child in children.iter() {
         let subchildren = if let Some(data) = cx.data::<AppData>() {
-            child.children(&data.world.tree).map(|c| *c).collect::<Vec<_>>()
+            child.children(&data.world.tree).copied().collect::<Vec<_>>()
         } else {
             vec![]
         };

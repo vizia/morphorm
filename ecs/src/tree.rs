@@ -90,6 +90,13 @@ impl Tree {
         self.parent[entity_index] = None;
     }
 
+    pub fn clear(&mut self) {
+        self.parent.clear();
+        self.first_child.clear();
+        self.next_sibling.clear();
+        self.prev_sibling.clear();
+    }
+
     /// Returns the parent of the given entity if it exists.
     pub fn get_parent(&self, entity: &Entity) -> Option<&Entity> {
         self.parent.get(entity.index()).and_then(|parent| parent.as_ref())
