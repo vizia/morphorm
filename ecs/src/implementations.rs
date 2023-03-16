@@ -139,7 +139,7 @@ pub struct Rect {
     pub height: f32,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct NodeCache {
     // Computed size and position of nodes.
     pub rect: SecondaryMap<Entity, Rect>,
@@ -152,6 +152,10 @@ impl NodeCache {
 
     pub fn remove(&mut self, entity: Entity) {
         self.rect.remove(entity);
+    }
+
+    pub fn clear(&mut self) {
+        self.rect.clear();
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {

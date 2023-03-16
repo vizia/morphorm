@@ -9,7 +9,7 @@ repository = "https://github.com/vizia/morphorm"
 keywords = ["ui", "gui", "layout"]
 
 [workspace]
-members = ["playground"]
+members = ["playground", "demo"]
 
 [dependencies]
 smallvec = "1.10.0"

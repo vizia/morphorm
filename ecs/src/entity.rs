@@ -37,6 +37,10 @@ impl EntityManager {
         self.count += 1;
         Entity(self.count - 1)
     }
+
+    pub fn reset(&mut self) {
+        self.count = 0;
+    }
 }
 
 unsafe impl Key for Entity {

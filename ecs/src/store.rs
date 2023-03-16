@@ -91,4 +91,40 @@ impl Store {
         self.green.remove(entity);
         self.blue.remove(entity);
     }
+
+    pub fn clear(&mut self) {
+        self.visible.clear();
+        self.layout_type.clear();
+        self.position_type.clear();
+        self.left.clear();
+        self.right.clear();
+        self.top.clear();
+        self.bottom.clear();
+        self.min_left.clear();
+        self.max_left.clear();
+        self.min_right.clear();
+        self.max_right.clear();
+        self.min_top.clear();
+        self.max_top.clear();
+        self.min_bottom.clear();
+        self.max_bottom.clear();
+        self.width.clear();
+        self.height.clear();
+        self.min_width.clear();
+        self.max_width.clear();
+        self.min_height.clear();
+        self.max_height.clear();
+        self.child_left.clear();
+        self.child_right.clear();
+        self.child_top.clear();
+        self.child_bottom.clear();
+        self.col_between.clear();
+        self.row_between.clear();
+        self.content_size.clear();
+        self.text.clear();
+        self.text_wrap.clear();
+        self.red.clear();
+        self.green.clear();
+        self.blue.clear();
+    }
 }

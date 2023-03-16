@@ -1,0 +1,309 @@
+/* * {
+    border-width: 1px;
+    border-color: red;
+} */
+
+:root {
+    background-color: #1d1d1d;
+    color: #e6e6e6;
+    font-size: 12.0;
+}
+
+.icons {
+    font-family: "tabler-icons";
+    font-size: 16.0;
+}
+
+treepanel {
+    background-color: #3e3e3e;
+
+}
+
+treepanel .action_bar {
+    child-space: 8px;
+    col-between: 8px;
+    height: auto;
+}
+
+.tree_item {
+    height: 30px;
+    width: 1s;
+    child-top: 1s;
+    child-bottom: 1s;
+    border-width: 1px;
+    col-between: 2px;
+}
+
+.tree_item label.icons {
+    width: 22px;
+    height: 22px;
+    top: 1s;
+    bottom: 1s;
+    child-space: 1s;
+}
+
+.tree_item:over {
+    border-color: #1c8fbc55;
+}
+
+.tree_item:checked {
+    background-color: #1c8fbc55;
+    border-color: #1c8fbc55;
+}
+
+.treeview {
+    left: 0px;
+    right: 0px;
+}
+
+.add_button {
+    width: 28px;
+    height: 28px;
+    border-radius: 2px;
+    /* background-color: #1c8fbc; */
+
+}
+
+.add_button label {
+    width: 1s;
+    height: 1s;
+    child-space: 1s;
+    font-size: 20.0;
+}
+
+.add_button.danger {
+    left: 1s;
+    /* background-color: #bc1c1c; */
+}
+
+properties {
+    background-color: #1d1d1d;
+    row-between: 1px;
+    background-color: #3e3e3e;
+}
+
+.divider {
+    background-color: #1d1d1d;
+    width: 1s;
+    height: 1px;
+    left: 0px;
+    right: 0px;
+}
+
+.panel {
+    width: 1s;
+    height: auto;
+    child-space: 8px;
+    row-between: 8px;
+    background-color: #3e3e3e;
+}
+
+dropdown {
+    width: 1s;
+    height: 22px;
+    background-color: #2b2b2b;
+    border-radius: 2px;
+}
+/* 
+dropdown .header {
+    width: 1s;
+    height: 1s;
+    background-color: #2b2b2b;
+} */
+
+dropdown > popup {
+    background-color: #2b2b2b;
+    outer-shadow: 0 3 5 #00000055;
+    border-radius: 2px;
+    child-top: 4px;
+    child-bottom: 4px;
+}
+
+.unit_box {
+    width: 1s;
+    height: 22px;
+    background-color: #2b2b2b;
+    border-radius: 2px;
+    child-top: 1s;
+    child-bottom: 1s;
+    child-left: 5px;
+}
+
+.unit_box label {
+    height: 1s;
+    width: 22px;
+    child-top: 1s;
+    child-bottom: 1s;
+    /* background-color: #acacac; */
+}
+
+textbox {
+    width: 1s;
+    height: 22px;
+    child-top: 1s;
+    child-bottom: 1s;
+}
+
+textbox:checked .textbox_content {
+    caret-color: #f0f0f0;
+    selection-color: #4871ae88;
+}
+
+
+.panel textbox .textbox_content {
+    child-left: 1s;
+    child-right: 8px;
+}
+
+.panel label {
+    width: auto;
+    height: 22px;
+    child-space: 1s;
+}
+
+.panel label.panel-title {
+    color: #acacac;
+    font-weight: bold;
+    font-size: 14.0;
+    child-left: 0px;
+}
+
+.panel .row {
+    height: auto;
+    col-between: 8px;
+}
+
+button {
+    width: 1s;
+    border-radius: 2px;
+    background-color: #565656;
+}
+
+.panel.align {
+    row-between: 4px;
+}
+
+.panel.align hstack {
+    col-between: 4px;
+}
+
+.panel.align button {
+    width: 22px;
+    height: 22px;
+}
+
+.panel.align button label {
+    width: 22px;
+    height: 22px;
+    child-space: 1s;
+    font-size: 18.0;
+    color: #e6e6e655;
+    transition: color 0.1 0.0;
+}
+
+.panel.align button:hover label {
+    color: #e6e6e6;
+    transition: color 0.1 0.0;
+}
+
+scrollview > scrollbar.vertical {
+    top: 0px;
+    height: 1s;
+    bottom: 0px;
+
+    left: 1s;
+    width: 8px;
+    right: 0px;
+}
+
+.toggle_button {
+    border-radius: 0px;
+    width: 1s;
+    background-color: #565656;
+    child-space: 1s;
+    height: 22px;
+    width: 60px;
+}
+
+.toggle_button:checked {
+    background-color: #303030;
+}
+
+.toggle_left {
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+
+.toggle_right {
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+
+radiobutton {
+    width: 20px;
+    height: 20px;
+    border-width: 1px;
+    border-radius: 50%;
+    border-color: #666666;
+    background-color: transparent;
+    child-space: 1s;
+}
+
+radiobutton:hover {
+    background-color: #e5e5e5;
+}
+
+radiobutton:focus-visible {
+    outline-width: 2px;
+    outline-color: blue;
+}
+
+radiobutton:checked {
+    border-color: #3c77d2;
+}
+
+radiobutton:checked:hover {
+    border-color: #0082e6;
+}
+
+radiobutton:disabled {
+    border-color: #bdbdbd;
+}
+
+radiobutton:disabled:hover {
+    background-color: transparent;
+}
+
+radiobutton:checked:hover {
+    background-color: transparent;
+}
+
+radiobutton .inner {
+    width: 0px;
+    height: 0px;
+    border-radius: 50%;
+    background-color: #666666;
+    transition: width 0.2 0;
+    transition: height 0.2 0;
+}
+
+radiobutton:checked .inner {
+    width: 12px;
+    height: 12px;
+    background-color: #3c77d2;
+    transition: width 0.1 0;
+    transition: height 0.1 0;
+}
+
+radiobutton:hover .inner {
+    background-color: #0082e6;
+}
+
+radiobutton:disabled .inner {
+    width: 12px;
+    height: 12px;
+    background-color: #bdbdbd;
+    transition: width 0.1 0;
+    transition: height 0.1 0;
+}
