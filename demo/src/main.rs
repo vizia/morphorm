@@ -906,7 +906,7 @@ fn main() {
             CanvasView::new(cx).background_color(Color::rgb(29, 29, 29));
             // Properties
             // PropertiesPanel::new(cx).width(Pixels(300.0)).left(Stretch(1.0));
-            Label::new(cx, "The size of a node is determined by its `width` and `height` properties, which are specified with `Units` which have four variants.")
+            Label::new(cx, "The position of a node within a stack can be adjusted by the spacing applied to each of its four sides, and is specified with `Units` which have four variants.")
                 .font_size(16.0)
                 .width(Pixels(400.0))
                 .left(Pixels(50.0))
@@ -918,23 +918,27 @@ fn main() {
                     HStack::new(cx, move |cx| {
                         RadioButton::new(
                             cx,
-                            AppData::width.map(move |option| units_same(option, &current_option)),
+                            AppData::left.map(move |option| units_same(option, &current_option)),
                         )
                         .on_select(move |cx| {
-                            cx.emit(AppEvent::SetWidth(current_option));
-                            cx.emit(AppEvent::SetHeight(current_option));
+                            cx.emit(AppEvent::SetLeft(current_option));
+                            cx.emit(AppEvent::SetRight(current_option));
+                            cx.emit(AppEvent::SetTop(current_option));
+                            cx.emit(AppEvent::SetBottom(current_option));
                         })
                         .id(format!("button_{i}"));
                         Label::new(cx, units_to_label(current_option))
                             .width(Pixels(80.0))
                             .describing(format!("button_{i}"));
-                        Textbox::new(cx, AppData::width.map(|width| print_units(*width))).on_submit(move |cx, txt, _| {
+                        Textbox::new(cx, AppData::left.map(|left| print_units(*left))).on_submit(move |cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
-                                cx.emit(AppEvent::SetWidth(val));
-                                cx.emit(AppEvent::SetHeight(val));
+                                cx.emit(AppEvent::SetLeft(val));
+                                cx.emit(AppEvent::SetTop(val));
+                                cx.emit(AppEvent::SetRight(val));
+                                cx.emit(AppEvent::SetBottom(val));
                             }
                         })
-                        .visibility(AppData::width.map(move |option| units_same(option, &current_option) && *option != morph::Units::Auto))
+                        .visibility(AppData::left.map(move |option| units_same(option, &current_option) && *option != morph::Units::Auto))
                         .class("unit_box").width(Pixels(100.0));
                     })
                     .size(Auto)
@@ -974,7 +978,7 @@ fn main() {
 
 fn index_to_units(index: usize) -> morph::Units {
     match index {
-        0 => morph::Units::Pixels(100.0),
+        0 => morph::Units::Pixels(200.0),
         1 => morph::Units::Percentage(25.0),
         2 => morph::Units::Stretch(1.0),
         3 => morph::Units::Auto,

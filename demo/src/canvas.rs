@@ -27,16 +27,16 @@ impl View for CanvasView {
             WindowEvent::GeometryChanged(geo) => {
                 if geo.contains(GeometryChanged::WIDTH_CHANGED) || geo.contains(GeometryChanged::HEIGHT_CHANGED) {
                     cx.emit(AppEvent::SetCanvasSize(
-                        cx.cache.get_width(cx.current()) - 100.0,
-                        cx.cache.get_height(cx.current()) - 100.0,
+                        cx.cache.get_width(cx.current()),
+                        cx.cache.get_height(cx.current()),
                     ));
                 }
             }
 
             WindowEvent::MouseDown(button) if *button == MouseButton::Left => {
                 if let Some(app_data) = cx.data::<AppData>() {
-                    let posx = cx.cache.get_posx(cx.current()) + 50.0;
-                    let posy = cx.cache.get_posy(cx.current()) + 50.0;
+                    let posx = cx.cache.get_posx(cx.current());
+                    let posy = cx.cache.get_posy(cx.current());
                     let selected = select_node(
                         &app_data.root_node,
                         &app_data.world.tree,
@@ -76,7 +76,7 @@ impl View for CanvasView {
                 &app_data.world.tree,
                 &app_data.world.cache,
                 &app_data.world.store,
-                (bounds.x + 50.0, bounds.y + 50.0),
+                (bounds.x, bounds.y),
                 canvas,
             )
 
