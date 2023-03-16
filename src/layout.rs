@@ -167,8 +167,10 @@ where
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
 
+    let mut node_children = node.children(tree).enumerate().peekable();
+
     // Compute space and size of non-flexible children.
-    for (index, child) in node.children(tree).enumerate() {
+    while let Some((index, child)) = node_children.next() {
         let child_position_type = child.position_type(store).unwrap_or_default();
 
         // Get desired space and size.
@@ -200,17 +202,21 @@ where
         let child_max_main = child.max_main(store, layout_type);
 
         // Apply parent child_space overrides to auto child space.
-        if child_main_before == Units::Auto {
-            if first == Some(index) || child_position_type == PositionType::SelfDirected {
-                child_main_before = node_child_main_before;
-            } else {
-                child_main_before = node_child_main_between;
-            }
+        if child_main_before == Units::Auto
+            && (first == Some(index) || child_position_type == PositionType::SelfDirected)
+        {
+            child_main_before = node_child_main_before;
         }
 
-        if child_main_after == Units::Auto && (last == Some(index) || child_position_type == PositionType::SelfDirected)
-        {
-            child_main_after = node_child_main_after;
+        if child_main_after == Units::Auto {
+            if last == Some(index) || child_position_type == PositionType::SelfDirected {
+                child_main_after = node_child_main_after;
+            } else if let Some((_, next_node)) = node_children.peek() {
+                let next_main_before = next_node.main_before(store, layout_type);
+                if next_main_before == Units::Auto {
+                    child_main_after = node_child_main_between;
+                }
+            }
         }
 
         if child_cross_before == Units::Auto {
