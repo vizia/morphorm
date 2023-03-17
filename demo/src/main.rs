@@ -11,6 +11,7 @@ mod icons;
 pub enum DemoPage {
     LayoutTypePage,
     PositionTypePage,
+    Left,
 }
 
 pub enum AppEvent {
@@ -124,12 +125,12 @@ impl AppData {
         let root_node = world.add(None);
         world.set_width(root_node, morph::Units::Pixels(600.0));
         world.set_height(root_node, morph::Units::Pixels(600.0));
-        world.set_child_left(root_node, morph::Units::Stretch(1.0));
-        world.set_child_right(root_node, morph::Units::Stretch(1.0));
+        // world.set_child_left(root_node, morph::Units::Stretch(1.0));
+        // world.set_child_right(root_node, morph::Units::Stretch(1.0));
         world.set_child_top(root_node, morph::Units::Stretch(1.0));
         world.set_child_bottom(root_node, morph::Units::Stretch(1.0));
-        world.set_col_between(root_node, morph::Units::Stretch(1.0));
-        world.set_row_between(root_node, morph::Units::Stretch(1.0));
+        // world.set_col_between(root_node, morph::Units::Stretch(1.0));
+        // world.set_row_between(root_node, morph::Units::Stretch(1.0));
         world.set_layout_type(root_node, morph::LayoutType::Row);
 
         for _ in 0..4 {
@@ -261,8 +262,8 @@ impl AppData {
                 self.world.set_child_right(root_node, morph::Units::Stretch(1.0));
                 self.world.set_child_top(root_node, morph::Units::Stretch(1.0));
                 self.world.set_child_bottom(root_node, morph::Units::Stretch(1.0));
-                self.world.set_col_between(root_node, morph::Units::Stretch(1.0));
-                self.world.set_row_between(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_col_between(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_row_between(root_node, morph::Units::Stretch(1.0));
                 self.world.set_layout_type(root_node, morph::LayoutType::Row);
 
                 for n in 0..4 {
@@ -293,6 +294,34 @@ impl AppData {
                 }
 
                 self.root_node = root_node;
+            }
+
+            DemoPage::Left => {
+                let root_node = self.world.add(None);
+                self.world.set_width(root_node, morph::Units::Pixels(600.0));
+                self.world.set_height(root_node, morph::Units::Pixels(600.0));
+                // self.world.set_child_left(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_child_right(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_child_top(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_child_bottom(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_col_between(root_node, morph::Units::Stretch(1.0));
+                // self.world.set_row_between(root_node, morph::Units::Stretch(1.0));
+                self.world.set_layout_type(root_node, morph::LayoutType::Row);
+
+                let node = self.world.add(Some(root_node));
+                self.world.set_width(node, morph::Units::Pixels(100.0));
+                self.world.set_height(node, morph::Units::Pixels(100.0));
+
+                self.selected_nodes = Some(vec![node]);
+                if let Some(red) = self.world.store.red.get_mut(node) {
+                    *red = 188;
+                }
+                if let Some(green) = self.world.store.green.get_mut(node) {
+                    *green = 119;
+                }
+                if let Some(blue) = self.world.store.blue.get_mut(node) {
+                    *blue = 28;
+                }
             }
         }
         self.sync(self.root_node);
@@ -803,7 +832,7 @@ fn main() {
         cx.add_stylesheet("demo/src/theme.css").expect("Failed to find stylesheet");
         cx.add_fonts_mem(&[include_bytes!("tabler-icons.ttf")]);
         let mut app_data = AppData::new();
-        app_data.demo_page = DemoPage::PositionTypePage;
+        app_data.demo_page = DemoPage::Left;
         app_data.switch_demo_page();
         app_data.build(cx);
         // ZStack::new(cx, |cx| {
@@ -877,7 +906,6 @@ fn main() {
         //                 )
         //                 .on_select(move |cx| {
         //                     cx.emit(AppEvent::SetWidth(current_option));
-        //                     cx.emit(AppEvent::SetHeight(current_option));
         //                 })
         //                 .id(format!("button_{i}"));
         //                 Label::new(cx, units_to_label(current_option))
@@ -886,7 +914,6 @@ fn main() {
         //                 Textbox::new(cx, AppData::width.map(|width| print_units(*width))).on_submit(move |cx, txt, _| {
         //                     if let Some(val) = text_to_units(txt.as_ref()) {
         //                         cx.emit(AppEvent::SetWidth(val));
-        //                         cx.emit(AppEvent::SetHeight(val));
         //                     }
         //                 })
         //                 .visibility(AppData::width.map(move |option| units_same(option, &current_option) && *option != morph::Units::Auto))
@@ -922,9 +949,9 @@ fn main() {
                         )
                         .on_select(move |cx| {
                             cx.emit(AppEvent::SetLeft(current_option));
-                            cx.emit(AppEvent::SetRight(current_option));
-                            cx.emit(AppEvent::SetTop(current_option));
-                            cx.emit(AppEvent::SetBottom(current_option));
+                            // cx.emit(AppEvent::SetRight(current_option));
+                            // cx.emit(AppEvent::SetTop(current_option));
+                            // cx.emit(AppEvent::SetBottom(current_option));
                         })
                         .id(format!("button_{i}"));
                         Label::new(cx, units_to_label(current_option))
@@ -933,9 +960,9 @@ fn main() {
                         Textbox::new(cx, AppData::left.map(|left| print_units(*left))).on_submit(move |cx, txt, _| {
                             if let Some(val) = text_to_units(txt.as_ref()) {
                                 cx.emit(AppEvent::SetLeft(val));
-                                cx.emit(AppEvent::SetTop(val));
-                                cx.emit(AppEvent::SetRight(val));
-                                cx.emit(AppEvent::SetBottom(val));
+                                // cx.emit(AppEvent::SetTop(val));
+                                // cx.emit(AppEvent::SetRight(val));
+                                // cx.emit(AppEvent::SetBottom(val));
                             }
                         })
                         .visibility(AppData::left.map(move |option| units_same(option, &current_option) && *option != morph::Units::Auto))
