@@ -44,7 +44,6 @@ pub trait Node: Sized + Clone {
         cache.set_bounds(self, cache.posx(self), cache.posy(self), width, height);
 
         layout(self, LayoutType::Column, height, width, cache, tree, store)
-
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
