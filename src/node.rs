@@ -34,14 +34,17 @@ pub trait Node: Sized + Clone {
             .expect("Failed to get width for node");
 
         let height = self
-            .width(store)
+            .height(store)
             .and_then(|w| match w {
                 Units::Pixels(px) => Some(px),
                 _ => panic!("Root node must have fixed size."),
             })
             .expect("Failed to get height for node");
 
+        cache.set_bounds(self, cache.posx(self), cache.posy(self), width, height);
+
         layout(self, LayoutType::Column, height, width, cache, tree, store)
+
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
