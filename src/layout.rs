@@ -98,6 +98,13 @@ where
     let main = node.main(store, parent_layout_type);
     let cross = node.cross(store, parent_layout_type);
 
+    let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
+    let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
+
+    // TODO
+    let min_cross = node.min_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MIN);
+    let max_cross = node.max_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MAX);
+
     // Compute main-axis size.
     let mut computed_main = match main {
         Pixels(val) => val,
@@ -124,8 +131,6 @@ where
 
     // Apply main-axis size constraints for pixels and percentage.
     if !main.is_stretch() {
-        let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
-        let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
         computed_main = computed_main.clamp(min_main, max_main);
     }
 
@@ -316,7 +321,7 @@ where
 
     // Determine cross-size of auto node from children.
     if num_children != 0 && node.cross(store, layout_type) == Auto {
-        parent_cross = cross_max;
+        parent_cross = cross_max.clamp(min_cross, max_cross);
     }
 
     // Compute flexible space and size on the cross-axis for both parent-directed and self-directed nodes.
@@ -346,6 +351,8 @@ where
 
             cross_flex_sum += factor;
 
+            child.cross_before = 0.0;
+
             cross_axis.push(StretchItem::new(
                 index,
                 factor,
@@ -361,6 +368,8 @@ where
 
             cross_flex_sum += factor;
 
+            child.cross = 0.0;
+
             cross_axis.push(StretchItem::new(index, factor, ItemType::Size, child_min_cross, child_max_cross));
         }
 
@@ -369,6 +378,8 @@ where
             let child_max_cross_after = child.node.max_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
             cross_flex_sum += factor;
+
+            child.cross_after = 0.0;
 
             cross_axis.push(StretchItem::new(
                 index,
@@ -415,8 +426,6 @@ where
                 if item.frozen {
                     cross_flex_sum -= item.factor;
 
-                    cross_max = cross_max.max(item.computed);
-
                     match item.item_type {
                         ItemType::Size => {
                             child.cross = item.computed;
@@ -450,7 +459,7 @@ where
 
     // Determine main-size of auto node from children.
     if num_children != 0 && node.main(store, layout_type) == Auto {
-        parent_main = parent_main.max(main_sum);
+        parent_main = parent_main.max(main_sum).clamp(min_main, max_main);
     }
 
     // Compute flexible space and size on the main axis.
@@ -649,11 +658,11 @@ where
         };
 
         if main == Auto {
-            computed_main = main_sum;
+            computed_main = main_sum.clamp(min_main, max_main);
         }
 
         if cross == Auto {
-            computed_cross = cross_max;
+            computed_cross = cross_max.clamp(min_cross, max_cross);
         }
     }
 
