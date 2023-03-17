@@ -6,6 +6,7 @@ use crate::{CacheExt, Units::*};
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
 
+/// Represents the type of a stretch item. Either space-before, size (main/cross), or space-after.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ItemType {
     Before,
@@ -13,6 +14,7 @@ enum ItemType {
     After,
 }
 
+/// Represents a space or size which has stretch units.
 #[derive(Copy, Clone)]
 struct StretchItem {
     // The index of the node.
@@ -121,9 +123,11 @@ where
     }
 
     // Apply main-axis size constraints for pixels and percentage.
-    let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
-    let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
-    computed_main = computed_main.clamp(min_main, max_main);
+    if !main.is_stretch() {
+        let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
+        let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
+        computed_main = computed_main.clamp(min_main, max_main);
+    }
 
     // TODO: Figure out how to constrain content size on cross axis.
 
@@ -227,13 +231,9 @@ where
             child_cross_after = node_child_cross_after;
         }
 
-        // Sum flex factors on the main axis of the child node.
-        let mut child_main_flex_sum = 0.0;
-
         if let Stretch(factor) = child_main_before {
-            child_main_flex_sum += factor;
-
             if child_position_type == PositionType::ParentDirected {
+                main_flex_sum += factor;
                 stretch_nodes.push(StretchItem::new(
                     index,
                     factor,
@@ -245,9 +245,8 @@ where
         }
 
         if let Stretch(factor) = child_main {
-            child_main_flex_sum += factor;
-
             if child_position_type == PositionType::ParentDirected {
+                main_flex_sum += factor;
                 stretch_nodes.push(StretchItem::new(
                     index,
                     factor,
@@ -259,9 +258,8 @@ where
         }
 
         if let Stretch(factor) = child_main_after {
-            child_main_flex_sum += factor;
-
             if child_position_type == PositionType::ParentDirected {
+                main_flex_sum += factor;
                 stretch_nodes.push(StretchItem::new(
                     index,
                     factor,
@@ -291,25 +289,18 @@ where
         let computed_child_main_after =
             child_main_after.to_px_clamped(parent_main, 0.0, child_min_main_after, child_max_main_after);
 
-        let mut computed_child_main = child_main.to_px_clamped(parent_main, 0.0, child_min_main, child_max_main);
-
+        let mut computed_child_main = 0.0;
         // Compute fixed-size child main.
         if !child_main.is_stretch() && !child_cross.is_stretch() {
             let child_size = layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store);
 
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
-
-            if child_position_type == PositionType::ParentDirected {
-                main_sum += computed_child_main;
-                cross_max =
-                    cross_max.max(computed_child_cross_before + computed_child_cross + computed_child_cross_after);
-            }
         }
 
         if child_position_type == PositionType::ParentDirected {
-            main_flex_sum += child_main_flex_sum;
-            main_sum += computed_child_main_before + computed_child_main_after;
+            main_sum += computed_child_main + computed_child_main_before + computed_child_main_after;
+            cross_max = cross_max.max(computed_child_cross_before + computed_child_cross + computed_child_cross_after);
         }
 
         children.push(ChildNode {
@@ -465,6 +456,7 @@ where
     // Compute flexible space and size on the main axis.
     if !stretch_nodes.is_empty() {
         loop {
+            // If all stretch items are frozen, exit the loop.
             if stretch_nodes.iter().all(|item| item.frozen) {
                 break;
             }
@@ -500,9 +492,9 @@ where
 
                     match item.item_type {
                         ItemType::Size => {
-                            child.main = item.computed;
                             let child_size =
                                 layout(child.node, layout_type, item.computed, child.cross, cache, tree, store);
+                            child.main = child_size.main;
                             child.cross = child_size.cross;
                             cross_max = cross_max.max(child.cross_before + child.cross + child.cross_after);
                         }
@@ -633,7 +625,7 @@ where
         }
     }
 
-    // Position children.
+    // Set size and position of children in the cache.
     let mut main_pos = 0.0;
     for child in children.iter() {
         let child_position_type = child.node.position_type(store).unwrap_or_default();
@@ -650,7 +642,7 @@ where
         };
     }
 
-    // Determine size of auto node from children
+    // Determine auto main and cross size from space and size of children.
     if num_children != 0 {
         if parent_layout_type != layout_type {
             std::mem::swap(&mut main_sum, &mut cross_max)
