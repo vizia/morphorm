@@ -26,7 +26,7 @@ fn build_tree(world: &mut World, parent: Option<Entity>, children_per_node: usiz
     Entity(0)
 }
 
-// TODO: There's almost certainly a formula for this geometric series.
+// FIXME: There's almost certainly a formula for this geometric series.
 fn compute_node_count(children_per_node: usize, depth: usize, node_count: &mut usize) -> usize {
     *node_count += 1;
     let depth = depth.saturating_sub(1);
