@@ -67,7 +67,7 @@ pub fn render(mut world: World, root: Entity) {
                         }
                     };
 
-                    root.layout(&mut world.cache, &world.tree, &world.store);
+                    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 

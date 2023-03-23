@@ -61,7 +61,7 @@ fn morphorm_benchmarks(c: &mut Criterion) {
                     let root = build_tree(&mut world, None, children_per_node, depth);
                     (world, root)
                 },
-                |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store),
+                |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store, &mut ()),
                 criterion::BatchSize::SmallInput,
             )
         });
@@ -90,7 +90,7 @@ fn morphorm_benchmarks(c: &mut Criterion) {
                     let root = build_tree(&mut world, None, children_per_node, depth);
                     (world, root)
                 },
-                |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store),
+                |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store, &mut ()),
                 criterion::BatchSize::SmallInput,
             )
         });
@@ -118,7 +118,7 @@ fn morphorm_benchmarks(c: &mut Criterion) {
                 let root = build_tree(&mut world, None, children_per_node, depth);
                 (world, root)
             },
-            |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store),
+            |(mut world, root)| root.layout(&mut world.cache, &world.tree, &world.store, &mut ()),
             criterion::BatchSize::SmallInput,
         )
     });

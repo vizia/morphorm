@@ -66,6 +66,7 @@ impl Node for Widget {
     type Tree = ();
     type ChildIter<'t> = std::slice::Iter<'t, Widget>;
     type CacheKey = u32;
+    type SubLayout = ();
 
     fn children<'t>(&'t self, _tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         self.child.iter()
@@ -130,6 +131,7 @@ impl Node for Widget {
     fn content_size(
         &self,
         _store: &Self::Store,
+        _sublayout: &mut Self::SubLayout,
         _parent_width: Option<f32>,
         _parent_height: Option<f32>,
     ) -> Option<(f32, f32)> {
@@ -249,7 +251,7 @@ fn main() {
     let mut cache = LayoutCache::default();
     let mut root = Widget::new(0, Pixels(600.0), Pixels(600.0));
     root.child.push(Widget::new(1, Pixels(400.0), Pixels(400.0)));
-    root.layout(&mut cache, &(), &());
+    root.layout(&mut cache, &(), &(), &mut ());
     render(cache, root);
 }
 
@@ -292,7 +294,7 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                     root.width = Units::Pixels(physical_size.width as f32);
                     root.height = Units::Pixels(physical_size.height as f32);
 
-                    root.layout(&mut cache, &(), &());
+                    root.layout(&mut cache, &(), &(), &mut ());
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
