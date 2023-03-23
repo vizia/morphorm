@@ -52,6 +52,9 @@ pub trait Node: Sized + Clone {
     /// Returns an iterator over the children of the node.
     fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t>;
 
+    /// Returns a boolean representing whether the node is visible to layout.
+    fn visible(&self, store: &Self::Store) -> bool;
+
     /// Returns the layout type of the node.
     fn layout_type(&self, store: &Self::Store) -> Option<LayoutType>;
 

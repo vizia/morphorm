@@ -2,14 +2,14 @@
 
 use crate::{entity::Entity, TextWrap};
 use morphorm::{LayoutType, PositionType, Units};
-use slotmap::{SecondaryMap, SlotMap};
+use slotmap::SecondaryMap;
 
 type ContentSizeType<S> = Box<dyn Fn(&S, Option<f32>, Option<f32>) -> (f32, f32)>;
 
 /// A storage struct representing a component store for an ECS.
 #[derive(Default)]
 pub struct Store {
-    pub visible: SlotMap<Entity, bool>,
+    pub visible: SecondaryMap<Entity, bool>,
 
     pub layout_type: SecondaryMap<Entity, LayoutType>,
     pub position_type: SecondaryMap<Entity, PositionType>,
