@@ -80,7 +80,7 @@ fn main() {
     world.set_text_wrap(node, TextWrap::Hard);
     world.set_content_size(node, move |store, width, height| content_size(node, store, width, height));
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     render(world, root);
 }

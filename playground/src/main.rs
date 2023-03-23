@@ -133,7 +133,7 @@ impl AppData {
         world.set_col_between(root_node, morph::Units::Stretch(1.0));
         world.set_row_between(root_node, morph::Units::Stretch(1.0));
 
-        root_node.layout(&mut world.cache, &world.tree, &world.store);
+        root_node.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
         Self {
             canvas_width: 600.0,
@@ -210,7 +210,7 @@ impl Model for AppData {
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|app_event, _| match app_event {
             AppEvent::Relayout => {
-                self.root_node.layout(&mut self.world.cache, &self.world.tree, &self.world.store);
+                self.root_node.layout(&mut self.world.cache, &self.world.tree, &self.world.store, &mut ());
                 cx.needs_redraw();
             }
 

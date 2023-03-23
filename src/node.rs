@@ -24,7 +24,9 @@ pub trait Node: Sized + Clone {
     /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
     type CacheKey;
 
-    fn layout<C: Cache<Node = Self>>(&self, cache: &mut C, tree: &Self::Tree, store: &Self::Store) -> Size {
+    type SubLayout;
+
+    fn layout<C: Cache<Node = Self>>(&self, cache: &mut C, tree: &Self::Tree, store: &Self::Store, sublayout: &mut Self::SubLayout) -> Size {
         let width = self
             .width(store)
             .and_then(|w| match w {
@@ -43,7 +45,7 @@ pub trait Node: Sized + Clone {
 
         cache.set_bounds(self, cache.posx(self), cache.posy(self), width, height);
 
-        layout(self, LayoutType::Column, height, width, cache, tree, store)
+        layout(self, LayoutType::Column, height, width, cache, tree, store, sublayout)
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
@@ -83,6 +85,7 @@ pub trait Node: Sized + Clone {
     fn content_size(
         &self,
         store: &Self::Store,
+        sublayout: &mut Self::SubLayout,
         parent_width: Option<f32>,
         parent_height: Option<f32>,
     ) -> Option<(f32, f32)>;
@@ -250,15 +253,16 @@ pub(crate) trait NodeExt: Node {
     fn content_sizing(
         &self,
         store: &Self::Store,
+        sublayout: &mut Self::SubLayout,
         parent_layout_type: LayoutType,
         parent_main: Option<f32>,
         parent_cross: Option<f32>,
     ) -> Option<(f32, f32)> {
         match parent_layout_type {
-            LayoutType::Row => self.content_size(store, parent_main, parent_cross),
+            LayoutType::Row => self.content_size(store,  sublayout, parent_main, parent_cross),
 
             LayoutType::Column => {
-                self.content_size(store, parent_cross, parent_main).map(|(width, height)| (height, width))
+                self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))
             }
         }
     }

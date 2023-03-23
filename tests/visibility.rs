@@ -18,7 +18,7 @@ fn visibility() {
     world.set_width(child, Units::Pixels(100.0));
     world.set_height(child, Units::Pixels(100.0));
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 0.0 }));
     assert_eq!(world.cache.bounds(child), Some(&Rect { posx: 0.0, posy: 0.0, width: 0.0, height: 0.0 }));

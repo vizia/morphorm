@@ -12,6 +12,7 @@ impl Node for Entity {
     type Tree = Tree;
     type ChildIter<'t> = ChildIterator<'t>;
     type CacheKey = Entity;
+    type SubLayout = ();
 
     fn key(&self) -> Self::CacheKey {
         *self
@@ -58,7 +59,7 @@ impl Node for Entity {
         store.bottom.get(*self).copied()
     }
 
-    fn content_size(&self, store: &Store, width: Option<f32>, height: Option<f32>) -> Option<(f32, f32)> {
+    fn content_size(&self, store: &Store, _sublayout: &mut (), width: Option<f32>, height: Option<f32>) -> Option<(f32, f32)> {
         store.content_size.get(*self).map(|t| (t)(store, width, height))
     }
 

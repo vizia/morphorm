@@ -15,13 +15,13 @@ fn pixels_child_left_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_left(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 20.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 20.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -40,13 +40,13 @@ fn percentage_child_left_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_left(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 300.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 300.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -65,13 +65,13 @@ fn stretch_child_left_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_left(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 500.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 500.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -90,13 +90,13 @@ fn pixels_child_top_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_top(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 20.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 20.0, width: 100.0, height: 150.0 }));
 }
@@ -115,13 +115,13 @@ fn percentage_child_top_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_left(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 300.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 300.0, width: 100.0, height: 150.0 }));
 }
@@ -140,13 +140,13 @@ fn stretch_child_top_pixels_size() {
     world.set_height(node, Units::Pixels(150.0));
     world.set_top(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 450.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 450.0, width: 100.0, height: 150.0 }));
 }
@@ -166,13 +166,13 @@ fn pixels_child_right_pixels_size() {
     world.set_left(node, Units::Stretch(1.0));
     world.set_right(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -192,13 +192,13 @@ fn percentage_child_right_pixels_size() {
     world.set_left(node, Units::Stretch(1.0));
     world.set_right(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -218,13 +218,13 @@ fn stretch_child_right_pixels_size() {
     world.set_left(node, Units::Stretch(1.0));
     world.set_right(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 250.0, posy: 0.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 250.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
@@ -244,13 +244,13 @@ fn pixels_child_bottom_pixels_size() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 430.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 430.0, width: 100.0, height: 150.0 }));
 }
@@ -270,13 +270,13 @@ fn percentage_child_bottom_pixels_size() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 150.0, width: 100.0, height: 150.0 }));
 }
@@ -296,13 +296,13 @@ fn stretch_child_bottom_pixels_size() {
     world.set_top(node, Units::Stretch(1.0));
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 225.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 225.0, width: 100.0, height: 150.0 }));
 }
@@ -327,13 +327,13 @@ fn pixels_child_space_pixels_size() {
     world.set_right(node, Units::Auto);
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 20.0, posy: 20.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 20.0, posy: 20.0, width: 100.0, height: 150.0 }));
 }
@@ -358,13 +358,13 @@ fn percentage_child_space_pixels_size() {
     world.set_right(node, Units::Auto);
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 300.0, posy: 300.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 300.0, posy: 300.0, width: 100.0, height: 150.0 }));
 }
@@ -389,13 +389,13 @@ fn stretch_child_space_pixels_size() {
     world.set_right(node, Units::Auto);
     world.set_bottom(node, Units::Auto);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 250.0, posy: 225.0, width: 100.0, height: 150.0 }));
 
     world.set_layout_type(root, LayoutType::Row);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 250.0, posy: 225.0, width: 100.0, height: 150.0 }));
 }
@@ -415,13 +415,13 @@ fn stretch_child_space_stretch_width_stretch_height() {
     world.set_width(node, Units::Stretch(1.0));
     world.set_height(node, Units::Stretch(1.0));
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 200.0, width: 200.0, height: 200.0 }));
 
     world.set_layout_type(root, LayoutType::Column);
 
-    root.layout(&mut world.cache, &world.tree, &world.store);
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 200.0, width: 200.0, height: 200.0 }));
 }
