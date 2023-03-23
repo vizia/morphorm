@@ -116,8 +116,10 @@ where
     // Cross size is determined by the parent.
     let mut computed_cross = cross_size;
 
+    let node_children = node.children(tree).filter(|child| child.visible(store)).enumerate().peekable();
+
     // Get the total number of children of the node.
-    let num_children = node.children(tree).count();
+    let num_children = node_children.count();
 
     // Apply content sizing.
     if (main == Auto || cross == Auto) && num_children == 0 {
@@ -135,6 +137,11 @@ where
     }
 
     // TODO: Figure out how to constrain content size on cross axis.
+
+    // Return if there's no children to layout
+    if num_children == 0 {
+        return Size { main: computed_main, cross: computed_cross };
+    }
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
@@ -170,13 +177,14 @@ where
     // Determine index of first and last parent-directed child nodes.
     let mut iter = node
         .children(tree)
+        .filter(|child| child.visible(store))
         .enumerate()
         .filter(|(_, child)| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected);
 
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
 
-    let mut node_children = node.children(tree).enumerate().peekable();
+    let mut node_children = node.children(tree).filter(|child| child.visible(store)).enumerate().peekable();
 
     // Compute space and size of non-flexible children.
     while let Some((index, child)) = node_children.next() {

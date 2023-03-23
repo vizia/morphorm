@@ -205,6 +205,10 @@ impl World {
         self.store.content_size.insert(entity, Box::new(content));
     }
 
+    pub fn set_visibility(&mut self, entity: Entity, visible: bool) {
+        self.store.visible.insert(entity, visible);
+    }
+
     /// Set the text to be displayed on the given entity.
     pub fn set_text(&mut self, entity: Entity, text: &str) {
         self.store.text.insert(entity, String::from(text));

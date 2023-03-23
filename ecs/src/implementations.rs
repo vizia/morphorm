@@ -22,6 +22,10 @@ impl Node for Entity {
         ChildIterator { tree, current_node }
     }
 
+    fn visible(&self, store: &Store) -> bool {
+        store.visible.get(*self).copied().unwrap_or(true)
+    }
+
     fn layout_type(&self, store: &Store) -> Option<LayoutType> {
         store.layout_type.get(*self).copied()
     }

@@ -75,6 +75,10 @@ impl Node for Widget {
         self.id
     }
 
+    fn visible(&self, _store: &Self::Store) -> bool {
+        true
+    }
+
     fn width(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.width)
     }
