@@ -126,21 +126,22 @@ fn main() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_child_space(root, Units::Stretch(1.0));
 
-    world.set_layout_type(root, LayoutType::Row);
+    // world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
-    world.set_width(node, Units::Pixels(200.0));
-    world.set_height(node, Units::Auto);
+    world.set_width(node, Units::Auto);
+    world.set_height(node, Units::Stretch(1.0));
+    // world.set_child_space(node, Units::Pixels(20.0));
 
     let child = world.add(Some(node));
-    world.set_width(child, Units::Auto);
-    world.set_height(child, Units::Auto);
-    world.set_min_width(child, Units::Stretch(1.0));
-    world.set_content_size(child, |_, width, height| {
-        println!("{:?}, {:?}", width, height);
-        (0.0, 0.0)
-    });
+    world.set_width(child, Units::Pixels(100.0));
+    world.set_height(child, Units::Pixels(100.0));
+    // world.set_min_width(child, Units::Stretch(1.0));
+    // world.set_content_size(child, |_, width, height| {
+    //     (100.0, 100.0)
+    // });
 
     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
