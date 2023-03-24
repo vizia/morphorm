@@ -26,7 +26,13 @@ pub trait Node: Sized + Clone {
 
     type SubLayout;
 
-    fn layout<C: Cache<Node = Self>>(&self, cache: &mut C, tree: &Self::Tree, store: &Self::Store, sublayout: &mut Self::SubLayout) -> Size {
+    fn layout<C: Cache<Node = Self>>(
+        &self,
+        cache: &mut C,
+        tree: &Self::Tree,
+        store: &Self::Store,
+        sublayout: &mut Self::SubLayout,
+    ) -> Size {
         let width = self
             .width(store)
             .and_then(|w| match w {
@@ -259,7 +265,7 @@ pub(crate) trait NodeExt: Node {
         parent_cross: Option<f32>,
     ) -> Option<(f32, f32)> {
         match parent_layout_type {
-            LayoutType::Row => self.content_size(store,  sublayout, parent_main, parent_cross),
+            LayoutType::Row => self.content_size(store, sublayout, parent_main, parent_cross),
 
             LayoutType::Column => {
                 self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))
