@@ -137,7 +137,7 @@ fn main() {
     world.set_width(child, Units::Auto);
     world.set_height(child, Units::Auto);
     world.set_min_width(child, Units::Stretch(1.0));
-    world.set_content_size(child, |store, width, height|{
+    world.set_content_size(child, |_, width, height| {
         println!("{:?}, {:?}", width, height);
         (0.0, 0.0)
     });

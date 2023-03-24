@@ -59,7 +59,13 @@ impl Node for Entity {
         store.bottom.get(*self).copied()
     }
 
-    fn content_size(&self, store: &Store, _sublayout: &mut (), width: Option<f32>, height: Option<f32>) -> Option<(f32, f32)> {
+    fn content_size(
+        &self,
+        store: &Store,
+        _sublayout: &mut (),
+        width: Option<f32>,
+        height: Option<f32>,
+    ) -> Option<(f32, f32)> {
         store.content_size.get(*self).map(|t| (t)(store, width, height))
     }
 

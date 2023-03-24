@@ -78,6 +78,7 @@ struct ChildNode<'a, N: Node> {
 /// ```
 /// layout(&root, LayoutType::Column, 600.0, 600.0, &mut cache, &tree, &store);
 /// ```
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn layout<N, C>(
     node: &N,
     parent_layout_type: LayoutType,
@@ -125,8 +126,9 @@ where
     // Apply content sizing.
     if (main == Auto || cross == Auto) && num_children == 0 {
         let parent_main = if main == Auto { None } else { Some(computed_main) };
-        let parent_cross = if cross == Auto { if computed_cross == 0.0 {None} else {Some(computed_cross)} } else { Some(computed_cross) };
-        if let Some(content_size) = node.content_sizing(store, sublayout, parent_layout_type, parent_main, parent_cross) {
+        let parent_cross = if cross == Auto { None } else { Some(computed_cross) };
+        if let Some(content_size) = node.content_sizing(store, sublayout, parent_layout_type, parent_main, parent_cross)
+        {
             computed_main = content_size.0;
             computed_cross = content_size.1;
         }
@@ -305,8 +307,9 @@ where
 
         let mut computed_child_main = 0.0;
         // Compute fixed-size child main.
-        if !child_main.is_stretch() && !child_cross.is_stretch() && !child_cross.is_auto() {
-            let child_size = layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store, sublayout);
+        if !child_main.is_stretch() && !child_cross.is_stretch() {
+            let child_size =
+                layout(child, layout_type, parent_main, computed_child_cross, cache, tree, store, sublayout);
 
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
@@ -382,22 +385,6 @@ where
             cross_axis.push(StretchItem::new(index, factor, ItemType::Size, child_min_cross, child_max_cross));
         }
 
-        if let Auto = child_cross {
-            let child_min_cross = child.node.min_cross(store, layout_type);
-            let child_max_cross = child.node.max_cross(store, layout_type);
-            let factor = if let Stretch(factor) = child_min_cross {
-                factor
-            } else {
-                0.0
-            };
-
-            cross_flex_sum += factor;
-
-            child.cross = 0.0;
-
-            cross_axis.push(StretchItem::new(index, factor, ItemType::Size, child_min_cross.to_px(parent_cross, DEFAULT_MIN), child_max_cross.to_px(parent_cross, DEFAULT_MAX)));
-        }
-
         if let Stretch(factor) = child_cross_after {
             let child_min_cross_after = child.node.min_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
             let child_max_cross_after = child.node.max_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
@@ -459,10 +446,18 @@ where
                         ItemType::Size => {
                             child.cross = item.computed;
                             if !child.node.main(store, layout_type).is_stretch() {
-                                let child_size =
-                                    layout(child.node, layout_type, parent_main, item.computed, cache, tree, store, sublayout);
+                                let child_size = layout(
+                                    child.node,
+                                    layout_type,
+                                    parent_main,
+                                    item.computed,
+                                    cache,
+                                    tree,
+                                    store,
+                                    sublayout,
+                                );
                                 child.main = child_size.main;
-                                child.cross = child_size.cross;
+                                // child.cross = child_size.cross;
 
                                 if child_position_type == PositionType::ParentDirected {
                                     main_sum += child.main;
@@ -531,8 +526,16 @@ where
 
                     match item.item_type {
                         ItemType::Size => {
-                            let child_size =
-                                layout(child.node, layout_type, item.computed, child.cross, cache, tree, store, sublayout);
+                            let child_size = layout(
+                                child.node,
+                                layout_type,
+                                item.computed,
+                                child.cross,
+                                cache,
+                                tree,
+                                store,
+                                sublayout,
+                            );
                             child.main = child_size.main;
                             child.cross = child_size.cross;
                             cross_max = cross_max.max(child.cross_before + child.cross + child.cross_after);
