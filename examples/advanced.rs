@@ -66,7 +66,7 @@ impl Node for Widget {
     type Tree = ();
     type ChildIter<'t> = std::slice::Iter<'t, Widget>;
     type CacheKey = u32;
-    type SubLayout = ();
+    type SubLayout<'a> = ();
 
     fn children<'t>(&'t self, _tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         self.child.iter()
@@ -128,10 +128,10 @@ impl Node for Widget {
         Some(self.bottom)
     }
 
-    fn content_size(
+    fn content_size<'a>(
         &self,
         _store: &Self::Store,
-        _sublayout: &mut Self::SubLayout,
+        _sublayout: &mut Self::SubLayout<'a>,
         _parent_width: Option<f32>,
         _parent_height: Option<f32>,
     ) -> Option<(f32, f32)> {

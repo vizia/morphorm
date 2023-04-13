@@ -79,7 +79,7 @@ struct ChildNode<'a, N: Node> {
 /// layout(&root, LayoutType::Column, 600.0, 600.0, &mut cache, &tree, &store);
 /// ```
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn layout<N, C>(
+pub(crate) fn layout<'a, N, C>(
     node: &N,
     parent_layout_type: LayoutType,
     parent_main: f32,
@@ -87,7 +87,7 @@ pub(crate) fn layout<N, C>(
     cache: &mut C,
     tree: &<N as Node>::Tree,
     store: &<N as Node>::Store,
-    sublayout: &mut <N as Node>::SubLayout,
+    sublayout: &mut <N as Node>::SubLayout<'a>,
 ) -> Size
 where
     N: Node,
