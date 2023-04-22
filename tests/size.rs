@@ -562,3 +562,71 @@ fn auto_width_multiple_children() {
 
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
 }
+
+#[test]
+fn auto_width_multiple_children2() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+
+    let node1 = world.add(Some(root));
+    world.set_width(node1, Units::Auto);
+    world.set_height(node1, Units::Stretch(1.0));
+    world.set_layout_type(node1, LayoutType::Column);
+
+    let node2 = world.add(Some(node1));
+    world.set_width(node2, Units::Stretch(1.0));
+    world.set_height(node2, Units::Pixels(100.0));
+
+    let node3 = world.add(Some(node1));
+    world.set_width(node3, Units::Auto);
+    world.set_height(node3, Units::Stretch(1.0));
+    world.set_layout_type(node3, LayoutType::Row);
+
+    let node4 = world.add(Some(node3));
+    world.set_width(node4, Units::Pixels(100.0));
+    world.set_height(node4, Units::Stretch(1.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 600.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 0.0, posy: 100.0, width: 100.0, height: 500.0 }));
+    assert_eq!(world.cache.bounds(node4), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 500.0 }));
+}
+
+#[test]
+fn auto_width_multiple_children3() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+
+    let node1 = world.add(Some(root));
+    world.set_width(node1, Units::Stretch(1.0));
+    world.set_height(node1, Units::Stretch(1.0));
+    // world.set_layout_type(node1, LayoutType::Column);
+
+    let node2 = world.add(Some(node1));
+    world.set_width(node2, Units::Stretch(1.0));
+    world.set_height(node2, Units::Stretch(1.0));
+
+    let node3 = world.add(Some(node1));
+    world.set_width(node3, Units::Stretch(1.0));
+    world.set_height(node3, Units::Stretch(1.0));
+    // world.set_layout_type(node3, LayoutType::Row);
+
+    // let node4 = world.add(Some(node3));
+    // world.set_width(node4, Units::Pixels(100.0));
+    // world.set_height(node4, Units::Pixels(100.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 600.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 300.0 }));
+    assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 0.0, posy: 300.0, width: 600.0, height: 300.0 }));
+    // assert_eq!(world.cache.bounds(node4), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 100.0 }));
+}

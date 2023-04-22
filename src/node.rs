@@ -26,12 +26,12 @@ pub trait Node: Sized + Clone {
 
     type SubLayout<'a>;
 
-    fn layout<'a, C: Cache<Node = Self>>(
+    fn layout<C: Cache<Node = Self>>(
         &self,
         cache: &mut C,
         tree: &Self::Tree,
         store: &Self::Store,
-        sublayout: &mut Self::SubLayout<'a>,
+        sublayout: &mut Self::SubLayout<'_>,
     ) -> Size {
         let width = self
             .width(store)
@@ -88,10 +88,10 @@ pub trait Node: Sized + Clone {
     fn bottom(&self, store: &Self::Store) -> Option<Units>;
 
     /// Returns the width and height of the node if its desired width and/or desired height are auto.
-    fn content_size<'a>(
+    fn content_size(
         &self,
         store: &Self::Store,
-        sublayout: &mut Self::SubLayout<'a>,
+        sublayout: &mut Self::SubLayout<'_>,
         parent_width: Option<f32>,
         parent_height: Option<f32>,
     ) -> Option<(f32, f32)>;
@@ -256,10 +256,10 @@ pub(crate) trait NodeExt: Node {
         parent_layout_type.select_unwrap(store, |store| self.max_bottom(store), |store| self.max_right(store))
     }
 
-    fn content_sizing<'a>(
+    fn content_sizing(
         &self,
         store: &Self::Store,
-        sublayout: &mut Self::SubLayout<'a>,
+        sublayout: &mut Self::SubLayout<'_>,
         parent_layout_type: LayoutType,
         parent_main: Option<f32>,
         parent_cross: Option<f32>,
@@ -271,6 +271,12 @@ pub(crate) trait NodeExt: Node {
                 self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))
             }
         }
+    }
+
+    fn is_main_content(&self, store: &Self::Store, tree: &Self::Tree, parent_layout_type: LayoutType) -> bool {
+        let num_children = self.children(tree).filter(|child| child.visible(store)).count();
+
+        self.main(store, parent_layout_type).is_auto() && num_children == 0
     }
 }
 
