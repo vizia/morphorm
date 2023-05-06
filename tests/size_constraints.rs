@@ -168,3 +168,29 @@ fn max_width_percentage_min_height_percentage() {
 
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
+
+#[test]
+fn min_width_percentage_width_auto() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+
+    world.set_layout_type(root, LayoutType::Row);
+
+    let node = world.add(Some(root));
+    world.set_width(node, Units::Auto);
+    world.set_height(node, Units::Auto);
+    world.set_min_width(node, Units::Percentage(100.0));
+
+    let node2 = world.add(Some(node));
+    world.set_width(node2, Units::Pixels(200.0));
+    world.set_height(node2, Units::Pixels(100.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
+}
+
