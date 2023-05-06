@@ -80,7 +80,7 @@ impl Units {
             Units::Pixels(pixels) => pixels.clamp(min, max),
             Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).clamp(min, max),
             Units::Stretch(_) => default.clamp(min, max),
-            Units::Auto => default,
+            Units::Auto => default.clamp(min, max),
         }
     }
 
