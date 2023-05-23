@@ -5,6 +5,7 @@ use crate::{CacheExt, Units::*};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
+const DEFAULT_BORDER_WIDTH: f32 = 0.0;
 
 /// Represents the type of a stretch item. Either space-before, size (main/cross), or space-after.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -103,9 +104,16 @@ where
     let min_main = node.min_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MIN);
     let max_main = node.max_main(store, parent_layout_type).to_px(parent_main, DEFAULT_MAX);
 
-    // TODO
+    // TODO: Need parent_cross to compute this correctly
     let min_cross = node.min_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MIN);
     let max_cross = node.max_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MAX);
+
+    let border_main_before =
+        node.border_main_before(store, parent_layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
+    let border_main_after = node.border_main_after(store, parent_layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
+    let border_cross_before =
+        node.border_cross_before(store, parent_layout_type).to_px(cross_size, DEFAULT_BORDER_WIDTH);
+    let border_cross_after = node.border_cross_after(store, parent_layout_type).to_px(cross_size, DEFAULT_BORDER_WIDTH);
 
     // Compute main-axis size.
     let mut computed_main = match main {
@@ -330,7 +338,7 @@ where
         parent_cross = cross_max.clamp(min_cross, max_cross);
     }
 
-    // Compute flexible space and size on the cross-axis for both parent-directed and self-directed nodes.
+    // Compute flexible space and size on the cross-axis for parent-directed children.
     for (index, child) in children
         .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
@@ -401,8 +409,6 @@ where
             ));
         }
 
-        let child_position_type = child.node.position_type(store).unwrap_or_default();
-
         loop {
             // If all stretch items are frozen, exit the loop.
             if cross_axis.iter().all(|item| item.frozen) {
@@ -410,7 +416,12 @@ where
             }
 
             // Compute free space in the cross axis.
-            let child_cross_free_space = parent_cross - child.cross_before - child.cross - child.cross_after;
+            let child_cross_free_space = parent_cross
+                - border_cross_before
+                - border_cross_after
+                - child.cross_before
+                - child.cross
+                - child.cross_after;
 
             // Total size violation in the cross axis.
             let mut total_violation = 0.0;
@@ -454,9 +465,7 @@ where
                                 child.main = child_size.main;
                                 child.cross = child_size.cross;
 
-                                if child_position_type == PositionType::ParentDirected {
-                                    main_sum += child.main;
-                                }
+                                main_sum += child.main;
                             }
                         }
 
@@ -472,9 +481,7 @@ where
             }
         }
 
-        if child_position_type == PositionType::ParentDirected {
-            cross_max = cross_max.max(child.cross_before + child.cross + child.cross_after);
-        }
+        cross_max = cross_max.max(child.cross_before + child.cross + child.cross_after);
     }
 
     // Determine main-size of auto node from children.
@@ -482,7 +489,7 @@ where
         parent_main = parent_main.max(main_sum).clamp(min_main, max_main);
     }
 
-    // Compute flexible space and size on the main axis.
+    // Compute flexible space and size on the main axis for parent-directed children.
     if !stretch_nodes.is_empty() {
         loop {
             // If all stretch items are frozen, exit the loop.
@@ -491,7 +498,7 @@ where
             }
 
             // Calculate free space on the main-axis.
-            let free_main_space = parent_main - main_sum;
+            let free_main_space = parent_main - main_sum - border_main_before - border_main_after;
 
             let mut total_violation = 0.0;
 
@@ -550,6 +557,7 @@ where
     }
 
     // Compute stretch cross_before and stretch cross_after for auto cross children.
+    // TODO: I think this only needs to be done for parent-directed children...
     for (index, child) in children.iter_mut().filter(|child| child.node.cross(store, layout_type).is_auto()).enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
@@ -613,7 +621,12 @@ where
             }
 
             // Compute free space in the cross axis.
-            let child_cross_free_space = parent_cross - child.cross_before - child.cross - child.cross_after;
+            let child_cross_free_space = parent_cross
+                - border_cross_before
+                - border_cross_after
+                - child.cross_before
+                - child.cross
+                - child.cross_after;
 
             // Total size violation in the cross axis.
             let mut total_violation = 0.0;
@@ -1019,12 +1032,26 @@ where
         let child_position_type = child.node.position_type(store).unwrap_or_default();
         match child_position_type {
             PositionType::SelfDirected => {
-                cache.set_rect(child.node, layout_type, child.main_before, child.cross_before, child.main, child.cross);
+                cache.set_rect(
+                    child.node,
+                    layout_type,
+                    child.main_before + border_main_before,
+                    child.cross_before + border_cross_before,
+                    child.main,
+                    child.cross,
+                );
             }
 
             PositionType::ParentDirected => {
                 main_pos += child.main_before;
-                cache.set_rect(child.node, layout_type, main_pos, child.cross_before, child.main, child.cross);
+                cache.set_rect(
+                    child.node,
+                    layout_type,
+                    main_pos + border_main_before,
+                    child.cross_before + border_cross_before,
+                    child.main,
+                    child.cross,
+                );
                 main_pos += child.main + child.main_after;
             }
         };

@@ -193,6 +193,22 @@ impl Node for Widget {
     fn max_bottom(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.max_bottom)
     }
+
+    fn border_left(&self, _store: &Self::Store) -> Option<Units> {
+        todo!()
+    }
+
+    fn border_right(&self, _store: &Self::Store) -> Option<Units> {
+        todo!()
+    }
+
+    fn border_top(&self, _store: &Self::Store) -> Option<Units> {
+        todo!()
+    }
+
+    fn border_bottom(&self, _store: &Self::Store) -> Option<Units> {
+        todo!()
+    }
 }
 
 #[derive(Default)]
