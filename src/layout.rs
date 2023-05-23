@@ -846,7 +846,12 @@ where
             }
 
             // Compute free space in the cross axis.
-            let child_cross_free_space = parent_cross - child.cross_before - child.cross - child.cross_after;
+            let child_cross_free_space = parent_cross
+                - border_cross_before
+                - border_cross_after
+                - child.cross_before
+                - child.cross
+                - child.cross_after;
 
             // Total size violation in the cross axis.
             let mut total_violation = 0.0;
@@ -980,7 +985,12 @@ where
             }
 
             // Compute free space in the main axis.
-            let child_main_free_space = parent_main - child.main_before - child.main - child.main_after;
+            let child_main_free_space = parent_main
+                - border_main_before
+                - border_main_after
+                - child.main_before
+                - child.main
+                - child.main_after;
 
             // Total size violation in the main axis.
             let mut total_violation = 0.0;
