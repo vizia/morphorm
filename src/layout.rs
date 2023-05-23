@@ -187,12 +187,15 @@ where
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
 
-    let mut node_children = node.children(tree).filter(|child| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected).filter(|child| child.visible(store)).enumerate().peekable();
+    let mut node_children = node
+        .children(tree)
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
+        .filter(|child| child.visible(store))
+        .enumerate()
+        .peekable();
 
-    // Compute space and size of non-flexible children.
+    // Compute space and size of non-flexible parent-directed children.
     while let Some((index, child)) = node_children.next() {
-        let child_position_type = child.position_type(store).unwrap_or_default();
-
         // Get desired space and size.
         let mut child_main_before = child.main_before(store, layout_type);
         let child_main = child.main(store, layout_type);
@@ -222,9 +225,7 @@ where
         let child_max_main = child.max_main(store, layout_type);
 
         // Apply parent child_space overrides to auto child space.
-        if child_main_before == Units::Auto
-            && first == Some(index)
-        {
+        if child_main_before == Units::Auto && first == Some(index) {
             child_main_before = node_child_main_before;
         }
 
@@ -232,6 +233,7 @@ where
             if last == Some(index) {
                 child_main_after = node_child_main_after;
             } else if let Some((_, next_node)) = node_children.peek() {
+                // Only apply main between if both adjacent children have auto space between
                 let next_main_before = next_node.main_before(store, layout_type);
                 if next_main_before == Units::Auto {
                     child_main_after = node_child_main_between;
@@ -247,7 +249,7 @@ where
             child_cross_after = node_child_cross_after;
         }
 
-        if let Stretch(factor) = child_main_before {        
+        if let Stretch(factor) = child_main_before {
             main_flex_sum += factor;
             stretch_nodes.push(StretchItem::new(
                 index,
@@ -311,7 +313,6 @@ where
 
         main_sum += computed_child_main + computed_child_main_before + computed_child_main_after;
         cross_max = cross_max.max(computed_child_cross_before + computed_child_cross + computed_child_cross_after);
-        
 
         children.push(ChildNode {
             node: child,
@@ -330,10 +331,11 @@ where
     }
 
     // Compute flexible space and size on the cross-axis for both parent-directed and self-directed nodes.
-    for (index, child) in
-        children.iter_mut()
+    for (index, child) in children
+        .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
-        .filter(|child| !child.node.cross(store, layout_type).is_auto()).enumerate()
+        .filter(|child| !child.node.cross(store, layout_type).is_auto())
+        .enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
@@ -658,13 +660,13 @@ where
         }
     }
 
-
-    let mut node_children = node.children(tree).filter(|child| child.position_type(store).unwrap_or_default() == PositionType::SelfDirected).filter(|child| child.visible(store)).enumerate().peekable();
+    let node_children = node
+        .children(tree)
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
+        .filter(|child| child.visible(store));
 
     // Compute space and size of non-flexible self-directed children.
-    while let Some((index, child)) = node_children.next() {
-        let child_position_type = child.position_type(store).unwrap_or_default();
-
+    for child in node_children {
         // Get desired space and size.
         let mut child_main_before = child.main_before(store, layout_type);
         let child_main = child.main(store, layout_type);
@@ -694,8 +696,7 @@ where
         // let child_max_main = child.max_main(store, layout_type);
 
         // Apply parent child_space overrides to auto child space.
-        if child_main_before == Units::Auto
-        {
+        if child_main_before == Units::Auto {
             child_main_before = node_child_main_before;
         }
 
@@ -753,10 +754,11 @@ where
     }
 
     // Compute flexible space and size on the cross-axis for self-directed nodes.
-    for (index, child) in
-        children.iter_mut()
+    for (index, child) in children
+        .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
-        .filter(|child| !child.node.cross(store, layout_type).is_auto()).enumerate()
+        .filter(|child| !child.node.cross(store, layout_type).is_auto())
+        .enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
