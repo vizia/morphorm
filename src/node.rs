@@ -35,16 +35,16 @@ pub trait Node: Sized + Clone {
     ) -> Size {
         let width = self
             .width(store)
-            .and_then(|w| match w {
-                Units::Pixels(px) => Some(px),
+            .map(|w| match w {
+                Units::Pixels(px) => px,
                 _ => panic!("Root node must have fixed size."),
             })
             .expect("Failed to get width for node");
 
         let height = self
             .height(store)
-            .and_then(|w| match w {
-                Units::Pixels(px) => Some(px),
+            .map(|w| match w {
+                Units::Pixels(px) => px,
                 _ => panic!("Root node must have fixed size."),
             })
             .expect("Failed to get height for node");
@@ -149,6 +149,18 @@ pub trait Node: Sized + Clone {
 
     /// Returns the maximum bottom-side space of the node.
     fn max_bottom(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the left-side border width of the node.
+    fn border_left(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the right-side border width of the node.
+    fn border_right(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the top-side border width of the node.
+    fn border_top(&self, store: &Self::Store) -> Option<Units>;
+
+    /// Returns the bottom-side border width of the node.
+    fn border_bottom(&self, store: &Self::Store) -> Option<Units>;
 }
 
 /// Helper trait for converting layout properties into a direction-agnostic value.
@@ -254,6 +266,22 @@ pub(crate) trait NodeExt: Node {
 
     fn max_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         parent_layout_type.select_unwrap(store, |store| self.max_bottom(store), |store| self.max_right(store))
+    }
+
+    fn border_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
+        parent_layout_type.select_unwrap(store, |store| self.border_left(store), |store| self.border_top(store))
+    }
+
+    fn border_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
+        parent_layout_type.select_unwrap(store, |store| self.border_right(store), |store| self.border_bottom(store))
+    }
+
+    fn border_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
+        parent_layout_type.select_unwrap(store, |store| self.border_top(store), |store| self.border_left(store))
+    }
+
+    fn border_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
+        parent_layout_type.select_unwrap(store, |store| self.border_bottom(store), |store| self.border_right(store))
     }
 
     fn content_sizing(

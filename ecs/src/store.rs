@@ -53,6 +53,11 @@ pub struct Store {
     pub red: SecondaryMap<Entity, u8>,
     pub green: SecondaryMap<Entity, u8>,
     pub blue: SecondaryMap<Entity, u8>,
+
+    pub border_left: SecondaryMap<Entity, Units>,
+    pub border_right: SecondaryMap<Entity, Units>,
+    pub border_top: SecondaryMap<Entity, Units>,
+    pub border_bottom: SecondaryMap<Entity, Units>,
 }
 
 impl Store {
@@ -90,6 +95,10 @@ impl Store {
         self.red.remove(entity);
         self.green.remove(entity);
         self.blue.remove(entity);
+        self.border_left.remove(entity);
+        self.border_right.remove(entity);
+        self.border_top.remove(entity);
+        self.border_bottom.remove(entity);
     }
 
     pub fn clear(&mut self) {
@@ -126,5 +135,9 @@ impl Store {
         self.red.clear();
         self.green.clear();
         self.blue.clear();
+        self.border_left.clear();
+        self.border_right.clear();
+        self.border_top.clear();
+        self.border_bottom.clear();
     }
 }

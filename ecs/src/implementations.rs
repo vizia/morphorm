@@ -140,6 +140,22 @@ impl Node for Entity {
     fn max_bottom(&self, store: &Store) -> Option<Units> {
         store.max_bottom.get(*self).copied()
     }
+
+    fn border_left(&self, store: &Store) -> Option<Units> {
+        store.border_left.get(*self).copied()
+    }
+
+    fn border_right(&self, store: &Store) -> Option<Units> {
+        store.border_right.get(*self).copied()
+    }
+
+    fn border_top(&self, store: &Store) -> Option<Units> {
+        store.border_top.get(*self).copied()
+    }
+
+    fn border_bottom(&self, store: &Store) -> Option<Units> {
+        store.border_bottom.get(*self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

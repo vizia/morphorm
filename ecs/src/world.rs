@@ -228,4 +228,11 @@ impl World {
         self.set_width(entity, Units::Stretch(1.0));
         self.set_height(entity, Units::Stretch(1.0));
     }
+
+    pub fn set_border(&mut self, entity: Entity, width: Units) {
+        self.store.border_left.insert(entity, width);
+        self.store.border_right.insert(entity, width);
+        self.store.border_top.insert(entity, width);
+        self.store.border_bottom.insert(entity, width);
+    }
 }
