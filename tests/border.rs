@@ -48,3 +48,21 @@ fn border_pixels_stretch_child2() {
     assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 50.0, posy: 50.0, width: 250.0, height: 500.0 }));
     assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 300.0, posy: 50.0, width: 250.0, height: 500.0 }));
 }
+
+#[test]
+fn border_percentage_stretch_child() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+    world.set_border(root, Units::Percentage(10.0));
+
+    let node = world.add(Some(root));
+    world.set_width(node, Units::Stretch(1.0));
+    world.set_height(node, Units::Stretch(1.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 60.0, posy: 60.0, width: 480.0, height: 480.0 }));
+}
