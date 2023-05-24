@@ -108,13 +108,6 @@ where
     let min_cross = node.min_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MIN);
     let max_cross = node.max_cross(store, parent_layout_type).to_px(cross_size, DEFAULT_MAX);
 
-    let border_main_before =
-        node.border_main_before(store, parent_layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
-    let border_main_after = node.border_main_after(store, parent_layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
-    let border_cross_before =
-        node.border_cross_before(store, parent_layout_type).to_px(cross_size, DEFAULT_BORDER_WIDTH);
-    let border_cross_after = node.border_cross_after(store, parent_layout_type).to_px(cross_size, DEFAULT_BORDER_WIDTH);
-
     // Compute main-axis size.
     let mut computed_main = match main {
         Pixels(val) => val,
@@ -126,6 +119,13 @@ where
     // Cross size is determined by the parent.
     let mut computed_cross = cross_size;
 
+    let border_main_before =
+        node.border_main_before(store, parent_layout_type).to_px(computed_main, DEFAULT_BORDER_WIDTH);
+    let border_main_after = node.border_main_after(store, parent_layout_type).to_px(computed_main, DEFAULT_BORDER_WIDTH);
+    let border_cross_before =
+        node.border_cross_before(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
+    let border_cross_after = node.border_cross_after(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
+    
     let node_children = node.children(tree).filter(|child| child.visible(store)).enumerate().peekable();
 
     // Get the total number of children of the node.
