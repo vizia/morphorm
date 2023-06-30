@@ -337,7 +337,7 @@ where
 
     // Determine cross-size of auto node from children.
     if num_children != 0 && node.cross(store, layout_type) == Auto {
-        parent_cross = cross_max.clamp(min_cross, max_cross);
+        parent_cross = (cross_max + border_cross_before + border_cross_after).clamp(min_cross, max_cross);
     }
 
     // Compute flexible space and size on the cross-axis for parent-directed children.
@@ -488,7 +488,7 @@ where
 
     // Determine main-size of auto node from children.
     if num_children != 0 && node.main(store, layout_type) == Auto {
-        parent_main = parent_main.max(main_sum).clamp(min_main, max_main);
+        parent_main = (parent_main.max(main_sum) + border_main_before + border_main_after).clamp(min_main, max_main);
     }
 
     // Compute flexible space and size on the main axis for parent-directed children.
@@ -1071,6 +1071,9 @@ where
 
     // Determine auto main and cross size from space and size of children.
     if num_children != 0 {
+        main_sum += border_main_before + border_main_after;
+        cross_max += border_cross_before + border_cross_after;
+
         if parent_layout_type != layout_type {
             std::mem::swap(&mut main_sum, &mut cross_max)
         };
