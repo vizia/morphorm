@@ -772,7 +772,6 @@ where
     for (index, child) in children
         .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
-        .filter(|child| !child.node.cross(store, layout_type).is_auto())
         .enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
