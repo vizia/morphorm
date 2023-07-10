@@ -167,8 +167,8 @@ pub trait Node: Sized + Clone {
 pub(crate) trait NodeExt: Node {
     fn main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
-            LayoutType::Row => self.width(store).unwrap_or(Units::Stretch(1.0)),
-            LayoutType::Column => self.height(store).unwrap_or(Units::Stretch(1.0)),
+            LayoutType::Row => self.width(store).unwrap_or(Units::Auto),
+            LayoutType::Column => self.height(store).unwrap_or(Units::Auto),
         }
     }
 
