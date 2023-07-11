@@ -128,13 +128,22 @@ where
     let border_cross_after =
         node.border_cross_after(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
 
-    let node_children = node.children(tree).filter(|child| child.visible(store)).enumerate().peekable();
+    let node_children = node
+        .children(tree)
+        .filter(|child| child.visible(store));
 
     // Get the total number of children of the node.
     let num_children = node_children.count();
 
+    // Get the total number of parent-directed children of the node.
+    let num_parent_directed_children = node
+        .children(tree)
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
+        .filter(|child| child.visible(store))
+        .count();
+
     // Apply content sizing.
-    if (main == Auto || cross == Auto) && num_children == 0 {
+    if (main == Auto || cross == Auto) && num_parent_directed_children == 0 {
         let parent_main = if main == Auto { None } else { Some(computed_main) };
         let parent_cross = if cross == Auto { None } else { Some(computed_cross) };
         if let Some(content_size) = node.content_sizing(store, sublayout, parent_layout_type, parent_main, parent_cross)
@@ -336,7 +345,7 @@ where
     }
 
     // Determine cross-size of auto node from children.
-    if num_children != 0 && node.cross(store, layout_type) == Auto {
+    if num_parent_directed_children != 0 && node.cross(store, layout_type) == Auto {
         parent_cross = (cross_max + border_cross_before + border_cross_after).clamp(min_cross, max_cross);
     }
 
@@ -487,7 +496,7 @@ where
     }
 
     // Determine main-size of auto node from children.
-    if num_children != 0 && node.main(store, layout_type) == Auto {
+    if num_parent_directed_children != 0 && node.main(store, layout_type) == Auto {
         parent_main = (parent_main.max(main_sum) + border_main_before + border_main_after).clamp(min_main, max_main);
     }
 
@@ -1069,7 +1078,7 @@ where
     }
 
     // Determine auto main and cross size from space and size of children.
-    if num_children != 0 {
+    if num_parent_directed_children != 0 {
         main_sum += border_main_before + border_main_after;
         cross_max += border_cross_before + border_cross_after;
 
