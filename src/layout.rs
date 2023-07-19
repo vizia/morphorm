@@ -146,7 +146,7 @@ where
     if (main == Auto || cross == Auto) && num_parent_directed_children == 0 {
         let parent_main = if main == Auto { None } else { Some(computed_main) };
         let parent_cross = if cross == Auto { None } else { Some(computed_cross) };
-        if let Some(content_size) = node.content_sizing(store, sublayout, parent_layout_type, parent_main, parent_cross)
+        if let Some(content_size) = node.content_sizing(store, tree, sublayout, parent_layout_type, parent_main, parent_cross)
         {
             computed_main = content_size.0;
             computed_cross = content_size.1;

@@ -131,6 +131,7 @@ impl Node for Widget {
     fn content_size<'a>(
         &self,
         _store: &Self::Store,
+        _tree: &Self::Tree,
         _sublayout: &mut Self::SubLayout<'a>,
         _parent_width: Option<f32>,
         _parent_height: Option<f32>,

@@ -62,6 +62,7 @@ impl Node for Entity {
     fn content_size<'a>(
         &self,
         store: &Store,
+        _tree: &Tree,
         _sublayout: &mut (),
         width: Option<f32>,
         height: Option<f32>,
