@@ -128,9 +128,7 @@ where
     let border_cross_after =
         node.border_cross_after(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
 
-    let node_children = node
-        .children(tree)
-        .filter(|child| child.visible(store));
+    let node_children = node.children(tree).filter(|child| child.visible(store));
 
     // Get the total number of children of the node.
     let num_children = node_children.count();

@@ -1,8 +1,15 @@
-use vizia::{fonts::icons_names::DOWN, prelude::*};
+use vizia::icons::{
+    ICON_ARROW_AUTOFIT_HEIGHT, ICON_ARROW_AUTOFIT_WIDTH, ICON_ARROW_BAR_DOWN, ICON_ARROW_BAR_LEFT,
+    ICON_ARROW_BAR_RIGHT, ICON_ARROW_BAR_UP, ICON_BOX_ALIGN_BOTTOM, ICON_BOX_ALIGN_BOTTOM_LEFT,
+    ICON_BOX_ALIGN_BOTTOM_RIGHT, ICON_BOX_ALIGN_LEFT, ICON_BOX_ALIGN_RIGHT, ICON_BOX_ALIGN_TOP,
+    ICON_BOX_ALIGN_TOP_LEFT, ICON_BOX_ALIGN_TOP_RIGHT, ICON_BOX_MARGIN, ICON_LAYOUT_ALIGN_BOTTOM,
+    ICON_LAYOUT_ALIGN_LEFT, ICON_LAYOUT_ALIGN_RIGHT, ICON_LAYOUT_ALIGN_TOP, ICON_LAYOUT_DISTRIBUTE_HORIZONTAL,
+    ICON_LAYOUT_DISTRIBUTE_VERTICAL,
+};
+use vizia::prelude::*;
 
 use morphorm as morph;
 
-use crate::icons::*;
 use crate::{AppData, AppEvent};
 
 pub struct PropertiesPanel {}
@@ -16,81 +23,40 @@ impl PropertiesPanel {
                         Label::new(cx, "Space and Size").class("panel-title");
 
                         HStack::new(cx, |cx| {
-                            Label::new(cx, "Position Type").width(Auto);
-                            Dropdown::new(
-                                cx,
-                                move |cx|
-                                // A Label and an Icon
-                                HStack::new(cx, move |cx|{
-                                    Label::new(cx, AppData::position_type.map(|position_type| match position_type {
-                                        morph::PositionType::ParentDirected => "Parent Directed",
-                                        morph::PositionType::SelfDirected => "Self Directed",
-                                    })).width(Auto);
-                                    Label::new(cx, DOWN).class("icon").width(Auto);
-                                })
-                                .child_left(Pixels(5.0))
-                                .child_right(Pixels(5.0))
-                                .col_between(Stretch(1.0)),
-                                move |cx| {
-                                    List::new(cx, AppData::position_type_list, |cx, _, item| {
-                                        Label::new(cx, item)
-                                            .width(Stretch(1.0))
-                                            .child_top(Stretch(1.0))
-                                            .child_bottom(Stretch(1.0))
-                                            .child_left(Pixels(5.0))
-                                            .bind(
-                                                AppData::position_type.map(|position_type| match position_type {
-                                                    morph::PositionType::ParentDirected => "Parent Directed",
-                                                    morph::PositionType::SelfDirected => "Self Directed",
-                                                }),
-                                                move |handle, selected| {
-                                                    if item.get(handle.cx) == selected.get(handle.cx) {
-                                                        handle.background_color(Color::from("#4871ae"));
-                                                    } else {
-                                                        handle.background_color(Color::transparent());
-                                                    }
-                                                },
-                                            )
-                                            .on_press(move |cx| {
-                                                cx.emit(AppEvent::SetPositionType(item.get(cx)));
-                                                cx.emit(PopupEvent::Close);
-                                            });
-                                    });
-                                },
-                            )
-                            .width(Stretch(1.0));
-                        })
-                        .col_between(Pixels(10.0))
-                        .height(Auto)
-                        .class("row");
-
-                        HStack::new(cx, |cx| {
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_BAR_RIGHT, AppData::left, AppEvent::SetLeft);
-                            });
-
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_AUTOFIT_WIDTH, AppData::width, AppEvent::SetWidth);
-                            });
-
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_BAR_LEFT, AppData::right, AppEvent::SetRight);
-                            });
+                            Label::new(cx, "Position Type");
+                            PickList::new(cx, AppData::position_type_list, AppData::selected_position_type, true)
+                                .on_select(|cx, index| cx.emit(AppEvent::SetPositionType(index)))
+                                .width(Stretch(1.0));
                         })
                         .class("row");
 
                         HStack::new(cx, |cx| {
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_BAR_DOWN, AppData::top, AppEvent::SetTop);
-                            });
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_BAR_RIGHT, AppData::left, AppEvent::SetLeft);
+                            // }).height(Auto);
 
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_AUTOFIT_HEIGHT, AppData::height, AppEvent::SetHeight);
-                            });
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_AUTOFIT_WIDTH, AppData::width, AppEvent::SetWidth);
+                            // }).height(Auto);
 
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_ARROW_BAR_UP, AppData::bottom, AppEvent::SetBottom);
-                            });
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_BAR_LEFT, AppData::right, AppEvent::SetRight);
+                            // }).height(Auto);
+                        })
+                        .class("row");
+
+                        HStack::new(cx, |cx| {
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_BAR_DOWN, AppData::top, AppEvent::SetTop);
+                            // }).height(Auto);
+
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_AUTOFIT_HEIGHT, AppData::height, AppEvent::SetHeight);
+                            // }).height(Auto);
+
+                            // VStack::new(cx, |cx| {
+                            unit_box(cx, ICON_ARROW_BAR_UP, AppData::bottom, AppEvent::SetBottom);
+                            // }).height(Auto);
                         })
                         .col_between(Pixels(10.0))
                         .height(Auto)
@@ -239,92 +205,41 @@ impl PropertiesPanel {
                         Label::new(cx, "Child Layout").class("panel-title");
                         HStack::new(cx, |cx| {
                             Label::new(cx, "Layout Type").width(Auto);
-                            Dropdown::new(
+                            PickList::new(cx, AppData::layout_type_list, AppData::selected_layout_type, true)
+                                .on_select(|cx, index| cx.emit(AppEvent::SetLayoutType(index)))
+                                .width(Stretch(1.0));
+                        })
+                        .col_between(Pixels(10.0))
+                        .height(Auto)
+                        .class("row");
+
+                        HStack::new(cx, |cx| {
+                            unit_box(cx, ICON_LAYOUT_ALIGN_LEFT, AppData::child_left, AppEvent::SetChildLeft);
+
+                            unit_box(
                                 cx,
-                                move |cx|
-                                // A Label and an Icon
-                                HStack::new(cx, move |cx|{
-                                    Label::new(cx, AppData::layout_type.map(|layout_type| match layout_type {
-                                        morph::LayoutType::Row => "Row",
-                                        morph::LayoutType::Column => "Column",
-                                    })).width(Auto);
-                                    Label::new(cx, DOWN).class("icon").width(Auto);
-                                })
-                                .child_left(Pixels(5.0))
-                                .child_right(Pixels(5.0))
-                                .col_between(Stretch(1.0)),
-                                move |cx| {
-                                    List::new(cx, AppData::layout_type_list, |cx, _, item| {
-                                        Label::new(cx, item)
-                                            .width(Stretch(1.0))
-                                            .child_top(Stretch(1.0))
-                                            .child_bottom(Stretch(1.0))
-                                            .child_left(Pixels(5.0))
-                                            .bind(
-                                                AppData::layout_type.map(|layout_type| match layout_type {
-                                                    morph::LayoutType::Row => "Row",
-                                                    morph::LayoutType::Column => "Column",
-                                                }),
-                                                move |handle, selected| {
-                                                    if item.get(handle.cx) == selected.get(handle.cx) {
-                                                        handle.background_color(Color::from("#4871ae"));
-                                                    } else {
-                                                        handle.background_color(Color::transparent());
-                                                    }
-                                                },
-                                            )
-                                            .on_press(move |cx| {
-                                                cx.emit(AppEvent::SetLayoutType(item.get(cx)));
-                                                cx.emit(PopupEvent::Close);
-                                            });
-                                    });
-                                },
-                            )
-                            .width(Stretch(1.0));
+                                ICON_LAYOUT_DISTRIBUTE_VERTICAL,
+                                AppData::col_between,
+                                AppEvent::SetColBetween,
+                            );
+
+                            unit_box(cx, ICON_LAYOUT_ALIGN_RIGHT, AppData::child_right, AppEvent::SetChildRight);
                         })
                         .col_between(Pixels(10.0))
                         .height(Auto)
                         .class("row");
 
                         HStack::new(cx, |cx| {
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_LAYOUT_ALIGN_LEFT, AppData::child_left, AppEvent::SetChildLeft);
-                            });
+                            unit_box(cx, ICON_LAYOUT_ALIGN_TOP, AppData::child_top, AppEvent::SetChildTop);
 
-                            VStack::new(cx, |cx| {
-                                unit_box(
-                                    cx,
-                                    ICON_LAYOUT_DISTRIBUTE_VERTICAL,
-                                    AppData::col_between,
-                                    AppEvent::SetColBetween,
-                                );
-                            });
+                            unit_box(
+                                cx,
+                                ICON_LAYOUT_DISTRIBUTE_HORIZONTAL,
+                                AppData::row_between,
+                                AppEvent::SetRowBetween,
+                            );
 
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_LAYOUT_ALIGN_RIGHT, AppData::child_right, AppEvent::SetChildRight);
-                            });
-                        })
-                        .col_between(Pixels(10.0))
-                        .height(Auto)
-                        .class("row");
-
-                        HStack::new(cx, |cx| {
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_LAYOUT_ALIGN_TOP, AppData::child_top, AppEvent::SetChildTop);
-                            });
-
-                            VStack::new(cx, |cx| {
-                                unit_box(
-                                    cx,
-                                    ICON_LAYOUT_DISTRIBUTE_HORIZONTAL,
-                                    AppData::row_between,
-                                    AppEvent::SetRowBetween,
-                                );
-                            });
-
-                            VStack::new(cx, |cx| {
-                                unit_box(cx, ICON_LAYOUT_ALIGN_BOTTOM, AppData::child_bottom, AppEvent::SetChildBottom);
-                            });
+                            unit_box(cx, ICON_LAYOUT_ALIGN_BOTTOM, AppData::child_bottom, AppEvent::SetChildBottom);
                         })
                         .col_between(Pixels(10.0))
                         .height(Auto)
@@ -343,7 +258,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildTop);
                                     cx.emit(AppEvent::AlignChildLeft);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_TOP_LEFT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_TOP_LEFT),
                             );
 
                             Button::new(
@@ -352,7 +267,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildTop);
                                     cx.emit(AppEvent::AlignChildCenter);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_TOP).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_TOP),
                             );
 
                             Button::new(
@@ -361,9 +276,10 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildTop);
                                     cx.emit(AppEvent::AlignChildRight);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_TOP_RIGHT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_TOP_RIGHT),
                             );
                         })
+                        .height(Auto)
                         .child_left(Stretch(1.0))
                         .child_right(Stretch(1.0));
 
@@ -374,7 +290,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildMiddle);
                                     cx.emit(AppEvent::AlignChildLeft);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_LEFT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_LEFT),
                             );
 
                             Button::new(
@@ -383,7 +299,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildMiddle);
                                     cx.emit(AppEvent::AlignChildCenter);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_MARGIN).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_MARGIN),
                             );
 
                             Button::new(
@@ -392,9 +308,10 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildMiddle);
                                     cx.emit(AppEvent::AlignChildRight);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_RIGHT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_RIGHT),
                             );
                         })
+                        .height(Auto)
                         .child_left(Stretch(1.0))
                         .child_right(Stretch(1.0));
 
@@ -405,7 +322,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildBottom);
                                     cx.emit(AppEvent::AlignChildLeft);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_BOTTOM_LEFT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_BOTTOM_LEFT),
                             );
 
                             Button::new(
@@ -414,7 +331,7 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildBottom);
                                     cx.emit(AppEvent::AlignChildCenter);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_BOTTOM).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_BOTTOM),
                             );
 
                             Button::new(
@@ -423,9 +340,10 @@ impl PropertiesPanel {
                                     cx.emit(AppEvent::AlignChildBottom);
                                     cx.emit(AppEvent::AlignChildRight);
                                 },
-                                |cx| Label::new(cx, ICON_BOX_ALIGN_BOTTOM_RIGHT).class("icons"),
+                                |cx| Icon::new(cx, ICON_BOX_ALIGN_BOTTOM_RIGHT),
                             );
                         })
+                        .height(Auto)
                         .child_left(Stretch(1.0))
                         .child_right(Stretch(1.0));
                     })
