@@ -1,10 +1,8 @@
 use morphorm::Node;
+use vizia::icons::{ICON_CHEVRON_DOWN, ICON_LAYOUT_LIST, ICON_ROW_INSERT_BOTTOM, ICON_SQUARE_PLUS, ICON_TRASH};
 use vizia::prelude::*;
 
-use crate::{
-    icons::{ICON_CHEVRON_DOWN, ICON_LAYOUT_LIST, ICON_ROW_INSERT_BOTTOM, ICON_SQUARE_PLUS, ICON_TRASH},
-    AppData, AppEvent,
-};
+use crate::{AppData, AppEvent};
 
 pub struct TreePanel {}
 

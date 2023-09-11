@@ -13,8 +13,6 @@ use canvas::*;
 mod properties;
 use properties::*;
 
-mod icons;
-
 pub enum AppEvent {
     Relayout,
     SetCanvasSize(f32, f32),
@@ -43,8 +41,8 @@ pub enum AppEvent {
     AlignBottom,
     FillHeight,
 
-    SetLayoutType(&'static str),
-    SetPositionType(&'static str),
+    SetLayoutType(usize),
+    SetPositionType(usize),
 
     SetChildLeft(morph::Units),
     SetColBetween(morph::Units),
@@ -92,11 +90,11 @@ pub struct AppData {
     height: morph::Units,
     bottom: morph::Units,
 
-    layout_type: morph::LayoutType,
+    selected_layout_type: usize,
     layout_type_list: Vec<&'static str>,
 
-    position_type: morph::PositionType,
     position_type_list: Vec<&'static str>,
+    selected_position_type: usize,
 
     child_left: morph::Units,
     col_between: morph::Units,
@@ -156,11 +154,11 @@ impl AppData {
             height: morph::Units::Pixels(600.0),
             bottom: morph::Units::Auto,
 
-            layout_type: morph::LayoutType::Column,
+            selected_layout_type: 0,
             layout_type_list: vec!["Row", "Column"],
 
-            position_type: morph::PositionType::ParentDirected,
             position_type_list: vec!["Parent Directed", "Self Directed"],
+            selected_position_type: 0,
 
             child_left: morph::Units::Stretch(1.0),
             col_between: morph::Units::Stretch(1.0),
@@ -194,8 +192,14 @@ impl AppData {
         self.col_between = self.world.store.col_between.get(node).copied().unwrap_or_default();
         self.row_between = self.world.store.row_between.get(node).copied().unwrap_or_default();
 
-        self.layout_type = self.world.store.layout_type.get(node).copied().unwrap_or_default();
-        self.position_type = self.world.store.position_type.get(node).copied().unwrap_or_default();
+        self.selected_layout_type = match self.world.store.layout_type.get(node).copied().unwrap_or_default() {
+            morph::LayoutType::Column => 0,
+            morph::LayoutType::Row => 1,
+        };
+        self.selected_position_type = match self.world.store.position_type.get(node).copied().unwrap_or_default() {
+            morph::PositionType::ParentDirected => 0,
+            morph::PositionType::SelfDirected => 1,
+        };
 
         self.min_left = self.world.store.min_left.get(node).copied().unwrap_or_default();
         self.min_width = self.world.store.min_width.get(node).copied().unwrap_or_default();
@@ -381,29 +385,29 @@ impl Model for AppData {
                 }
             }
 
-            AppEvent::SetLayoutType(layout_type) => {
+            AppEvent::SetLayoutType(selected_layout_type) => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        let layout_type = match *layout_type {
-                            "Row" => morph::LayoutType::Row,
+                        let layout_type = match *selected_layout_type {
+                            0 => morph::LayoutType::Row,
                             _ => morph::LayoutType::Column,
                         };
                         self.world.set_layout_type(*selected, layout_type);
-                        self.layout_type = layout_type;
+                        self.selected_layout_type = *selected_layout_type;
                     }
                     cx.emit(AppEvent::Relayout);
                 }
             }
 
-            AppEvent::SetPositionType(position_type) => {
+            AppEvent::SetPositionType(selected_position_type) => {
                 if let Some(nodes) = &self.selected_nodes {
                     for selected in nodes {
-                        let position_type = match *position_type {
-                            "Parent Directed" => morph::PositionType::ParentDirected,
+                        let position_type = match *selected_position_type {
+                            0 => morph::PositionType::ParentDirected,
                             _ => morph::PositionType::SelfDirected,
                         };
                         self.world.set_position_type(*selected, position_type);
-                        self.position_type = position_type;
+                        self.selected_position_type = *selected_position_type;
                     }
                     cx.emit(AppEvent::Relayout);
                 }
@@ -706,8 +710,10 @@ impl Model for AppData {
 
 fn main() {
     Application::new(|cx| {
-        cx.add_stylesheet("playground/src/theme.css").expect("Failed to find stylesheet");
-        cx.add_fonts_mem(&[include_bytes!("tabler-icons.ttf")]);
+        cx.add_stylesheet(include_style!("src/theme.css")).expect("Failed to find stylesheet");
+
+        // cx.emit(EnvironmentEvent::SetThemeMode(ThemeMode::DarkMode));
+
         AppData::new().build(cx);
         HStack::new(cx, |cx| {
             // Treeview

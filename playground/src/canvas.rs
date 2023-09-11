@@ -25,7 +25,7 @@ impl View for CanvasView {
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|window_event, _| match window_event {
             WindowEvent::GeometryChanged(geo) => {
-                if geo.contains(GeometryChanged::WIDTH_CHANGED) || geo.contains(GeometryChanged::HEIGHT_CHANGED) {
+                if geo.contains(GeoChanged::WIDTH_CHANGED) || geo.contains(GeoChanged::HEIGHT_CHANGED) {
                     cx.emit(AppEvent::SetCanvasSize(
                         cx.cache.get_width(cx.current()) - 100.0,
                         cx.cache.get_height(cx.current()) - 100.0,
@@ -43,11 +43,11 @@ impl View for CanvasView {
                         &app_data.world.cache,
                         posx,
                         posy,
-                        cx.mouse.cursorx,
-                        cx.mouse.cursory,
+                        cx.mouse().cursorx,
+                        cx.mouse().cursory,
                     );
                     // println!("selected: {:?}", selected);
-                    if cx.modifiers.contains(Modifiers::SHIFT) {
+                    if cx.modifiers().contains(Modifiers::SHIFT) {
                         if let Some(selected) = selected {
                             cx.emit(AppEvent::MultiSelectNode(*selected));
                         }
@@ -67,8 +67,8 @@ impl View for CanvasView {
 
             let mut path = vg::Path::new();
             path.rect(bounds.x, bounds.y, bounds.w, bounds.h);
-            let background_color = cx.background_color().copied().unwrap_or_default();
-            canvas.fill_path(&mut path, &vg::Paint::color(background_color.into()));
+            let background_color = cx.background_color();
+            canvas.fill_path(&path, &vg::Paint::color(background_color.into()));
 
             draw_node(
                 &app_data.root_node,
@@ -145,14 +145,14 @@ fn draw_node<N: Node<CacheKey = ecs::Entity>>(
     let mut path = vg::Path::new();
     path.rect(parent_pos.0 + posx, parent_pos.1 + posy, width, height);
     let paint = vg::Paint::color(vg::Color::rgb(*red, *green, *blue));
-    canvas.fill_path(&mut path, &paint);
+    canvas.fill_path(&path, &paint);
 
     if let Some(selected_nodes) = selected_nodes {
         for selected_node in selected_nodes {
             if node.key() == selected_node.key() {
                 let mut selection_paint = vg::Paint::color(vg::Color::rgb(72, 113, 174));
                 selection_paint.set_line_width(4.0);
-                canvas.stroke_path(&mut path, &selection_paint);
+                canvas.stroke_path(&path, &selection_paint);
             }
         }
     }
