@@ -1,6 +1,6 @@
 # Morphorm
 
-Morphorm is a crate for determining the size and position of UI elements which are organised into a tree structure.
+Morphorm is a crate for determining the size and position of UI elements which are organized into a tree structure.
 
 ## Description
 

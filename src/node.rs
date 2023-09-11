@@ -9,7 +9,7 @@ use crate::{layout, types::*, Cache};
 /// which is passed to the layout property methods.
 ///
 /// Similarly, the children of the node can be optionally stored externally using the `Tree` associated type,
-/// a reference to which is passed to the `children` method, which returns an iterator on the children of the node,
+/// a reference to which is passed to the [`children`](crate::Node::children) method, which returns an iterator on the children of the node,
 /// the type of which is specified by the `ChildIter` associated type.
 pub trait Node: Sized + Clone {
     /// A type representing a store where layout properties can be stored.

@@ -4,10 +4,10 @@ use crate::{LayoutType, Node};
 /// after a layout calculation.
 ///
 /// The `Node` associated type, which implements the [`Node`](crate::Node) trait, provides
-/// a [`CacheKey'](crate::Node::CacheKey) associated type which can be used as key for storage types
-/// within the cache if the `Node` type itself cannot be used. For example, as the key to a hashmap.
+/// a [`CacheKey`](crate::Node::CacheKey) associated type which can be used as key for storage types
+/// within the cache if the `Node` type itself cannot be used. For example, as the key to a hashmap/slotmap.
 pub trait Cache {
-    /// A type which represents a layout node and implments the [`Node`](crate::Node) trait.
+    /// A type which represents a layout node and implements the [`Node`](crate::Node) trait.
     type Node: Node;
     /// Returns the cached width of the given node.
     fn width(&self, node: &Self::Node) -> f32;
