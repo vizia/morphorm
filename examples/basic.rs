@@ -131,13 +131,17 @@ fn main() {
     // world.set_layout_type(root, LayoutType::Row);
 
     let node = world.add(Some(root));
-    world.set_width(node, Units::Auto);
+    world.set_width(node, Units::Stretch(1.0));
     world.set_height(node, Units::Stretch(1.0));
-    // world.set_child_space(node, Units::Pixels(20.0));
+    world.set_min_width(node, Units::Auto);
+    world.set_min_height(node, Units::Auto);
+    world.set_child_space(node, Units::Stretch(1.0));
+    world.set_position_type(node, PositionType::SelfDirected);
 
     let child = world.add(Some(node));
-    world.set_width(child, Units::Pixels(100.0));
-    world.set_height(child, Units::Pixels(100.0));
+    world.set_width(child, Units::Pixels(300.0));
+    world.set_height(child, Units::Pixels(300.0));
+    // world.set_position_type(child, PositionType::SelfDirected);
     // world.set_min_width(child, Units::Stretch(1.0));
     // world.set_content_size(child, |_, width, height| {
     //     (100.0, 100.0)

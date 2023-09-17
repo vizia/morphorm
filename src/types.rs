@@ -21,6 +21,20 @@ impl LayoutType {
             LayoutType::Column => second(s).unwrap_or_default(),
         }
     }
+
+    // Helper function for selecting between optional values depending on the layout type with specified default.
+    pub(crate) fn select_unwrap_default<T, S>(
+        &self,
+        s: S,
+        first: impl FnOnce(S) -> Option<T>,
+        second: impl FnOnce(S) -> Option<T>,
+        default: T,
+    ) -> T {
+        match self {
+            LayoutType::Row => first(s).unwrap_or(default),
+            LayoutType::Column => second(s).unwrap_or(default),
+        }
+    }
 }
 
 /// The position type determines whether a node will be positioned in-line with its siblings or out-of-line / independently of its siblings.

@@ -173,11 +173,21 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.min_width(store), |store| self.min_height(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.min_width(store),
+            |store| self.min_height(store),
+            Units::Pixels(0.0),
+        )
     }
 
     fn max_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.max_width(store), |store| self.max_height(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.max_width(store),
+            |store| self.max_height(store),
+            Units::Pixels(f32::MAX),
+        )
     }
 
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
@@ -188,11 +198,21 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.min_height(store), |store| self.min_width(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.min_height(store),
+            |store| self.min_width(store),
+            Units::Pixels(0.0),
+        )
     }
 
     fn max_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.max_height(store), |store| self.max_width(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.max_height(store),
+            |store| self.max_width(store),
+            Units::Pixels(f32::MAX),
+        )
     }
 
     fn main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
