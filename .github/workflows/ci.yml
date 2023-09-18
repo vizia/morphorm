@@ -8,16 +8,16 @@ name: Continuous Integration
 
 jobs:
   tests:
-    name: "Test Suite"
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: sudo apt install libwayland-dev libxkbcommon-dev
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build
       - run: cargo test
 
   fmt:
-    name: Rustfmt
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,14 +40,13 @@ jobs:
       - run: cargo +nightly clippy --workspace -- -D warnings
 
   doc:
-    name: Documentation
+    name: Docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          components: clippy
       - run: cargo doc
         env:
           RUSTDOCFLAGS: "-D warnings"
