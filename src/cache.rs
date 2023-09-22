@@ -22,7 +22,7 @@ pub trait Cache {
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32);
 }
 
-/// Helper trait for getting/setting node size/position in a direction agnostic way.
+/// Helper trait for getting/setting node position/size in a direction agnostic way.
 pub(crate) trait CacheExt: Cache {
     fn set_rect(
         &mut self,
@@ -40,4 +40,5 @@ pub(crate) trait CacheExt: Cache {
     }
 }
 
+// Implement `CacheExt` for all types which implement `Cache`.
 impl<C: Cache> CacheExt for C {}

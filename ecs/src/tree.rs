@@ -182,7 +182,6 @@ impl<'a> Iterator for ChildIterator<'a> {
     type Item = &'a Entity;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(entity) = self.current_node {
-            //self.current_node = self.tree.next_sibling[entity.index()].as_ref();
             self.current_node = self.tree.get_next_sibling(entity);
             return Some(entity);
         }

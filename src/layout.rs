@@ -79,7 +79,7 @@ struct ChildNode<'a, N: Node> {
 /// # Example
 ///
 /// ```
-/// layout(&root, LayoutType::Column, 600.0, 600.0, &mut cache, &tree, &store);
+/// layout(&root, LayoutType::Column, 600.0, 600.0, &mut cache, &tree, &store, &mut sublayout);
 /// ```
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn layout<N, C>(
