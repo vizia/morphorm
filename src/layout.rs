@@ -74,7 +74,7 @@ struct ChildNode<'a, N: Node> {
 /// * `cache` - A mutable reference to the [`Cache`].
 /// * `tree` - A mutable reference to the [`Tree`](crate::Node::Tree).
 /// * `store` - A mutable reference to the [`Store`](crate::Node::Store).
-/// * `sublayout` - A mutable reference to the [`Sublayout`](crate::Node::SubLayout) context.
+/// * `sublayout` - A mutable reference to the [`SubLayout`](crate::Node::SubLayout) context.
 ///
 /// # Example
 ///

@@ -20,16 +20,25 @@ pub trait Node: Sized {
     type ChildIter<'t>: Iterator<Item = &'t Self>
     where
         Self: 't;
-
     /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
     type CacheKey;
-
     /// A type representing a context which can be used to save/load state when computing [content size](crate::Node::content_size).
     /// For example, a `TextContext` which could be used to measure (and cache) the size of text, which could
     /// then be used to size an `Auto` layout node using content size.
     type SubLayout<'a>;
 
-    /// Performs a layout calculation on the node (see [layout](crate::layout::layout)).
+    /// Performs layout on the given node returning its computed size.
+    ///
+    /// The algorithm recurses down the tree, in depth-first order, and performs
+    /// layout on every node starting from the input `node`.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache` - A mutable reference to the [`Cache`].
+    /// * `tree` - A mutable reference to the [`Tree`](crate::Node::Tree).
+    /// * `store` - A mutable reference to the [`Store`](crate::Node::Store).
+    /// * `sublayout` - A mutable reference to the [`SubLayout`](crate::Node::SubLayout) context.
+    ///
     fn layout<C: Cache<Node = Self>>(
         &self,
         cache: &mut C,
