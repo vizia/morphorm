@@ -152,7 +152,7 @@ where
     }
 
     // Apply main-axis size constraints for pixels and percentage.
-    computed_main = computed_main.clamp(min_main, max_main);
+    computed_main = computed_main.min(max_main).max(min_main);
 
     // TODO: Figure out how to constrain content size on cross axis.
 
@@ -348,7 +348,7 @@ where
         min_cross = cross_max + border_cross_before + border_cross_after
     }
 
-    parent_cross = parent_cross.clamp(min_cross, max_cross);
+    parent_cross = parent_cross.min(max_cross).max(min_cross);
 
     // Compute flexible space and size on the cross-axis for parent-directed children.
     for (index, child) in children
@@ -453,7 +453,7 @@ where
                     }
                 }
 
-                let clamped = actual_cross.clamp(item.min, item.max);
+                let clamped = actual_cross.min(item.max).max(item.min);
                 item.violation = clamped - actual_cross;
                 total_violation += item.violation;
 
@@ -491,7 +491,7 @@ where
         min_main = parent_main.max(main_sum) + border_main_before + border_main_after
     }
 
-    parent_main = parent_main.clamp(min_main, max_main);
+    parent_main = parent_main.min(max_main).max(min_main);
 
     // Compute flexible space and size on the main axis for parent-directed children.
     if !main_axis.is_empty() {
@@ -521,7 +521,7 @@ where
                     }
                 }
 
-                let clamped = actual_main.clamp(item.min, item.max);
+                let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
                 total_violation += item.violation;
                 item.computed = clamped;
@@ -745,7 +745,7 @@ where
                     child.main = child_size.main;
                 }
 
-                let clamped = actual_cross.clamp(item.min, item.max);
+                let clamped = actual_cross.min(item.max).max(item.min);
                 item.violation = clamped - actual_cross;
                 total_violation += item.violation;
 
@@ -865,7 +865,7 @@ where
                     }
                 }
 
-                let clamped = actual_main.clamp(item.min, item.max);
+                let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
                 total_violation += item.violation;
                 item.computed = clamped;
@@ -976,7 +976,7 @@ where
             for item in cross_axis.iter_mut().filter(|item| !item.frozen) {
                 let actual_cross = (item.factor * child_cross_free_space / cross_flex_sum).round();
 
-                let clamped = actual_cross.clamp(item.min, item.max);
+                let clamped = actual_cross.min(item.max).max(item.min);
                 item.violation = clamped - actual_cross;
                 total_violation += item.violation;
 
@@ -1059,8 +1059,8 @@ where
         }
     }
 
-    computed_main = computed_main.clamp(min_main, max_main);
-    computed_cross = computed_cross.clamp(min_cross, max_cross);
+    computed_main = computed_main.min(max_main).max(min_main);
+    computed_cross = computed_cross.min(max_cross).max(min_cross);
 
     // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }
