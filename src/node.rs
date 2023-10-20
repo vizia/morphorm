@@ -20,7 +20,7 @@ pub trait Node: Sized {
     type ChildIter<'t>: Iterator<Item = &'t Self>
     where
         Self: 't;
-    /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
+    /// A type representing a key to store and retrieve values from the [`Cache`].
     type CacheKey;
     /// A type representing a context which can be used to save/load state when computing [content size](crate::Node::content_size).
     /// For example, a `TextContext` which could be used to measure (and cache) the size of text, which could
