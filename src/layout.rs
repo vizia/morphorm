@@ -343,7 +343,7 @@ where
 
     // Determine cross-size of auto node from children.
     if num_parent_directed_children != 0
-        && (node.cross(store, parent_layout_type).is_auto() || node.min_cross(store, parent_layout_type).is_auto())
+        && (node.cross(store, layout_type).is_auto() || node.min_cross(store, layout_type).is_auto())
     {
         min_cross = cross_max + border_cross_before + border_cross_after
     }
@@ -486,7 +486,7 @@ where
 
     // Determine main-size of auto node from children.
     if num_parent_directed_children != 0
-        && (node.main(store, parent_layout_type).is_auto() || node.min_main(store, parent_layout_type).is_auto())
+        && (node.main(store, layout_type).is_auto() || node.min_main(store, layout_type).is_auto())
     {
         min_main = parent_main.max(main_sum) + border_main_before + border_main_after
     }
