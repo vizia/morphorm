@@ -90,11 +90,12 @@ impl Units {
     pub fn to_px_clamped(&self, parent_value: f32, default: f32, min: Units, max: Units) -> f32 {
         let min = min.to_px(parent_value, f32::MIN);
         let max = max.to_px(parent_value, f32::MAX);
+
         match self {
-            Units::Pixels(pixels) => pixels.clamp(min, max),
-            Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).clamp(min, max),
-            Units::Stretch(_) => default.clamp(min, max),
-            Units::Auto => default.clamp(min, max),
+            Units::Pixels(pixels) => pixels.min(max).max(min),
+            Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).min(max).max(min),
+            Units::Stretch(_) => default.min(max).max(min),
+            Units::Auto => default.min(max).max(min),
         }
     }
 
