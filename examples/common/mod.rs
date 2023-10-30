@@ -1,9 +1,17 @@
+use std::num::NonZeroU32;
+
 use femtovg::FontId;
-use glutin::event::{ElementState, VirtualKeyCode};
+use glutin::config::ConfigTemplateBuilder;
+use glutin::context::{ContextApi, ContextAttributesBuilder};
+use glutin::display::GetGlDisplay;
+use glutin::prelude::{GlConfig, GlDisplay, NotCurrentGlContextSurfaceAccessor};
+use glutin::surface::{GlSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface};
+use glutin_winit::DisplayBuilder;
 pub use morphorm::*;
 pub use morphorm_ecs::*;
 
-use winit::event::{Event, WindowEvent};
+use raw_window_handle::HasRawWindowHandle;
+use winit::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
@@ -19,51 +27,96 @@ use femtovg::{
 };
 
 pub fn render(mut world: World, root: Entity) {
-    let event_loop = EventLoop::new();
+    let events_loop = EventLoop::new();
 
-    let (renderer, windowed_context) = {
-        use glutin::ContextBuilder;
-
+    let (mut canvas, window, context, surface) = {
         let window_builder =
-            WindowBuilder::new().with_inner_size(winit::dpi::PhysicalSize::new(1000, 600)).with_title("Morphorm Demo");
+            WindowBuilder::new().with_inner_size(winit::dpi::PhysicalSize::new(600, 600)).with_title("Morphorm Demo");
 
-        let windowed_context =
-            ContextBuilder::new().with_vsync(false).build_windowed(window_builder, &event_loop).unwrap();
-        let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+        let template = ConfigTemplateBuilder::new().with_alpha_size(8);
 
-        let renderer = unsafe {
-            OpenGl::new_from_function(|s| windowed_context.get_proc_address(s) as *const _)
-                .expect("Cannot create renderer")
-        };
+        let display_builder = DisplayBuilder::new().with_window_builder(Some(window_builder));
 
-        (renderer, windowed_context)
+        let (window, gl_config) = display_builder
+            .build(&events_loop, template, |configs| {
+                // Find the config with the maximum number of samples, so our triangle will
+                // be smooth.
+                configs
+                    .reduce(|accum, config| {
+                        let transparency_check = config.supports_transparency().unwrap_or(false)
+                            & !accum.supports_transparency().unwrap_or(false);
+
+                        if transparency_check || config.num_samples() < accum.num_samples() {
+                            config
+                        } else {
+                            accum
+                        }
+                    })
+                    .unwrap()
+            })
+            .unwrap();
+
+        let window = window.unwrap();
+
+        let raw_window_handle = Some(window.raw_window_handle());
+
+        let gl_display = gl_config.display();
+
+        let context_attributes = ContextAttributesBuilder::new().build(raw_window_handle);
+        let fallback_context_attributes =
+            ContextAttributesBuilder::new().with_context_api(ContextApi::Gles(None)).build(raw_window_handle);
+        let mut not_current_gl_context = Some(unsafe {
+            gl_display.create_context(&gl_config, &context_attributes).unwrap_or_else(|_| {
+                gl_display.create_context(&gl_config, &fallback_context_attributes).expect("failed to create context")
+            })
+        });
+
+        let (width, height): (u32, u32) = window.inner_size().into();
+        let raw_window_handle = window.raw_window_handle();
+        let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
+            raw_window_handle,
+            NonZeroU32::new(width).unwrap(),
+            NonZeroU32::new(height).unwrap(),
+        );
+
+        let surface = unsafe { gl_config.display().create_window_surface(&gl_config, &attrs).unwrap() };
+
+        let gl_context = not_current_gl_context.take().unwrap().make_current(&surface).unwrap();
+
+        surface.set_swap_interval(&gl_context, SwapInterval::DontWait).unwrap();
+
+        let renderer = unsafe { OpenGl::new_from_function_cstr(|s| gl_display.get_proc_address(s) as *const _) }
+            .expect("Cannot create renderer");
+        let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
+
+        let size = window.inner_size();
+        canvas.set_size(size.width, size.height, 1.0);
+        canvas.clear_rect(0, 0, size.width, size.height, Color::rgb(255, 80, 80));
+
+        (canvas, window, gl_context, surface)
     };
-
-    let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
 
     let font = canvas.add_font("examples/common/Roboto-Regular.ttf").expect("Failed to load font file");
 
-    event_loop.run(move |event, _, control_flow| {
-        #[cfg(not(target_arch = "wasm32"))]
-        let window = windowed_context.window();
-
+    events_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
         match event {
             Event::LoopDestroyed => return,
             Event::WindowEvent { ref event, .. } => match event {
-                WindowEvent::Resized(physical_size) => {
-                    windowed_context.resize(*physical_size);
+                WindowEvent::Resized(size) => {
+                    surface.resize(&context, size.width.try_into().unwrap(), size.height.try_into().unwrap());
+
                     let layout_type = world.store.layout_type.get(root).cloned().unwrap_or_default();
                     match layout_type {
                         LayoutType::Row => {
-                            world.set_width(root, Units::Pixels(physical_size.width as f32));
-                            world.set_height(root, Units::Pixels(physical_size.height as f32));
+                            world.set_width(root, Units::Pixels(size.width as f32));
+                            world.set_height(root, Units::Pixels(size.height as f32));
                         }
 
                         LayoutType::Column => {
-                            world.set_height(root, Units::Pixels(physical_size.height as f32));
-                            world.set_width(root, Units::Pixels(physical_size.width as f32));
+                            world.set_height(root, Units::Pixels(size.height as f32));
+                            world.set_width(root, Units::Pixels(size.width as f32));
                         }
                     };
 
@@ -87,9 +140,11 @@ pub fn render(mut world: World, root: Entity) {
                 draw_node(&root, &world.tree, &world.cache, &world.store, 0.0, 0.0, font, &mut canvas);
 
                 canvas.flush();
-                windowed_context.swap_buffers().unwrap();
+                surface.swap_buffers(&context).unwrap();
             }
-            Event::MainEventsCleared => window.request_redraw(),
+            Event::MainEventsCleared => {
+                window.request_redraw();
+            }
             _ => (),
         }
     });

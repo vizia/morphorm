@@ -3,11 +3,11 @@ use crate::{LayoutType, Node};
 /// The `Cache` is a store which contains the computed size and position of nodes
 /// after a layout calculation.
 ///
-/// The `Node` associated type, which implements the [`Node`](crate::Node) trait, provides
-/// a [`CacheKey'](crate::Node::CacheKey) associated type which can be used as key for storage types
-/// within the cache if the `Node` type itself cannot be used. For example, as the key to a hashmap.
+/// The `Node` associated type, which implements the [`Node`] trait, provides
+/// a [`CacheKey`](crate::Node::CacheKey) associated type which can be used as key for storage types
+/// within the cache if the `Node` type itself cannot be used. For example, as the key to a hashmap/slotmap.
 pub trait Cache {
-    /// A type which represents a layout node and implments the [`Node`](crate::Node) trait.
+    /// A type which represents a layout node and implements the [`Node`] trait.
     type Node: Node;
     /// Returns the cached width of the given node.
     fn width(&self, node: &Self::Node) -> f32;
@@ -22,7 +22,7 @@ pub trait Cache {
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32);
 }
 
-/// Helper trait for getting/setting node size/position in a direction agnostic way.
+/// Helper trait for getting/setting node position/size in a direction agnostic way.
 pub(crate) trait CacheExt: Cache {
     fn set_rect(
         &mut self,
@@ -40,4 +40,5 @@ pub(crate) trait CacheExt: Cache {
     }
 }
 
+// Implement `CacheExt` for all types which implement `Cache`.
 impl<C: Cache> CacheExt for C {}

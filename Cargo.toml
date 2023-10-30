@@ -1,26 +1,28 @@
 [package]
 name = "morphorm"
-version = "0.5.0"
+version = "0.6.2"
 edition = "2021"
-author = "George Atkinson"
+author = "George Atkinson <geom3trik@vizia.dev>"
 license = "MIT"
 description = "A UI layout engine"
 repository = "https://github.com/vizia/morphorm"
-keywords = ["ui", "gui", "layout"]
+keywords = ["ui", "gui", "layout", "flex"]
 
 [workspace]
 members = ["playground"]
 
 [dependencies]
-smallvec = "1.10.0"
+smallvec = "1.11.0"
 
 [dev-dependencies]
 morphorm-ecs = {path = "ecs"}
-winit = { version = "0.25.0", default-features = false }
-femtovg = {version = "0.4.0", default-features = false}
-glutin = "0.27.0"
+winit = { version = "0.28.6", default-features = false }
+femtovg = {version = "0.7.1", default-features = false}
+glutin = "0.30.10"
+glutin-winit = "0.3.0"
+raw-window-handle = "0.5.0"
 rand = "0.8.5"
-criterion = "0.4.0"
+criterion = "0.5.1"
 unicode-segmentation = "1.10.1"
 
 [lib]

@@ -21,6 +21,20 @@ impl LayoutType {
             LayoutType::Column => second(s).unwrap_or_default(),
         }
     }
+
+    // Helper function for selecting between optional values depending on the layout type with specified default.
+    pub(crate) fn select_unwrap_default<T, S>(
+        &self,
+        s: S,
+        first: impl FnOnce(S) -> Option<T>,
+        second: impl FnOnce(S) -> Option<T>,
+        default: T,
+    ) -> T {
+        match self {
+            LayoutType::Row => first(s).unwrap_or(default),
+            LayoutType::Column => second(s).unwrap_or(default),
+        }
+    }
 }
 
 /// The position type determines whether a node will be positioned in-line with its siblings or out-of-line / independently of its siblings.
@@ -76,11 +90,12 @@ impl Units {
     pub fn to_px_clamped(&self, parent_value: f32, default: f32, min: Units, max: Units) -> f32 {
         let min = min.to_px(parent_value, f32::MIN);
         let max = max.to_px(parent_value, f32::MAX);
+
         match self {
-            Units::Pixels(pixels) => pixels.clamp(min, max),
-            Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).clamp(min, max),
-            Units::Stretch(_) => default.clamp(min, max),
-            Units::Auto => default.clamp(min, max),
+            Units::Pixels(pixels) => pixels.min(max).max(min),
+            Units::Percentage(percentage) => ((percentage / 100.0) * parent_value).min(max).max(min),
+            Units::Stretch(_) => default.min(max).max(min),
+            Units::Auto => default.min(max).max(min),
         }
     }
 

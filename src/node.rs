@@ -9,9 +9,9 @@ use crate::{layout, types::*, Cache};
 /// which is passed to the layout property methods.
 ///
 /// Similarly, the children of the node can be optionally stored externally using the `Tree` associated type,
-/// a reference to which is passed to the `children` method, which returns an iterator on the children of the node,
+/// a reference to which is passed to the [`children`](crate::Node::children) method, which returns an iterator on the children of the node,
 /// the type of which is specified by the `ChildIter` associated type.
-pub trait Node: Sized + Clone {
+pub trait Node: Sized {
     /// A type representing a store where layout properties can be stored.
     type Store;
     /// A type representing a tree structure where the children of the node can be stored.
@@ -20,12 +20,25 @@ pub trait Node: Sized + Clone {
     type ChildIter<'t>: Iterator<Item = &'t Self>
     where
         Self: 't;
-
-    /// A type representing a key to store and retrieve values from the [`Cache`](crate::Cache).
+    /// A type representing a key to store and retrieve values from the [`Cache`].
     type CacheKey;
-
+    /// A type representing a context which can be used to save/load state when computing [content size](crate::Node::content_size).
+    /// For example, a `TextContext` which could be used to measure (and cache) the size of text, which could
+    /// then be used to size an `Auto` layout node using content size.
     type SubLayout<'a>;
 
+    /// Performs layout on the given node returning its computed size.
+    ///
+    /// The algorithm recurses down the tree, in depth-first order, and performs
+    /// layout on every node starting from the input `node`.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache` - A mutable reference to the [`Cache`].
+    /// * `tree` - A mutable reference to the [`Tree`](crate::Node::Tree).
+    /// * `store` - A mutable reference to the [`Store`](crate::Node::Store).
+    /// * `sublayout` - A mutable reference to the [`SubLayout`](crate::Node::SubLayout) context.
+    ///
     fn layout<C: Cache<Node = Self>>(
         &self,
         cache: &mut C,
@@ -87,7 +100,8 @@ pub trait Node: Sized + Clone {
     /// Returns the desired bottom-side space of the node.
     fn bottom(&self, store: &Self::Store) -> Option<Units>;
 
-    /// Returns the width and height of the node if its desired width and/or desired height are auto.
+    /// Returns the width and height of the node if its desired width and/or desired height are auto and the node has no children.
+    /// This can be used to size the node based on visual content (such as text), or to apply an aspect ratio size constraint.
     fn content_size(
         &self,
         store: &Self::Store,
@@ -164,7 +178,7 @@ pub trait Node: Sized + Clone {
     fn border_bottom(&self, store: &Self::Store) -> Option<Units>;
 }
 
-/// Helper trait for converting layout properties into a direction-agnostic value.
+/// Helper trait used internally for converting layout properties into a direction-agnostic value.
 pub(crate) trait NodeExt: Node {
     fn main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
@@ -174,11 +188,21 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.min_width(store), |store| self.min_height(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.min_width(store),
+            |store| self.min_height(store),
+            Units::Pixels(0.0),
+        )
     }
 
     fn max_main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.max_width(store), |store| self.max_height(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.max_width(store),
+            |store| self.max_height(store),
+            Units::Pixels(f32::MAX),
+        )
     }
 
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
@@ -189,11 +213,21 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn min_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.min_height(store), |store| self.min_width(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.min_height(store),
+            |store| self.min_width(store),
+            Units::Pixels(0.0),
+        )
     }
 
     fn max_cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.max_height(store), |store| self.max_width(store))
+        parent_layout_type.select_unwrap_default(
+            store,
+            |store| self.max_height(store),
+            |store| self.max_width(store),
+            Units::Pixels(f32::MAX),
+        )
     }
 
     fn main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
@@ -304,4 +338,5 @@ pub(crate) trait NodeExt: Node {
     }
 }
 
+// Implement `NodeExt` for all types which implement `Node`.
 impl<N: Node> NodeExt for N {}
