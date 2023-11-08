@@ -6,7 +6,7 @@ description = "A mini ECS used for testing the morphorm crate."
 license = "MIT"
 
 [dependencies]
-morphorm = {version = "0.6.2", path = "../"}
+morphorm = {version = "0.6.3", path = "../"}
 femtovg = {version = "0.7.1", default-features = false}
 rand = "0.8.5"
 slotmap = "1.0.6"
