@@ -200,8 +200,8 @@ where
     let mut iter = node
         .children(tree)
         .filter(|child| child.visible(store))
-        .enumerate()
-        .filter(|(_, child)| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected);
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
+        .enumerate();
 
     let first = iter.next().map(|(index, _)| index);
     let last = iter.last().map_or(first, |(index, _)| Some(index));
@@ -209,8 +209,8 @@ where
     let mut node_children = node
         .children(tree)
         .filter(|child| child.visible(store))
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
         .enumerate()
-        .filter(|(_, child)| child.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
         .peekable();
 
     // Compute space and size of non-flexible parent-directed children.
@@ -353,9 +353,9 @@ where
     // Compute flexible space and size on the cross-axis for parent-directed children.
     for (index, child) in children
         .iter_mut()
+        .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
+        .filter(|child| !child.node.cross(store, layout_type).is_auto())
         .enumerate()
-        .filter(|(_, child)| child.node.position_type(store).unwrap_or_default() == PositionType::ParentDirected)
-        .filter(|(_, child)| !child.node.cross(store, layout_type).is_auto())
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
@@ -571,7 +571,7 @@ where
     // Compute stretch cross_before and stretch cross_after for auto cross children.
     // TODO: I think this only needs to be done for parent-directed children...
     for (index, child) in
-        children.iter_mut().enumerate().filter(|(_, child)| child.node.cross(store, layout_type).is_auto())
+        children.iter_mut().filter(|child| child.node.cross(store, layout_type).is_auto()).enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let mut child_cross_after = child.node.cross_after(store, layout_type);
@@ -782,8 +782,8 @@ where
     // Compute flexible space and size on the cross-axis for self-directed nodes.
     for (index, child) in children
         .iter_mut()
+        .filter(| child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
         .enumerate()
-        .filter(|(_, child)| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let child_cross = child.node.cross(store, layout_type);
@@ -933,8 +933,8 @@ where
     // Compute flexible space and size on the main-axis for self-directed nodes.
     for (index, child) in children
         .iter_mut()
+        .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
         .enumerate()
-        .filter(|(_, child)| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
     {
         let mut child_main_before = child.node.main_before(store, layout_type);
         let child_main = child.node.main(store, layout_type);
