@@ -570,8 +570,7 @@ where
 
     // Compute stretch cross_before and stretch cross_after for auto cross children.
     // TODO: I think this only needs to be done for parent-directed children...
-    for (index, child) in
-        children.iter_mut().filter(|child| child.node.cross(store, layout_type).is_auto()).enumerate()
+    for (index, child) in children.iter_mut().filter(|child| child.node.cross(store, layout_type).is_auto()).enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
         let mut child_cross_after = child.node.cross_after(store, layout_type);
@@ -782,7 +781,7 @@ where
     // Compute flexible space and size on the cross-axis for self-directed nodes.
     for (index, child) in children
         .iter_mut()
-        .filter(| child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
+        .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::SelfDirected)
         .enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
