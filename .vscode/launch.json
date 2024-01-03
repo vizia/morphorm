@@ -1,11 +1,20 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "lldb",
             "request": "launch",
             "name": "Basic",
             "program": "${workspaceFolder}/target/debug/examples/basic",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Menu",
+            "program": "${workspaceFolder}/target/debug/examples/menu",
             "args": [],
             "cwd": "${workspaceFolder}"
         }
