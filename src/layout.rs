@@ -385,9 +385,17 @@ where
         || node.min_cross(store, parent_layout_type).is_auto()
     {
         min_cross = (cross_max + border_cross_before + border_cross_after).min(max_cross).max(min_cross);
+        parent_cross = parent_cross.max(min_cross);
     }
 
-    parent_cross = parent_cross.max(min_cross);
+    // Determine main-size of auto node from children.
+    if num_parent_directed_children != 0 && node.main(store, parent_layout_type).is_auto()
+        || node.min_main(store, parent_layout_type).is_auto()
+    {
+        min_main = (main_sum + border_main_before + border_main_after).min(max_main).max(min_main);
+        parent_main = parent_main.max(min_main);
+    }
+
 
     // Compute flexible space and size on the cross-axis for parent-directed children.
     for (index, child) in children
@@ -535,11 +543,20 @@ where
         cross_max = cross_max.max(child.cross_before + child.cross + child.cross_after);
     }
 
+    // Determine cross-size of auto node from children.
+    if num_parent_directed_children != 0 && node.cross(store, parent_layout_type).is_auto()
+        || node.min_cross(store, parent_layout_type).is_auto()
+    {
+        min_cross = (cross_max + border_cross_before + border_cross_after).min(max_cross).max(min_cross);
+        parent_cross = parent_cross.max(min_cross);
+    }
+
     // Determine main-size of auto node from children.
     if num_parent_directed_children != 0 && node.main(store, parent_layout_type).is_auto()
         || node.min_main(store, parent_layout_type).is_auto()
     {
-        min_main = (parent_main.max(main_sum) + border_main_before + border_main_after).min(max_main).max(min_main);
+        min_main = (main_sum + border_main_before + border_main_after).min(max_main).max(min_main);
+        parent_main = parent_main.max(min_main);
     }
 
     // Compute flexible space and size on the main axis for parent-directed children.
@@ -991,13 +1008,30 @@ where
         }
     }
 
-        // Compute stretch cross_before and stretch cross_after for auto cross children.
+    
+    // Determine cross-size of auto node from children.
+    if num_parent_directed_children != 0 && node.cross(store, parent_layout_type).is_auto()
+        || node.min_cross(store, parent_layout_type).is_auto()
+    {
+        min_cross = (cross_max + border_cross_before + border_cross_after).min(max_cross).max(min_cross);
+        parent_cross = parent_cross.max(min_cross);
+    }
+
+    // Determine main-size of auto node from children.
+    if num_parent_directed_children != 0 && node.main(store, parent_layout_type).is_auto()
+        || node.min_main(store, parent_layout_type).is_auto()
+    {
+        min_main = (main_sum + border_main_before + border_main_after).min(max_main).max(min_main);
+        parent_main = parent_main.max(min_main);
+    }
+    
+    // Compute stretch cross_before and stretch cross_after for auto cross children.
     // TODO: I think this only needs to be done for parent-directed children...
     for (index, child) in children
         .iter_mut()
-        .filter(|child| {
-            child.node.cross(store, layout_type).is_auto() || child.node.min_cross(store, layout_type).is_auto()
-        })
+        // .filter(|child| {
+        //     child.node.cross(store, layout_type).is_auto() || child.node.min_cross(store, layout_type).is_auto()
+        // })
         .enumerate()
     {
         let mut child_cross_before = child.node.cross_before(store, layout_type);
