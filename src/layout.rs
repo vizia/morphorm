@@ -192,8 +192,8 @@ where
 
     // Apply main-axis size constraints for pixels and percentage.
     // if !main.is_stretch() {
-    computed_main = computed_main.min(max_main).max(min_main);
-    computed_cross = computed_cross.min(max_cross).max(min_cross);
+    computed_main = computed_main.max(min_main).min(max_main);
+    computed_cross = computed_cross.max(min_cross).min(max_cross);
     // }
 
     // Return early if there's no children to layout.
@@ -387,25 +387,25 @@ where
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_main = main_sum + border_main_before + border_main_after;
-                parent_main = parent_main.min(max_main).max(min_main);
+                parent_main = parent_main.max(min_main).min(max_main);
             } else {
                 min_main = cross_max + border_main_before + border_main_after;
-                parent_cross = parent_cross.min(max_main).max(min_main);
+                parent_cross = parent_cross.max(min_main).min(max_main);
             }
         }
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross = cross_max + border_cross_before + border_cross_after;
-                parent_cross = parent_cross.min(max_cross).max(min_cross);
+                parent_cross = parent_cross.max(min_cross).min(max_cross);
             } else {
                 min_cross = main_sum + border_cross_before + border_cross_after;
-                parent_main = parent_main.min(max_cross).max(min_cross);
+                parent_main = parent_main.max(min_cross).min(max_cross);
             }
         }
     }
 
-    computed_main = computed_main.min(max_main).max(min_main);
-    computed_cross = computed_cross.min(max_cross).max(min_cross);
+    computed_main = computed_main.max(min_main).min(max_main);
+    computed_cross = computed_cross.max(min_cross).min(max_cross);
 
     // Compute flexible space and size on the cross-axis for parent-directed children.
     for (index, child) in children
@@ -558,25 +558,25 @@ where
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_main = main_sum + border_main_before + border_main_after;
-                parent_main = parent_main.min(max_main).max(min_main);
+                parent_main = parent_main.max(min_main).min(max_main);
             } else {
                 min_main = cross_max + border_main_before + border_main_after;
-                parent_cross = parent_cross.min(max_main).max(min_main);
+                parent_cross = parent_cross.max(min_main).min(max_main);
             }
         }
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross = cross_max + border_cross_before + border_cross_after;
-                parent_cross = parent_cross.min(max_cross).max(min_cross);
+                parent_cross = parent_cross.max(min_cross).min(max_cross);
             } else {
                 min_cross = main_sum + border_cross_before + border_cross_after;
-                parent_main = parent_main.min(max_cross).max(min_cross);
+                parent_main = parent_main.max(min_cross).min(max_cross);
             }
         }
     }
 
-    computed_main = computed_main.min(max_main).max(min_main);
-    computed_cross = computed_cross.min(max_cross).max(min_cross);
+    computed_main = computed_main.max(min_main).min(max_main);
+    computed_cross = computed_cross.max(min_cross).min(max_cross);
 
     // Compute flexible space and size on the main axis for parent-directed children.
     if !main_axis.is_empty() {
@@ -657,25 +657,25 @@ where
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_main = main_sum + border_main_before + border_main_after;
-                parent_main = parent_main.min(max_main).max(min_main);
+                parent_main = parent_main.max(min_main).min(max_main);
             } else {
                 min_main = cross_max + border_main_before + border_main_after;
-                parent_cross = parent_cross.min(max_main).max(min_main);
+                parent_cross = parent_cross.max(min_main).min(max_main);
             }
         }
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross = cross_max + border_cross_before + border_cross_after;
-                parent_cross = parent_cross.min(max_cross).max(min_cross);
+                parent_cross = parent_cross.max(min_cross).min(max_cross);
             } else {
                 min_cross = main_sum + border_cross_before + border_cross_after;
-                parent_main = parent_main.min(max_cross).max(min_cross);
+                parent_main = parent_main.max(min_cross).min(max_cross);
             }
         }
     }
 
-    computed_main = computed_main.min(max_main).max(min_main);
-    computed_cross = computed_cross.min(max_cross).max(min_cross);
+    computed_main = computed_main.max(min_main).min(max_main);
+    computed_cross = computed_cross.max(min_cross).min(max_cross);
 
     let node_children = node
         .children(tree)
@@ -1039,25 +1039,25 @@ where
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_main = main_sum + border_main_before + border_main_after;
-                parent_main = parent_main.min(max_main).max(min_main);
+                parent_main = parent_main.max(min_main).min(max_main);
             } else {
                 min_main = cross_max + border_main_before + border_main_after;
-                parent_cross = parent_cross.min(max_main).max(min_main);
+                parent_cross = parent_cross.max(min_main).min(max_main);
             }
         }
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross = cross_max + border_cross_before + border_cross_after;
-                parent_cross = parent_cross.min(max_cross).max(min_cross);
+                parent_cross = parent_cross.max(min_cross).min(max_cross);
             } else {
                 min_cross = main_sum + border_cross_before + border_cross_after;
-                parent_main = parent_main.min(max_cross).max(min_cross);
+                parent_main = parent_main.max(min_cross).min(max_cross);
             }
         }
     }
 
-    computed_main = computed_main.min(max_main).max(min_main);
-    computed_cross = computed_cross.min(max_cross).max(min_cross);
+    computed_main = computed_main.max(min_main).min(max_main);
+    computed_cross = computed_cross.max(min_cross).min(max_cross);
 
     // Compute stretch cross_before and stretch cross_after for auto cross children.
     // TODO: I think this only needs to be done for parent-directed children...
