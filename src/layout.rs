@@ -181,8 +181,8 @@ where
     if (node.min_main(store, parent_layout_type).is_auto() || node.min_cross(store, parent_layout_type).is_auto())
         && num_parent_directed_children == 0
     {
-        let p_main = if main.is_auto() { None } else { Some(computed_main) };
-        let p_cross = if cross.is_auto() { None } else { Some(computed_cross) };
+        let p_main = if node.min_main(store, parent_layout_type).is_auto() { None } else { Some(computed_main) };
+        let p_cross = if node.min_cross(store, parent_layout_type).is_auto() { None } else { Some(computed_cross) };
 
         if let Some(content_size) = node.content_sizing(store, sublayout, parent_layout_type, p_main, p_cross) {
             min_main = content_size.0;
@@ -339,8 +339,8 @@ where
 
         let mut computed_child_cross = child_cross.to_px(parent_cross, 0.0);
 
-        if (child.min_cross(store, layout_type).is_auto()) {
-            let p_cross = if child_cross.is_auto() { None } else { Some(parent_cross) };
+        if child.min_cross(store, layout_type).is_auto() {
+            let p_cross = if child.min_cross(store, layout_type).is_auto() { None } else { Some(parent_cross) };
 
             if let Some(content_size) = child.content_sizing(store, sublayout, layout_type, p_cross, p_cross) {
                 // min_main = content_size.0;
