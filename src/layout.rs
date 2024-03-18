@@ -381,7 +381,6 @@ where
         });
     }
 
-    
     // Determine auto main and cross size from space and size of children.
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {

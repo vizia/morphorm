@@ -401,7 +401,7 @@ fn min_size_auto_child_self_directed() {
     world.set_height(node2, Units::Pixels(300.0));
     world.set_position_type(node2, PositionType::SelfDirected);
     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
-    
+
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 200.0, posy: 200.0, width: 200.0, height: 200.0 }));
     assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
