@@ -8,9 +8,6 @@ description = "A UI layout engine"
 repository = "https://github.com/vizia/morphorm"
 keywords = ["ui", "gui", "layout", "flex"]
 
-[workspace]
-members = ["playground"]
-
 [dependencies]
 smallvec = "1.11.0"
 
