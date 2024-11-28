@@ -17,8 +17,7 @@ fn main() {
     world.set_width(child, Units::Stretch(1.0));
     world.set_min_width(child, Units::Auto);
     world.set_height(child, Units::Pixels(50.0));
-    world.set_content_size(child, |_, width, height| {
-        let w = width.unwrap();
+    world.set_content_size(child, |_, _, height| {
         let h = height.unwrap();
         (50.0, h)
     });
@@ -27,8 +26,7 @@ fn main() {
     world.set_width(child, Units::Stretch(1.0));
     world.set_min_width(child, Units::Auto);
     world.set_height(child, Units::Pixels(50.0));
-    world.set_content_size(child, |_, width, height| {
-        let w = width.unwrap();
+    world.set_content_size(child, |_, _, height| {
         let h = height.unwrap();
         (60.0, h)
     });
@@ -37,8 +35,7 @@ fn main() {
     world.set_width(child, Units::Stretch(1.0));
     world.set_min_width(child, Units::Auto);
     world.set_height(child, Units::Pixels(50.0));
-    world.set_content_size(child, |_, width, height| {
-        let w = width.unwrap();
+    world.set_content_size(child, |_, _, height| {
         let h = height.unwrap();
         (130.0, h)
     });
@@ -47,8 +44,7 @@ fn main() {
     world.set_width(child, Units::Stretch(1.0));
     world.set_min_width(child, Units::Auto);
     world.set_height(child, Units::Pixels(50.0));
-    world.set_content_size(child, |_, width, height| {
-        let w = width.unwrap();
+    world.set_content_size(child, |_, _, height| {
         let h = height.unwrap();
         (80.0, h)
     });
