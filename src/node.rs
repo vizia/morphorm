@@ -266,6 +266,7 @@ pub(crate) trait NodeExt: Node {
     }
 
     // Currently unused until wrapping is implemented
+    #[allow(dead_code)]
     fn cross_between(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         parent_layout_type.select_unwrap(store, |store| self.row_between(store), |store| self.col_between(store))
     }

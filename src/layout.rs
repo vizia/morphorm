@@ -1038,7 +1038,7 @@ where
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_main = main_sum + border_main_before + border_main_after;
-                parent_main = parent_main.max(min_main).min(max_main);
+                // parent_main = parent_main.max(min_main).min(max_main);
             } else {
                 min_main = cross_max + border_main_before + border_main_after;
                 parent_cross = parent_cross.max(min_main).min(max_main);
@@ -1050,7 +1050,7 @@ where
                 parent_cross = parent_cross.max(min_cross).min(max_cross);
             } else {
                 min_cross = main_sum + border_cross_before + border_cross_after;
-                parent_main = parent_main.max(min_cross).min(max_cross);
+                // parent_main = parent_main.max(min_cross).min(max_cross);
             }
         }
     }
