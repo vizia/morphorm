@@ -58,8 +58,8 @@ Spacing is specified with `Units`, which has four variants:
 
 ### Position Type
 The position type property determines whether a node should be positioned in-line with its siblings in a stack, or out-of-line and independently of its siblings. There are two variants:
-- `PositionType::ParentDirected` - The node will be positioned relative to its in-line position with its siblings.
-- `PositionType::SelfDirected` - The node will be positioned out-of-line and relative to the top-left corner of its parent.
+- `Position::Relative` - The node will be positioned relative to its in-line position with its siblings.
+- `Position::SelfDirected` - The node will be positioned out-of-line and relative to the top-left corner of its parent.
 
 ![](/docs/images/position_type.svg)
 
@@ -200,7 +200,7 @@ pub struct PropertyStore {
     pub visible: SecondaryMap<Entity, bool>,
 
     pub layout_type: SecondaryMap<Entity, LayoutType>,
-    pub position_type: SecondaryMap<Entity, PositionType>,
+    pub position_type: SecondaryMap<Entity, Position>,
 
     pub left: SecondaryMap<Entity, Units>,
     pub right: SecondaryMap<Entity, Units>,

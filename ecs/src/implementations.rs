@@ -35,6 +35,10 @@ impl Node for Entity {
         store.position_type.get(*self).copied()
     }
 
+    fn alignment(&self, store: &Store) -> Option<Alignment> {
+        store.alignment.get(*self).copied()
+    }
+
     fn width(&self, store: &Store) -> Option<Units> {
         store.width.get(*self).copied()
     }
@@ -69,28 +73,36 @@ impl Node for Entity {
         store.content_size.get(*self).map(|t| (t)(store, width, height))
     }
 
-    fn child_left(&self, store: &Store) -> Option<Units> {
-        store.child_left.get(*self).copied()
+    fn padding_left(&self, store: &Store) -> Option<Units> {
+        store.padding_left.get(*self).copied()
     }
 
-    fn child_right(&self, store: &Store) -> Option<Units> {
-        store.child_right.get(*self).copied()
+    fn padding_right(&self, store: &Store) -> Option<Units> {
+        store.padding_right.get(*self).copied()
     }
 
-    fn child_top(&self, store: &Store) -> Option<Units> {
-        store.child_top.get(*self).copied()
+    fn padding_top(&self, store: &Store) -> Option<Units> {
+        store.padding_top.get(*self).copied()
     }
 
-    fn child_bottom(&self, store: &Store) -> Option<Units> {
-        store.child_bottom.get(*self).copied()
+    fn padding_bottom(&self, store: &Store) -> Option<Units> {
+        store.padding_bottom.get(*self).copied()
     }
 
-    fn row_between(&self, store: &Store) -> Option<Units> {
-        store.row_between.get(*self).copied()
+    fn vertical_gap(&self, store: &Store) -> Option<Units> {
+        store.vertical_gap.get(*self).copied()
     }
 
-    fn col_between(&self, store: &Store) -> Option<Units> {
-        store.col_between.get(*self).copied()
+    fn horizontal_gap(&self, store: &Store) -> Option<Units> {
+        store.horizontal_gap.get(*self).copied()
+    }
+
+    fn vertical_scroll(&self, store: &Store) -> Option<f32> {
+        store.vertical_scroll.get(*self).copied()
+    }
+
+    fn horizontal_scroll(&self, store: &Store) -> Option<f32> {
+        store.horizontal_scroll.get(*self).copied()
     }
 
     fn min_width(&self, store: &Store) -> Option<Units> {
@@ -109,38 +121,6 @@ impl Node for Entity {
         store.max_height.get(*self).copied()
     }
 
-    fn min_left(&self, store: &Store) -> Option<Units> {
-        store.min_left.get(*self).copied()
-    }
-
-    fn max_left(&self, store: &Store) -> Option<Units> {
-        store.max_left.get(*self).copied()
-    }
-
-    fn min_right(&self, store: &Store) -> Option<Units> {
-        store.min_right.get(*self).copied()
-    }
-
-    fn max_right(&self, store: &Store) -> Option<Units> {
-        store.max_right.get(*self).copied()
-    }
-
-    fn min_top(&self, store: &Store) -> Option<Units> {
-        store.min_top.get(*self).copied()
-    }
-
-    fn max_top(&self, store: &Store) -> Option<Units> {
-        store.max_top.get(*self).copied()
-    }
-
-    fn min_bottom(&self, store: &Store) -> Option<Units> {
-        store.min_bottom.get(*self).copied()
-    }
-
-    fn max_bottom(&self, store: &Store) -> Option<Units> {
-        store.max_bottom.get(*self).copied()
-    }
-
     fn border_left(&self, store: &Store) -> Option<Units> {
         store.border_left.get(*self).copied()
     }
@@ -155,6 +135,22 @@ impl Node for Entity {
 
     fn border_bottom(&self, store: &Store) -> Option<Units> {
         store.border_bottom.get(*self).copied()
+    }
+
+    fn min_horizontal_gap(&self, store: &Store) -> Option<Units> {
+        store.min_horizontal_gap.get(*self).copied()
+    }
+
+    fn max_horizontal_gap(&self, store: &Store) -> Option<Units> {
+        store.max_horizontal_gap.get(*self).copied()
+    }
+
+    fn min_vertical_gap(&self, store: &Store) -> Option<Units> {
+        store.min_vertical_gap.get(*self).copied()
+    }
+
+    fn max_vertical_gap(&self, store: &Store) -> Option<Units> {
+        store.max_vertical_gap.get(*self).copied()
     }
 }
 

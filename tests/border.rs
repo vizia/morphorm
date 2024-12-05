@@ -74,6 +74,7 @@ fn border_parent_auto() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Auto);

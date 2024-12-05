@@ -8,6 +8,7 @@ fn content_size_height() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -34,6 +35,7 @@ fn content_size_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -60,6 +62,7 @@ fn content_size_height2() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -93,6 +96,7 @@ fn content_size_width2() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -126,6 +130,7 @@ fn content_size_width_parent_auto_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Auto);
@@ -164,6 +169,7 @@ fn content_size_height_parent_auto_height() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     let node = world.add(Some(root));
     world.set_height(node, Units::Auto);
@@ -202,6 +208,7 @@ fn content_size_width_parent_auto_height() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     let node = world.add(Some(root));
     world.set_height(node, Units::Auto);
@@ -240,15 +247,18 @@ fn content_size_height_parent_auto_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Auto);
     world.set_height(node, Units::Stretch(1.0));
     world.set_layout_type(node, LayoutType::Row);
+    world.set_alignment(node, Alignment::TopLeft);
 
     let node1 = world.add(Some(node));
     world.set_height(node1, Units::Auto);
     world.set_width(node1, Units::Stretch(1.0));
+    world.set_alignment(node1, Alignment::TopLeft);
     world.set_content_size(node1, |_, width, _| (width.unwrap(), width.unwrap() / 2.0));
 
     let node2 = world.add(Some(node));
@@ -278,6 +288,7 @@ fn nested_content_size() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -285,6 +296,7 @@ fn nested_content_size() {
     world.set_width(node1, Units::Auto);
     world.set_height(node1, Units::Pixels(200.0));
     world.set_layout_type(node1, LayoutType::Row);
+    world.set_alignment(node1, Alignment::TopLeft);
 
     let node2 = world.add(Some(node1));
     world.set_width(node2, Units::Auto);
@@ -305,6 +317,7 @@ fn content_size() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Column);
 
@@ -332,6 +345,7 @@ fn equal_aspect_ratio() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
