@@ -16,16 +16,16 @@ fn main() {
     let container = world.add(Some(root));
     world.set_width(container, Units::Auto);
     world.set_height(container, Units::Auto);
-    world.set_child_space(container, Units::Pixels(10.0));
+    world.set_padding(container, Units::Pixels(10.0));
     world.set_layout_type(container, LayoutType::Row);
-    world.set_col_between(container, Units::Pixels(10.0));
+    world.set_horizontal_gap(container, Units::Pixels(10.0));
 
     let container1 = world.add(Some(container));
     world.set_width(container1, Units::Auto);
     world.set_height(container1, Units::Auto);
-    world.set_child_space(container1, Units::Pixels(10.0));
+    world.set_padding(container1, Units::Pixels(10.0));
     world.set_layout_type(container1, LayoutType::Row);
-    world.set_col_between(container1, Units::Pixels(10.0));
+    world.set_horizontal_gap(container1, Units::Pixels(10.0));
 
     let node = world.add(Some(container1));
     world.set_width(node, Units::Auto);
@@ -38,9 +38,9 @@ fn main() {
     let container2 = world.add(Some(container));
     world.set_width(container2, Units::Auto);
     world.set_height(container2, Units::Auto);
-    world.set_child_space(container2, Units::Pixels(10.0));
+    world.set_padding(container2, Units::Pixels(10.0));
     world.set_layout_type(container2, LayoutType::Row);
-    world.set_col_between(container2, Units::Pixels(10.0));
+    world.set_horizontal_gap(container2, Units::Pixels(10.0));
 
     let node = world.add(Some(container2));
     world.set_width(node, Units::Auto);
@@ -53,9 +53,9 @@ fn main() {
     let container3 = world.add(Some(container));
     world.set_width(container3, Units::Auto);
     world.set_height(container3, Units::Auto);
-    world.set_child_space(container3, Units::Pixels(10.0));
+    world.set_padding(container3, Units::Pixels(10.0));
     world.set_layout_type(container3, LayoutType::Row);
-    world.set_col_between(container3, Units::Pixels(10.0));
+    world.set_horizontal_gap(container3, Units::Pixels(10.0));
 
     let node = world.add(Some(container3));
     world.set_width(node, Units::Pixels(150.0));
@@ -68,9 +68,9 @@ fn main() {
     let container4 = world.add(Some(container));
     world.set_width(container4, Units::Auto);
     world.set_height(container4, Units::Auto);
-    world.set_child_space(container4, Units::Pixels(10.0));
+    world.set_padding(container4, Units::Pixels(10.0));
     world.set_layout_type(container4, LayoutType::Row);
-    world.set_col_between(container4, Units::Pixels(10.0));
+    world.set_horizontal_gap(container4, Units::Pixels(10.0));
 
     let node = world.add(Some(container4));
     world.set_width(node, Units::Auto);

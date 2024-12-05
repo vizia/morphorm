@@ -33,20 +33,19 @@ pub struct Widget {
     right: Units,
     top: Units,
     bottom: Units,
-    min_left: Units,
-    max_left: Units,
-    max_right: Units,
-    min_right: Units,
-    min_top: Units,
-    max_top: Units,
-    min_bottom: Units,
-    max_bottom: Units,
-    child_left: Units,
-    child_right: Units,
-    child_top: Units,
-    child_bottom: Units,
-    row_between: Units,
-    col_between: Units,
+    padding_left: Units,
+    padding_right: Units,
+    padding_top: Units,
+    padding_bottom: Units,
+    vertical_gap: Units,
+    horizontal_gap: Units,
+    min_vertical_gap: Units,
+    min_horizontal_gap: Units,
+    max_vertical_gap: Units,
+    max_horizontal_gap: Units,
+    vertical_scroll: f32,
+    horizontal_scroll: f32,
+    alignment: Alignment,
     layout_type: LayoutType,
     position_type: PositionType,
     color: femtovg::Color,
@@ -146,60 +145,28 @@ impl Node for Widget {
         None
     }
 
-    fn child_left(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.child_left)
+    fn padding_left(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.padding_left)
     }
 
-    fn child_right(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.child_right)
+    fn padding_right(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.padding_right)
     }
 
-    fn child_top(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.child_top)
+    fn padding_top(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.padding_top)
     }
 
-    fn child_bottom(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.child_bottom)
+    fn padding_bottom(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.padding_bottom)
     }
 
-    fn row_between(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.row_between)
+    fn vertical_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.vertical_gap)
     }
 
-    fn col_between(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.col_between)
-    }
-
-    fn min_left(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.min_left)
-    }
-
-    fn max_left(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.max_left)
-    }
-
-    fn min_right(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.min_right)
-    }
-
-    fn max_right(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.max_right)
-    }
-
-    fn min_top(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.min_top)
-    }
-
-    fn max_top(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.max_top)
-    }
-
-    fn min_bottom(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.min_bottom)
-    }
-
-    fn max_bottom(&self, _store: &Self::Store) -> Option<Units> {
-        Some(self.max_bottom)
+    fn horizontal_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.horizontal_gap)
     }
 
     fn border_left(&self, _store: &Self::Store) -> Option<Units> {
@@ -216,6 +183,34 @@ impl Node for Widget {
 
     fn border_bottom(&self, _store: &Self::Store) -> Option<Units> {
         Some(Units::Pixels(0.0))
+    }
+
+    fn alignment(&self, _store: &Self::Store) -> Option<Alignment> {
+        Some(self.alignment)
+    }
+
+    fn vertical_scroll(&self, _store: &Self::Store) -> Option<f32> {
+        Some(self.vertical_scroll)
+    }
+
+    fn horizontal_scroll(&self, _store: &Self::Store) -> Option<f32> {
+        Some(self.horizontal_scroll)
+    }
+
+    fn min_vertical_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_vertical_gap)
+    }
+
+    fn min_horizontal_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.min_horizontal_gap)
+    }
+
+    fn max_vertical_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_vertical_gap)
+    }
+
+    fn max_horizontal_gap(&self, _store: &Self::Store) -> Option<Units> {
+        Some(self.max_horizontal_gap)
     }
 }
 

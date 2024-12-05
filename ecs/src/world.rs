@@ -1,6 +1,6 @@
 // Part of a very simple ECS for demonstration purposes only.
 
-use morphorm::{LayoutType, PositionType, Units};
+use morphorm::{LayoutType, PositionType, Units, Alignment};
 
 use crate::entity::{Entity, EntityManager};
 use crate::implementations::NodeCache;
@@ -68,6 +68,9 @@ impl World {
         self.store.position_type.insert(entity, value);
     }
 
+    pub fn set_alignment(&mut self, entity: Entity, value: Alignment) {
+        self.store.alignment.insert(entity, value);
+    }
     /// Set the desired width of the given entity.
     pub fn set_width(&mut self, entity: Entity, value: Units) {
         self.store.width.insert(entity, value);
@@ -118,82 +121,62 @@ impl World {
         self.store.bottom.insert(entity, value);
     }
 
-    /// Set the desired child_space of the given entity.
-    pub fn set_child_space(&mut self, entity: Entity, value: Units) {
-        self.store.child_left.insert(entity, value);
-        self.store.child_right.insert(entity, value);
-        self.store.child_top.insert(entity, value);
-        self.store.child_bottom.insert(entity, value);
+    /// Set the desired padding of the given entity.
+    pub fn set_padding(&mut self, entity: Entity, value: Units) {
+        self.store.padding_left.insert(entity, value);
+        self.store.padding_right.insert(entity, value);
+        self.store.padding_top.insert(entity, value);
+        self.store.padding_bottom.insert(entity, value);
     }
 
-    /// Set the desired child_left space of the given entity.
-    pub fn set_child_left(&mut self, entity: Entity, value: Units) {
-        self.store.child_left.insert(entity, value);
+    /// Set the desired padding_left space of the given entity.
+    pub fn set_padding_left(&mut self, entity: Entity, value: Units) {
+        self.store.padding_left.insert(entity, value);
     }
 
-    /// Set the desired child_right space of the given entity.
-    pub fn set_child_right(&mut self, entity: Entity, value: Units) {
-        self.store.child_right.insert(entity, value);
+    /// Set the desired padding_right space of the given entity.
+    pub fn set_padding_right(&mut self, entity: Entity, value: Units) {
+        self.store.padding_right.insert(entity, value);
     }
 
-    /// Set the desired child_top space of the given entity.
-    pub fn set_child_top(&mut self, entity: Entity, value: Units) {
-        self.store.child_top.insert(entity, value);
+    /// Set the desired padding_top space of the given entity.
+    pub fn set_padding_top(&mut self, entity: Entity, value: Units) {
+        self.store.padding_top.insert(entity, value);
     }
 
-    /// Set the desired child_bottom space of the given entity.
-    pub fn set_child_bottom(&mut self, entity: Entity, value: Units) {
-        self.store.child_bottom.insert(entity, value);
+    /// Set the desired padding_bottom space of the given entity.
+    pub fn set_padding_bottom(&mut self, entity: Entity, value: Units) {
+        self.store.padding_bottom.insert(entity, value);
     }
 
-    /// Set the desired vertical (row) space between children of the given entity.
-    pub fn set_row_between(&mut self, entity: Entity, value: Units) {
-        self.store.row_between.insert(entity, value);
+    /// Set the desired vertical (row) space between paddingren of the given entity.
+    pub fn set_vertical_gap(&mut self, entity: Entity, value: Units) {
+        self.store.vertical_gap.insert(entity, value);
     }
 
-    /// Set the desired horizontal (column) space between children of the given entity.
-    pub fn set_col_between(&mut self, entity: Entity, value: Units) {
-        self.store.col_between.insert(entity, value);
+    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    pub fn set_horizontal_gap(&mut self, entity: Entity, value: Units) {
+        self.store.horizontal_gap.insert(entity, value);
     }
 
-    /// Set the minimum left space of the given entity.
-    pub fn set_min_left(&mut self, entity: Entity, value: Units) {
-        self.store.min_left.insert(entity, value);
+    /// Set the desired vertical (row) space between paddingren of the given entity.
+    pub fn set_min_vertical_gap(&mut self, entity: Entity, value: Units) {
+        self.store.min_vertical_gap.insert(entity, value);
     }
 
-    /// Set the maximum left space of the given entity.
-    pub fn set_max_left(&mut self, entity: Entity, value: Units) {
-        self.store.max_left.insert(entity, value);
+    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    pub fn set_min_horizontal_gap(&mut self, entity: Entity, value: Units) {
+        self.store.min_horizontal_gap.insert(entity, value);
     }
 
-    /// Set the minimum right space of the given entity.
-    pub fn set_min_right(&mut self, entity: Entity, value: Units) {
-        self.store.min_right.insert(entity, value);
+    /// Set the desired vertical (row) space between paddingren of the given entity.
+    pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
+        self.store.vertical_scroll.insert(entity, value);
     }
-
-    /// Set the maximum right space of the given entity.
-    pub fn set_max_right(&mut self, entity: Entity, value: Units) {
-        self.store.max_right.insert(entity, value);
-    }
-
-    /// Set the minimum top space of the given entity.
-    pub fn set_min_top(&mut self, entity: Entity, value: Units) {
-        self.store.min_top.insert(entity, value);
-    }
-
-    /// Set the maximum top space of the given entity.
-    pub fn set_max_top(&mut self, entity: Entity, value: Units) {
-        self.store.max_top.insert(entity, value);
-    }
-
-    /// Set the minimum bottom space of the given entity.
-    pub fn set_min_bottom(&mut self, entity: Entity, value: Units) {
-        self.store.min_bottom.insert(entity, value);
-    }
-
-    /// Set the maximum bottom space of the given entity.
-    pub fn set_max_bottom(&mut self, entity: Entity, value: Units) {
-        self.store.max_bottom.insert(entity, value);
+    
+    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    pub fn set_horizontal_scroll(&mut self, entity: Entity, value: f32) {
+        self.store.horizontal_scroll.insert(entity, value);
     }
 
     /// Set the content size function for the given entity.

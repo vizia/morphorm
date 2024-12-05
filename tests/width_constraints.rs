@@ -8,6 +8,7 @@ fn pixels_min_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -28,6 +29,7 @@ fn pixels_max_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -48,6 +50,7 @@ fn percentage_min_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -68,6 +71,7 @@ fn percentage_max_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -88,6 +92,7 @@ fn stretch_min_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -108,6 +113,7 @@ fn stretch_max_width_pixels_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -128,6 +134,7 @@ fn pixels_min_width_stretch_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -154,6 +161,7 @@ fn percentage_min_width_stretch_width() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
 
     world.set_layout_type(root, LayoutType::Row);
 

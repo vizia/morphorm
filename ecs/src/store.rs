@@ -1,7 +1,7 @@
 // Part of a very simple ECS for demonstration purposes only.
 
 use crate::{entity::Entity, TextWrap};
-use morphorm::{LayoutType, PositionType, Units};
+use morphorm::{LayoutType, PositionType, Units, Alignment};
 use slotmap::SecondaryMap;
 
 type ContentSizeType<S> = Box<dyn Fn(&S, Option<f32>, Option<f32>) -> (f32, f32)>;
@@ -13,20 +13,15 @@ pub struct Store {
 
     pub layout_type: SecondaryMap<Entity, LayoutType>,
     pub position_type: SecondaryMap<Entity, PositionType>,
+    pub alignment: SecondaryMap<Entity, Alignment>,
+
+    pub vertical_scroll: SecondaryMap<Entity, f32>,
+    pub horizontal_scroll: SecondaryMap<Entity, f32>,
 
     pub left: SecondaryMap<Entity, Units>,
     pub right: SecondaryMap<Entity, Units>,
     pub top: SecondaryMap<Entity, Units>,
     pub bottom: SecondaryMap<Entity, Units>,
-
-    pub min_left: SecondaryMap<Entity, Units>,
-    pub max_left: SecondaryMap<Entity, Units>,
-    pub min_right: SecondaryMap<Entity, Units>,
-    pub max_right: SecondaryMap<Entity, Units>,
-    pub min_top: SecondaryMap<Entity, Units>,
-    pub max_top: SecondaryMap<Entity, Units>,
-    pub min_bottom: SecondaryMap<Entity, Units>,
-    pub max_bottom: SecondaryMap<Entity, Units>,
 
     pub width: SecondaryMap<Entity, Units>,
     pub height: SecondaryMap<Entity, Units>,
@@ -35,12 +30,17 @@ pub struct Store {
     pub min_height: SecondaryMap<Entity, Units>,
     pub max_height: SecondaryMap<Entity, Units>,
 
-    pub child_left: SecondaryMap<Entity, Units>,
-    pub child_right: SecondaryMap<Entity, Units>,
-    pub child_top: SecondaryMap<Entity, Units>,
-    pub child_bottom: SecondaryMap<Entity, Units>,
-    pub col_between: SecondaryMap<Entity, Units>,
-    pub row_between: SecondaryMap<Entity, Units>,
+    pub min_horizontal_gap: SecondaryMap<Entity, Units>,
+    pub min_vertical_gap: SecondaryMap<Entity, Units>,
+    pub max_horizontal_gap: SecondaryMap<Entity, Units>,
+    pub max_vertical_gap: SecondaryMap<Entity, Units>,
+
+    pub padding_left: SecondaryMap<Entity, Units>,
+    pub padding_right: SecondaryMap<Entity, Units>,
+    pub padding_top: SecondaryMap<Entity, Units>,
+    pub padding_bottom: SecondaryMap<Entity, Units>,
+    pub horizontal_gap: SecondaryMap<Entity, Units>,
+    pub vertical_gap: SecondaryMap<Entity, Units>,
 
     pub content_size: SecondaryMap<Entity, ContentSizeType<Self>>,
 
@@ -69,26 +69,24 @@ impl Store {
         self.right.remove(entity);
         self.top.remove(entity);
         self.bottom.remove(entity);
-        self.min_left.remove(entity);
-        self.max_left.remove(entity);
-        self.min_right.remove(entity);
-        self.max_right.remove(entity);
-        self.min_top.remove(entity);
-        self.max_top.remove(entity);
-        self.min_bottom.remove(entity);
-        self.max_bottom.remove(entity);
+        self.vertical_scroll.remove(entity);
+        self.horizontal_scroll.remove(entity);
         self.width.remove(entity);
         self.height.remove(entity);
         self.min_width.remove(entity);
         self.max_width.remove(entity);
         self.min_height.remove(entity);
         self.max_height.remove(entity);
-        self.child_left.remove(entity);
-        self.child_right.remove(entity);
-        self.child_top.remove(entity);
-        self.child_bottom.remove(entity);
-        self.col_between.remove(entity);
-        self.row_between.remove(entity);
+        self.min_horizontal_gap.remove(entity);
+        self.max_horizontal_gap.remove(entity);
+        self.min_vertical_gap.remove(entity);
+        self.max_vertical_gap.remove(entity);
+        self.padding_left.remove(entity);
+        self.padding_right.remove(entity);
+        self.padding_top.remove(entity);
+        self.padding_bottom.remove(entity);
+        self.horizontal_gap.remove(entity);
+        self.vertical_gap.remove(entity);
         self.content_size.remove(entity);
         self.text.remove(entity);
         self.text_wrap.remove(entity);
@@ -109,26 +107,24 @@ impl Store {
         self.right.clear();
         self.top.clear();
         self.bottom.clear();
-        self.min_left.clear();
-        self.max_left.clear();
-        self.min_right.clear();
-        self.max_right.clear();
-        self.min_top.clear();
-        self.max_top.clear();
-        self.min_bottom.clear();
-        self.max_bottom.clear();
+        self.vertical_scroll.clear();
+        self.horizontal_scroll.clear();
         self.width.clear();
         self.height.clear();
         self.min_width.clear();
         self.max_width.clear();
         self.min_height.clear();
         self.max_height.clear();
-        self.child_left.clear();
-        self.child_right.clear();
-        self.child_top.clear();
-        self.child_bottom.clear();
-        self.col_between.clear();
-        self.row_between.clear();
+        self.min_horizontal_gap.clear();
+        self.max_horizontal_gap.clear();
+        self.min_vertical_gap.clear();
+        self.max_vertical_gap.clear();
+        self.padding_left.clear();
+        self.padding_right.clear();
+        self.padding_top.clear();
+        self.padding_bottom.clear();
+        self.horizontal_gap.clear();
+        self.vertical_gap.clear();
         self.content_size.clear();
         self.text.clear();
         self.text_wrap.clear();

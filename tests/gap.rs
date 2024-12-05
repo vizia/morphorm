@@ -2,13 +2,14 @@ use morphorm::*;
 use morphorm_ecs::*;
 
 #[test]
-fn pixels_col_between() {
+fn pixels_horizontal_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_col_between(root, Units::Pixels(20.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_horizontal_gap(root, Units::Pixels(20.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -36,13 +37,14 @@ fn pixels_col_between() {
 }
 
 #[test]
-fn percentage_col_between() {
+fn percentage_horizontal_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_col_between(root, Units::Percentage(50.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_horizontal_gap(root, Units::Percentage(50.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -70,13 +72,14 @@ fn percentage_col_between() {
 }
 
 #[test]
-fn stretch_col_between() {
+fn stretch_horizontal_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_col_between(root, Units::Stretch(1.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_horizontal_gap(root, Units::Stretch(1.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -104,13 +107,14 @@ fn stretch_col_between() {
 }
 
 #[test]
-fn pixels_row_between() {
+fn pixels_vertical_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_row_between(root, Units::Pixels(20.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_vertical_gap(root, Units::Pixels(20.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -138,13 +142,14 @@ fn pixels_row_between() {
 }
 
 #[test]
-fn percentage_row_between() {
+fn percentage_vertical_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_row_between(root, Units::Percentage(50.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_vertical_gap(root, Units::Percentage(50.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
@@ -172,13 +177,14 @@ fn percentage_row_between() {
 }
 
 #[test]
-fn stretch_row_between() {
+fn stretch_vertical_gap() {
     let mut world = World::default();
 
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_row_between(root, Units::Stretch(1.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_vertical_gap(root, Units::Stretch(1.0));
 
     world.set_layout_type(root, LayoutType::Row);
 
