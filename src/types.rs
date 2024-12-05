@@ -9,6 +9,20 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
+
+    // Helper function for selecting between optional values depending on the layout type.
+    pub(crate) fn select<T: Default, S>(
+        &self,
+        s: S,
+        first: impl FnOnce(S) -> Option<T>,
+        second: impl FnOnce(S) -> Option<T>,
+    ) -> Option<T> {
+        match self {
+            LayoutType::Row => first(s),
+            LayoutType::Column => second(s),
+        }
+    }
+
     // Helper function for selecting between optional values depending on the layout type.
     pub(crate) fn select_unwrap<T: Default, S>(
         &self,
@@ -129,6 +143,38 @@ impl Units {
     pub fn is_auto(&self) -> bool {
         self == &Units::Auto
     }
+}
+
+pub enum SizeType {
+    Stretch(f32),
+    Hug,
+    Pixels(f32),
+    Percentage(f32),
+}
+
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
+pub enum Alignment {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    #[default]
+    Left,
+    Center,
+    Right,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+pub enum PaddingType {
+    Pixels(f32),
+    Percentage(f32),
+}
+
+pub enum GapType {
+    Pixels(f32),
+    Percentage(f32),
+    Stretch(f32),
 }
 
 /// A type which represents the computed size of a node after [`layout`](crate::Node::layout).

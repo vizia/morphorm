@@ -7,7 +7,7 @@ fn main() {
     let root = world.add(None);
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
-    world.set_child_space(root, Units::Stretch(1.0));
+    world.set_padding(root, Units::Stretch(1.0));
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Auto);
