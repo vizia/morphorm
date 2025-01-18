@@ -50,6 +50,15 @@ impl LayoutType {
     }
 }
 
+impl std::fmt::Display for LayoutType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LayoutType::Column => write!(f, "column"),
+            LayoutType::Row => write!(f, "row"),
+        }
+    }
+}
+
 /// The position type determines whether a node will be positioned in-line with its siblings or out-of-line / independently of its siblings.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PositionType {
@@ -59,6 +68,16 @@ pub enum PositionType {
     #[default]
     Relative,
 }
+
+impl std::fmt::Display for PositionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PositionType::Absolute => write!(f, "absolute"),
+            PositionType::Relative => write!(f, "relative"),
+        }
+    }
+}
+
 
 /// Units which describe spacing and size.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -144,11 +163,15 @@ impl Units {
     }
 }
 
-pub enum SizeType {
-    Stretch(f32),
-    Hug,
-    Pixels(f32),
-    Percentage(f32),
+impl std::fmt::Display for Units {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Units::Auto => write!(f, "auto"),
+            Units::Pixels(p) => write!(f, "{}px", p),
+            Units::Percentage(p) => write!(f, "{}%", p),
+            Units::Stretch(s) => write!(f, "{}s", s),
+        }
+    }
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
@@ -166,17 +189,21 @@ pub enum Alignment {
     BottomRight,
 }
 
-pub enum PaddingType {
-    Pixels(f32),
-    Percentage(f32),
+impl std::fmt::Display for Alignment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Alignment::BottomCenter => write!(f, "bottom-center"),
+            Alignment::TopLeft => write!(f, "top-left"),
+            Alignment::TopCenter => write!(f, "top-center"),
+            Alignment::TopRight => write!(f, "top-right"),
+            Alignment::Left => write!(f, "left"),
+            Alignment::Center => write!(f, "center"),
+            Alignment::Right => write!(f, "right"),
+            Alignment::BottomLeft => write!(f, "bottom-left"),
+            Alignment::BottomRight => write!(f, "bottom-right"),
+        }
+    }
 }
-
-pub enum GapType {
-    Pixels(f32),
-    Percentage(f32),
-    Stretch(f32),
-}
-
 /// A type which represents the computed size of a node after [`layout`](crate::Node::layout).
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Size {
