@@ -20,7 +20,7 @@ fn main() {
     world.set_min_height(child1, Units::Auto);
     world.set_height(child1, Units::Stretch(1.0));
     world.set_layout_type(child1, LayoutType::Row);
-    world.set_content_size(child1, |_, width, height| {
+    world.set_content_size(child1, |_, width, _height| {
         let width = width.unwrap();
         (width, 50.0)
     });
@@ -30,7 +30,7 @@ fn main() {
     world.set_min_height(child2, Units::Auto);
     world.set_height(child2, Units::Stretch(1.0));
     world.set_layout_type(child2, LayoutType::Row);
-    world.set_content_size(child2, |_, width, height| {
+    world.set_content_size(child2, |_, width, _height| {
         let width = width.unwrap();
         (width, 80.0)
     });
