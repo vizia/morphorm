@@ -681,11 +681,11 @@ where
                 child_cross_pos *= parent_cross - child.cross;
 
                 if let Some(main_scroll) = node.main_scroll(store, layout_type) {
-                    child_main_pos = main_scroll * (parent_main - main_sum)
+                    child_main_pos = main_scroll
                 }
 
                 if let Some(cross_scroll) = node.cross_scroll(store, layout_type) {
-                    child_cross_pos = cross_scroll * (parent_cross - cross_max)
+                    child_cross_pos = cross_scroll
                 }
 
                 cache.set_rect(
