@@ -235,9 +235,6 @@ where
         if last != Some(index) {
             let child_main_after = node.main_between(store, layout_type);
 
-            computed_child_main_after =
-                child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
-
             if let Stretch(factor) = child_main_after {
                 main_flex_sum += factor;
                 main_axis.push(StretchItem::new(
@@ -247,6 +244,9 @@ where
                     min_main_between.to_px(parent_main, DEFAULT_MIN),
                     max_main_between.to_px(parent_main, DEFAULT_MAX),
                 ));
+            } else {
+                computed_child_main_after =
+                child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
             }
         }
 
