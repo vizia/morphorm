@@ -249,6 +249,8 @@ where
                 child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
             }
         }
+        
+        let mut computed_child_main = 0.0;
 
         // Collect stretch main items.
         if let Stretch(factor) = child_main {
@@ -260,10 +262,12 @@ where
                 child_min_main.to_px(parent_main, DEFAULT_MIN),
                 child_max_main.to_px(parent_main, DEFAULT_MAX),
             ));
+        } else {
+            computed_child_main = child_main.to_px_clamped(parent_cross, 0.0, child_min_main, child_max_main);
         }
 
         let mut computed_child_cross = child_cross.to_px_clamped(parent_cross, 0.0, child_min_cross, child_max_cross);
-        let mut computed_child_main = child_main.to_px_clamped(parent_cross, 0.0, child_min_main, child_max_main);
+        
 
         // Compute fixed-size child main and cross.
         if !child_main.is_stretch() && (!child_cross.is_stretch() || child_min_cross.is_auto()) {
@@ -476,6 +480,8 @@ where
                             child.main_after = item.computed;
                         }
                     }
+
+                    main_sum = children.iter().map(|child| child.main + child.main_after).sum();
                 }
             }
         }

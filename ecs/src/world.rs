@@ -169,6 +169,11 @@ impl World {
         self.store.min_horizontal_gap.insert(entity, value);
     }
 
+    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    pub fn set_max_horizontal_gap(&mut self, entity: Entity, value: Units) {
+        self.store.max_horizontal_gap.insert(entity, value);
+    }
+
     /// Set the desired vertical (row) space between paddingren of the given entity.
     pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
         self.store.vertical_scroll.insert(entity, value);
