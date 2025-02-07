@@ -152,6 +152,30 @@ impl Node for Entity {
     fn max_vertical_gap(&self, store: &Store) -> Option<Units> {
         store.max_vertical_gap.get(*self).copied()
     }
+
+    fn grid_columns(&self, store: &Self::Store) -> Option<Vec<Units>> {
+        store.grid_columns.get(*self).cloned()
+    }
+
+    fn grid_rows(&self, store: &Self::Store) -> Option<Vec<Units>> {
+        store.grid_rows.get(*self).cloned()
+    }
+
+    fn column_start(&self, store: &Self::Store) -> Option<usize> {
+        store.column_start.get(*self).copied()
+    }
+
+    fn row_start(&self, store: &Self::Store) -> Option<usize> {
+        store.row_start.get(*self).copied()
+    }
+
+    fn column_span(&self, store: &Self::Store) -> Option<usize> {
+        store.column_span.get(*self).copied()
+    }
+
+    fn row_span(&self, store: &Self::Store) -> Option<usize> {
+        store.row_span.get(*self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

@@ -118,6 +118,8 @@ pub fn render(mut world: World, root: Entity) {
                             world.set_height(root, Units::Pixels(size.height as f32));
                             world.set_width(root, Units::Pixels(size.width as f32));
                         }
+
+                        _ => {}
                     };
 
                     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());

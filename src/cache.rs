@@ -36,6 +36,7 @@ pub(crate) trait CacheExt: Cache {
         match parent_layout_type {
             LayoutType::Row => self.set_bounds(node, main_pos, cross_pos, main, cross),
             LayoutType::Column => self.set_bounds(node, cross_pos, main_pos, cross, main),
+            _ => {}
         }
     }
 }

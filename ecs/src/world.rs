@@ -149,39 +149,70 @@ impl World {
         self.store.padding_bottom.insert(entity, value);
     }
 
-    /// Set the desired vertical (row) space between paddingren of the given entity.
+    /// Set the desired vertical (row) space between children of the given entity.
     pub fn set_vertical_gap(&mut self, entity: Entity, value: Units) {
         self.store.vertical_gap.insert(entity, value);
     }
 
-    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    /// Set the desired horizontal (column) space between children of the given entity.
     pub fn set_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.horizontal_gap.insert(entity, value);
     }
 
-    /// Set the desired vertical (row) space between paddingren of the given entity.
+    /// Set the desired minimum vertical (row) space between children of the given entity.
     pub fn set_min_vertical_gap(&mut self, entity: Entity, value: Units) {
         self.store.min_vertical_gap.insert(entity, value);
     }
 
-    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    /// Set the desired minimum horizontal (column) space between children of the given entity.
     pub fn set_min_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.min_horizontal_gap.insert(entity, value);
     }
 
-    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    /// Set the desired maximum vertical (row) space between children of the given entity.
+    pub fn set_max_vertical_gap(&mut self, entity: Entity, value: Units) {
+        self.store.max_vertical_gap.insert(entity, value);
+    }
+
+    /// Set the desired maximum horizontal (column) space between children of the given entity.
     pub fn set_max_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.max_horizontal_gap.insert(entity, value);
     }
 
-    /// Set the desired vertical (row) space between paddingren of the given entity.
+    /// Set the desired vertical scroll offset.
     pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
         self.store.vertical_scroll.insert(entity, value);
     }
     
-    /// Set the desired horizontal (column) space between paddingren of the given entity.
+    /// Set the desired horizontal scroll offset.
     pub fn set_horizontal_scroll(&mut self, entity: Entity, value: f32) {
         self.store.horizontal_scroll.insert(entity, value);
+    }
+
+       
+    pub fn set_grid_columns(&mut self, entity: Entity, value: Vec<Units>) {
+        self.store.grid_columns.insert(entity, value);
+    }
+        
+ 
+    pub fn set_grid_rows(&mut self, entity: Entity, value: Vec<Units>) {
+        self.store.grid_rows.insert(entity, value);
+    }
+
+    pub fn set_column_start(&mut self, entity: Entity, value: usize) {
+        self.store.column_start.insert(entity, value);
+    }
+        
+    pub fn set_row_start(&mut self, entity: Entity, value: usize) {
+        self.store.row_start.insert(entity, value);
+    }
+
+    pub fn set_column_span(&mut self, entity: Entity, value: usize) {
+        self.store.column_span.insert(entity, value);
+    }
+        
+    pub fn set_row_span(&mut self, entity: Entity, value: usize) {
+        self.store.row_span.insert(entity, value);
     }
 
     /// Set the content size function for the given entity.

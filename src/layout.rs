@@ -51,6 +51,252 @@ struct ChildNode<'a, N: Node> {
     main_after: f32,
 }
 
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn layout_grid<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N>,
+{
+    let mut computed_main = parent_main;
+    let mut computed_cross = parent_cross;
+
+    let (mut parent_width, mut parent_height) = match parent_layout_type {
+        LayoutType::Column => (parent_cross, parent_main),
+        LayoutType::Row | LayoutType::Grid => (parent_main, parent_cross),
+    };
+
+    let padding_left = node.padding_left(store).unwrap_or_default().to_px(parent_width, 0.0);
+    let padding_right = node.padding_right(store).unwrap_or_default().to_px(parent_width, 0.0);
+    let padding_top = node.padding_top(store).unwrap_or_default().to_px(parent_height, 0.0);
+    let padding_bottom = node.padding_bottom(store).unwrap_or_default().to_px(parent_height, 0.0);
+
+    parent_width -= padding_left + padding_right;
+    parent_height -= padding_top + padding_bottom;
+
+    let grid_cols = node.grid_columns(store).unwrap_or_default();
+    let grid_rows = node.grid_rows(store).unwrap_or_default();
+
+    let mut computed_grid_cols = vec![0.0; 2 * grid_cols.len() + 2];
+    let mut computed_grid_rows = vec![0.0; 2 * grid_rows.len() + 2];
+
+    let horizontal_gap = node.horizontal_gap(store).unwrap_or_default();
+    let vertical_gap = node.vertical_gap(store).unwrap_or_default();
+
+    // Sum of all space and size flex factors on the col-axis of the node.
+    let mut col_flex_sum = 0.0;
+
+    // List of stretch nodes for the col axis.
+    let mut col_axis = SmallVec::<[StretchItem; 32]>::new();
+
+    // Sum of all space and size flex factors on the row-axis of the node.
+    let mut row_flex_sum = 0.0;
+
+    // List of stretch nodes for the row axis.
+    let mut row_axis = SmallVec::<[StretchItem; 32]>::new();
+
+    for (i, col) in grid_cols.iter().enumerate() {
+        let idx = 2 * i + 1;
+        computed_grid_cols[idx] = col.to_px(parent_width, 0.0);
+
+        if let Stretch(val) = col {
+            col_flex_sum += val;
+            col_axis.push(StretchItem::new(idx, *val, ItemType::Size, 0.0, 1000.0));
+        }
+
+        if i < grid_cols.len() - 1 {
+            let gutter_idx = 2 * i + 2;
+            computed_grid_cols[gutter_idx] = horizontal_gap.to_px(parent_width, 0.0);
+
+            if let Stretch(val) = horizontal_gap {
+                col_flex_sum += val;
+                col_axis.push(StretchItem::new(gutter_idx, val, ItemType::Size, 0.0, 1000.0));
+            }
+        }
+    }
+
+    for (i, row) in grid_rows.iter().enumerate() {
+        let idx = 2 * i + 1;
+        computed_grid_rows[idx] = row.to_px(parent_height, 0.0);
+
+        if let Stretch(val) = row {
+            row_flex_sum += val;
+            row_axis.push(StretchItem::new(idx, *val, ItemType::Size, 0.0, 1000.0));
+        }
+
+        if i < grid_rows.len() - 1 {
+            let gutter_idx = 2 * i + 2;
+            computed_grid_rows[gutter_idx] = vertical_gap.to_px(parent_height, 0.0);
+
+            if let Stretch(val) = vertical_gap {
+                row_flex_sum += val;
+                row_axis.push(StretchItem::new(gutter_idx, val, ItemType::Size, 0.0, 1000.0));
+            }
+        }
+    }
+
+    let mut width_sum: f32 = computed_grid_cols.iter().sum();
+    let mut height_sum: f32 = computed_grid_rows.iter().sum();
+
+    if !col_axis.is_empty() {
+        loop {
+            // If all stretch items are frozen, exit the loop.
+            if col_axis.iter().all(|item| item.frozen) {
+                break;
+            }
+
+            // Calculate free space on the main-axis.
+            let free_col_space = parent_width - width_sum;
+
+            let mut total_violation = 0.0;
+
+            for item in col_axis.iter_mut().filter(|item| !item.frozen) {
+                let mut actual_main = (item.factor * free_col_space / col_flex_sum).round();
+
+                let clamped = actual_main.min(item.max).max(item.min);
+                item.violation = clamped - actual_main;
+                total_violation += item.violation;
+                item.computed = clamped;
+            }
+
+            for item in col_axis.iter_mut().filter(|item| !item.frozen) {
+                // Freeze over-stretched items.
+                item.frozen = match total_violation {
+                    total if total > 0.0 => item.violation > 0.0,
+                    total if total < 0.0 => item.violation < 0.0,
+                    _ => true,
+                };
+
+                // If the item is frozen, adjust the used_space and sum of cross stretch factors.
+                if item.frozen {
+                    col_flex_sum -= item.factor;
+                    computed_grid_cols[item.index] = item.computed;
+
+                    width_sum = computed_grid_cols.iter().sum();
+                }
+            }
+        }
+    }
+
+    if !row_axis.is_empty() {
+        loop {
+            // If all stretch items are frozen, exit the loop.
+            if row_axis.iter().all(|item| item.frozen) {
+                break;
+            }
+
+            // Calculate free space on the main-axis.
+            let free_row_space = parent_height - height_sum;
+
+            let mut total_violation = 0.0;
+
+            for item in row_axis.iter_mut().filter(|item| !item.frozen) {
+                let mut actual_main = (item.factor * free_row_space / row_flex_sum).round();
+
+                let clamped = actual_main.min(item.max).max(item.min);
+                item.violation = clamped - actual_main;
+                total_violation += item.violation;
+                item.computed = clamped;
+            }
+
+            for item in row_axis.iter_mut().filter(|item| !item.frozen) {
+                // Freeze over-stretched items.
+                item.frozen = match total_violation {
+                    total if total > 0.0 => item.violation > 0.0,
+                    total if total < 0.0 => item.violation < 0.0,
+                    _ => true,
+                };
+
+                // If the item is frozen, adjust the used_space and sum of cross stretch factors.
+                if item.frozen {
+                    row_flex_sum -= item.factor;
+                    computed_grid_rows[item.index] = item.computed;
+
+                    height_sum = computed_grid_rows.iter().sum();
+                }
+            }
+        }
+    }
+
+    // println!("{:?} {:?}", computed_grid_cols, computed_grid_rows);
+
+    let mut current_col_pos = 0.0;
+    for i in 0..computed_grid_cols.len() {
+        current_col_pos += computed_grid_cols[i];
+        computed_grid_cols[i] = current_col_pos;
+    }
+
+    let mut current_row_pos = 0.0;
+    for i in 0..computed_grid_rows.len() {
+        current_row_pos += computed_grid_rows[i];
+        computed_grid_rows[i] = current_row_pos;
+    }
+
+    // println!("{:?} {:?}", computed_grid_cols, computed_grid_rows);
+
+    let alignment = node.alignment(store).unwrap_or_default();
+
+    let (mut child_posx, mut child_posy) = match alignment {
+        Alignment::TopLeft => (0.0, 0.0),
+        Alignment::TopCenter => (0.0, 0.5),
+        Alignment::TopRight => (0.0, 1.0),
+        Alignment::Left => (0.5, 0.0),
+        Alignment::Center => (0.5, 0.5),
+        Alignment::Right => (0.5, 1.0),
+        Alignment::BottomLeft => (1.0, 0.0),
+        Alignment::BottomCenter => (1.0, 0.5),
+        Alignment::BottomRight => (1.0, 1.0),
+    };
+
+    child_posx *= parent_width - width_sum;
+    child_posy *= parent_height - height_sum;
+
+    let mut node_children = node
+        .children(tree)
+        .filter(|child| child.visible(store))
+        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
+        .enumerate()
+        .peekable();
+
+    // Compute space and size of non-flexible relative children.
+    while let Some((index, child)) = node_children.next() {
+        let column_start = 2 * child.column_start(store).unwrap_or_default();
+        let column_span = 2 * child.column_span(store).unwrap_or(1) - 1;
+        let column_end = column_start + column_span;
+
+        let row_start = 2 * child.row_start(store).unwrap_or_default();
+        let row_span = 2 * child.row_span(store).unwrap_or(1) - 1;
+        let row_end = row_start + row_span;
+
+        let posx = computed_grid_cols[column_start];
+        let width = computed_grid_cols[column_end] - posx;
+
+        let posy = computed_grid_rows[row_start];
+        let height = computed_grid_rows[row_end] - posy;
+
+        layout(child, LayoutType::Grid, width, height, cache, tree, store, sublayout);
+
+        cache.set_rect(
+            child,
+            LayoutType::Row,
+            posx + padding_left + child_posx,
+            posy + padding_top + child_posy,
+            width,
+            height,
+        );
+    }
+
+    Size { main: computed_main, cross: computed_cross }
+}
+
 /// Performs layout on the given node returning its computed size.
 ///
 /// The algorithm recurses down the tree, in depth-first order, and performs
@@ -171,6 +417,10 @@ where
     computed_main = computed_main.max(min_main).min(max_main);
     computed_cross = computed_cross.max(min_cross).min(max_cross);
 
+    if layout_type == LayoutType::Grid {
+        return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+    }
+
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
     let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
@@ -246,10 +496,10 @@ where
                 ));
             } else {
                 computed_child_main_after =
-                child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
+                    child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
             }
         }
-        
+
         let mut computed_child_main = 0.0;
 
         // Collect stretch main items.
@@ -267,7 +517,6 @@ where
         }
 
         let mut computed_child_cross = child_cross.to_px_clamped(parent_cross, 0.0, child_min_cross, child_max_cross);
-        
 
         // Compute fixed-size child main and cross.
         if !child_main.is_stretch() && (!child_cross.is_stretch() || child_min_cross.is_auto()) {
