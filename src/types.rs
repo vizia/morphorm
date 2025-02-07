@@ -6,6 +6,8 @@ pub enum LayoutType {
     /// Stack child elements vertically.
     #[default]
     Column,
+    /// Place child elements in a grid.
+    Grid,
 }
 
 impl LayoutType {
@@ -18,7 +20,7 @@ impl LayoutType {
     ) -> Option<T> {
         match self {
             LayoutType::Row => first(s),
-            LayoutType::Column => second(s),
+            LayoutType::Column | LayoutType::Grid => second(s),
         }
     }
 
@@ -31,7 +33,7 @@ impl LayoutType {
     ) -> T {
         match self {
             LayoutType::Row => first(s).unwrap_or_default(),
-            LayoutType::Column => second(s).unwrap_or_default(),
+            LayoutType::Column | LayoutType::Grid => second(s).unwrap_or_default(),
         }
     }
 
@@ -45,7 +47,7 @@ impl LayoutType {
     ) -> T {
         match self {
             LayoutType::Row => first(s).unwrap_or(default),
-            LayoutType::Column => second(s).unwrap_or(default),
+            LayoutType::Column | LayoutType::Grid => second(s).unwrap_or(default),
         }
     }
 }
@@ -55,6 +57,7 @@ impl std::fmt::Display for LayoutType {
         match self {
             LayoutType::Column => write!(f, "column"),
             LayoutType::Row => write!(f, "row"),
+            LayoutType::Grid => write!(f, "grid"),
         }
     }
 }
@@ -77,7 +80,6 @@ impl std::fmt::Display for PositionType {
         }
     }
 }
-
 
 /// Units which describe spacing and size.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

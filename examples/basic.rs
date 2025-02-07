@@ -8,14 +8,30 @@ fn main() {
     world.set_width(root, Units::Pixels(600.0));
     world.set_height(root, Units::Pixels(600.0));
     world.set_alignment(root, Alignment::TopCenter);
-    world.set_padding(root, Units::Pixels(50.0));
+    // world.set_padding(root, Units::Pixels(50.0));
     world.set_layout_type(root, LayoutType::Row);
+    world.set_horizontal_gap(root, Units::Stretch(1.0));
+    world.set_min_horizontal_gap(root, Units::Pixels(50.0));
+    world.set_max_horizontal_gap(root, Units::Pixels(300.0));
+    // world.set_vertical_gap(root, Units::Stretch(1.0));
+    // world.set_min_vertical_gap(root, Units::Pixels(100.0));
+
+    let node = world.add(Some(root));
+    world.set_width(node, Units::Stretch(1.0));
+    world.set_height(node, Units::Pixels(100.0));
+    world.set_layout_type(node, LayoutType::Row);
+    world.set_min_width(node, Units::Pixels(100.0));
+
+    let node = world.add(Some(root));
+    world.set_width(node, Units::Stretch(1.0));
+    world.set_height(node, Units::Pixels(100.0));
+    world.set_layout_type(node, LayoutType::Row);
+    world.set_max_width(node, Units::Pixels(200.0));
 
     let node = world.add(Some(root));
     world.set_width(node, Units::Pixels(100.0));
     world.set_height(node, Units::Pixels(100.0));
     world.set_layout_type(node, LayoutType::Row);
-    world.set_max_width(node, Units::Auto);
 
     // let child = world.add(Some(node));
     // world.set_width(child, Units::Stretch(1.0));

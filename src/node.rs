@@ -167,16 +167,30 @@ pub trait Node: Sized {
     /// Returns the bottom-side border width of the node.
     fn border_bottom(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns the vertical scroll offset of the node.
     fn vertical_scroll(&self, store: &Self::Store) -> Option<f32>;
 
+    /// Returns the horizontal scroll offset of the node.
     fn horizontal_scroll(&self, store: &Self::Store) -> Option<f32>;
+
+    fn grid_columns(&self, store: &Self::Store) -> Option<Vec<Units>>;
+
+    fn grid_rows(&self, store: &Self::Store) -> Option<Vec<Units>>;
+
+    fn column_start(&self, store: &Self::Store) -> Option<usize>;
+
+    fn row_start(&self, store: &Self::Store) -> Option<usize>;
+
+    fn column_span(&self, store: &Self::Store) -> Option<usize>;
+
+    fn row_span(&self, store: &Self::Store) -> Option<usize>;
 }
 
 /// Helper trait used internally for converting layout properties into a direction-agnostic value.
 pub(crate) trait NodeExt: Node {
     fn main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
-            LayoutType::Row => self.width(store).unwrap_or(Units::Stretch(1.0)),
+            LayoutType::Row | LayoutType::Grid => self.width(store).unwrap_or(Units::Stretch(1.0)),
             LayoutType::Column => self.height(store).unwrap_or(Units::Stretch(1.0)),
         }
     }
@@ -201,7 +215,7 @@ pub(crate) trait NodeExt: Node {
 
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
-            LayoutType::Row => self.height(store).unwrap_or(Units::Stretch(1.0)),
+            LayoutType::Row | LayoutType::Grid => self.height(store).unwrap_or(Units::Stretch(1.0)),
             LayoutType::Column => self.width(store).unwrap_or(Units::Stretch(1.0)),
         }
     }
@@ -317,7 +331,7 @@ pub(crate) trait NodeExt: Node {
         parent_cross: Option<f32>,
     ) -> Option<(f32, f32)> {
         match parent_layout_type {
-            LayoutType::Row => self.content_size(store, sublayout, parent_main, parent_cross),
+            LayoutType::Row | LayoutType::Grid => self.content_size(store, sublayout, parent_main, parent_cross),
 
             LayoutType::Column => {
                 self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))

@@ -15,6 +15,13 @@ pub struct Store {
     pub position_type: SecondaryMap<Entity, PositionType>,
     pub alignment: SecondaryMap<Entity, Alignment>,
 
+    pub grid_columns: SecondaryMap<Entity, Vec<Units>>,
+    pub grid_rows: SecondaryMap<Entity, Vec<Units>>,
+    pub column_start: SecondaryMap<Entity, usize>,
+    pub row_start: SecondaryMap<Entity, usize>,
+    pub column_span: SecondaryMap<Entity, usize>,
+    pub row_span: SecondaryMap<Entity, usize>,
+
     pub vertical_scroll: SecondaryMap<Entity, f32>,
     pub horizontal_scroll: SecondaryMap<Entity, f32>,
 
