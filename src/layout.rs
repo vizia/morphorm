@@ -854,6 +854,68 @@ where
         });
     }
 
+    let absolute_auto = node.absolute_auto(store).unwrap_or_default();
+
+    if absolute_auto {
+        
+        main_sum = children.iter().map(|child| child.main + child.main_after).sum();
+        cross_max = children.iter().map(|child| child.cross).reduce(f32::max).unwrap_or_default();
+
+        // Determine auto main and cross size from space and size of children.
+        
+            if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
+                if parent_layout_type == layout_type {
+                    min_main =
+                        main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                } else {
+                    min_main =
+                        cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                }
+            }
+
+            if node.max_main(store, parent_layout_type).is_auto() {
+                if parent_layout_type == layout_type && main_sum != 0.0 {
+                    max_main =
+                        main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                } else if cross_max != 0.0 {
+                    max_main =
+                        cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                }
+            }
+
+            if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
+                if parent_layout_type == layout_type {
+                    min_cross = cross_max
+                        + border_cross_before
+                        + border_cross_after
+                        + padding_cross_before
+                        + padding_cross_after;
+                } else {
+                    min_cross =
+                        main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                }
+            }
+
+            if node.max_cross(store, parent_layout_type).is_auto() {
+                if parent_layout_type == layout_type && cross_max != 0.0 {
+                    max_cross = cross_max
+                        + border_cross_before
+                        + border_cross_after
+                        + padding_cross_before
+                        + padding_cross_after;
+                } else if main_sum != 0.0 {
+                    max_cross =
+                        main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                }
+            }
+        
+
+        
+
+        computed_main = computed_main.max(min_main).min(max_main);
+        computed_cross = computed_cross.max(min_cross).min(max_cross);
+    }
+
     let alignment = node.alignment(store).unwrap_or_default();
 
     // Set size and position of children in the cache.

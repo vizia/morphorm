@@ -14,6 +14,7 @@ pub struct Store {
     pub layout_type: SecondaryMap<Entity, LayoutType>,
     pub position_type: SecondaryMap<Entity, PositionType>,
     pub alignment: SecondaryMap<Entity, Alignment>,
+    pub absolute_auto: SecondaryMap<Entity, bool>,
 
     pub grid_columns: SecondaryMap<Entity, Vec<Units>>,
     pub grid_rows: SecondaryMap<Entity, Vec<Units>>,

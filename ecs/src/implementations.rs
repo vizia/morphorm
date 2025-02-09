@@ -176,6 +176,10 @@ impl Node for Entity {
     fn row_span(&self, store: &Self::Store) -> Option<usize> {
         store.row_span.get(*self).copied()
     }
+
+    fn absolute_auto(&self, store: &Self::Store) -> Option<bool> {
+        store.absolute_auto.get(*self).copied()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

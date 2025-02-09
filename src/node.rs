@@ -172,6 +172,8 @@ pub trait Node: Sized {
     fn column_span(&self, store: &Self::Store) -> Option<usize>;
 
     fn row_span(&self, store: &Self::Store) -> Option<usize>;
+
+    fn absolute_auto(&self, store: &Self::Store) -> Option<bool>;
 }
 
 /// Helper trait used internally for converting layout properties into a direction-agnostic value.

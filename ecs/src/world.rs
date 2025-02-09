@@ -215,6 +215,10 @@ impl World {
         self.store.row_span.insert(entity, value);
     }
 
+    pub fn set_absolute_auto(&mut self, entity: Entity, value: bool) {
+        self.store.absolute_auto.insert(entity, value);
+    }
+
     /// Set the content size function for the given entity.
     pub fn set_content_size(
         &mut self,

@@ -61,6 +61,9 @@ fn main() {
     world.set_row_start(subchild, 0);
     world.set_row_span(subchild, 2);
 
+    let subsubchild = world.add(Some(subchild));
+    
+
     let subchild = world.add(Some(child));
     world.set_column_start(subchild, 0);
     world.set_row_start(subchild, 1);
