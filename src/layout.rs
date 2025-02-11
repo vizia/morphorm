@@ -159,7 +159,7 @@ where
             let mut total_violation = 0.0;
 
             for item in col_axis.iter_mut().filter(|item| !item.frozen) {
-                let mut actual_main = (item.factor * free_col_space / col_flex_sum).round();
+                let actual_main = (item.factor * free_col_space / col_flex_sum).round();
 
                 let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
@@ -199,7 +199,7 @@ where
             let mut total_violation = 0.0;
 
             for item in row_axis.iter_mut().filter(|item| !item.frozen) {
-                let mut actual_main = (item.factor * free_row_space / row_flex_sum).round();
+                let actual_main = (item.factor * free_row_space / row_flex_sum).round();
 
                 let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
@@ -282,7 +282,7 @@ where
         let posy = computed_grid_rows[row_start];
         let height = computed_grid_rows[row_end] - posy;
 
-        layout(child, LayoutType::Grid, width, height, cache, tree, store, sublayout);
+        layout(child, LayoutType::Row, width, height, cache, tree, store, sublayout);
 
         cache.set_rect(
             child,
