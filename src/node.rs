@@ -46,21 +46,9 @@ pub trait Node: Sized {
         store: &Self::Store,
         sublayout: &mut Self::SubLayout<'_>,
     ) -> Size {
-        let width = self
-            .width(store)
-            .map(|w| match w {
-                Units::Pixels(px) => px,
-                _ => panic!("Root node must have fixed size."),
-            })
-            .expect("Failed to get width for node");
 
-        let height = self
-            .height(store)
-            .map(|w| match w {
-                Units::Pixels(px) => px,
-                _ => panic!("Root node must have fixed size."),
-            })
-            .expect("Failed to get height for node");
+        let width = self.width(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
+        let height = self.height(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
 
         cache.set_bounds(self, cache.posx(self), cache.posy(self), width, height);
 
