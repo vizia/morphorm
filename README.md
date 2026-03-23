@@ -7,7 +7,7 @@ Morphorm is a crate for efficiently determining the size and position of UI elem
 Morphorm is a 'one-pass' algorithm which recurses down the layout tree (depth-first), and determines the position and size of nodes based on their parent and children. It can produce similar layouts to flexbox, but with fewer concepts that need to be learned.
 
 ### Layout Type
-The layout type property determines how children of a node will be arranged. There are two variants:
+The `layout-type` determines the direction which a parent will stack its children. There are three variants:
 - `LayoutType::Row` - The node will arrange its children into a horizontal row.
 - `LayoutType::Column` - The node will arrange its children into a vertical column.
 
@@ -17,83 +17,131 @@ The layout type property determines how children of a node will be arranged. The
 The size of a node is determined by its `width` and `height` properties. These properties are specified with `Units`, which has four variants:
 - `Units::Pixels(val)` - Sets the size to a fixed number of pixels.
 
-![](/docs/images/size_pixels.svg)
+![](/docs/images/fixed_width.svg)
 - `Units::Percentage(val)` - Sets the size to a percentage of the nodes parent size.
 
-![](/docs/images/size_percentage.svg)
+![](/docs/images/percentage_width.svg)
 - `Units::Stretch(factor)` - Sets the size to a proportion of the free space of the parent within the same axis.
 
-![](/docs/images/size_stretch.svg)
+![](/docs/images/stretch_width.svg)
 - `Units::Auto` - Sets the size to either hug the nodes children, or to inherit the [content size](#content-size) of the node.
 
-![](/docs/images/size_auto.svg)
+![](/docs/images/auto_width.svg)
 
 ### Content Size
 Content size is used to determine the size of a node which has no children but may have an intrinsic size due to contents which do not correspond to nodes in the layout tree. For example, a node which contains text has an intrinsic size of the bounds of the text, which may introduce a dependency between the width and height (i.e. when text wraps). Similarly, content size can be used to size a node with a particular aspect ratio by constraining the height to be some proportion of the width (or conversely).
 
-![](/docs/images/content_size.svg)
 
-### Space
-The position of a node within a stack can be adjusted by the spacing applied to each of its four sides:
+### Alignment
+
+The `alignment` property determines how the children will be aligned within a view. There are 9 options:
+
+- `Alignment::TopLeft`
+- `Alignment::TopCenter`
+- `Alignment::TopRight`
+- `Alignment::Left`
+- `Alignment::Center`
+- `Alignment::Right`
+- `Alignment::BottomLeft`
+- `Alignment::BottomCenter`
+- `Alignment::BottomRight`
+
+![alignment](/docs/images/alignment.svg)
+
+
+### Padding
+
+The `padding` properties, `padding-left`, `padding-top`, `padding-right`, and `padding-bottom`, determines the spacing between the parent bounds and the children of a view. It can be specified as pixels or a percentage.
+
+![padding](/docs/images/padding.svg)
+
+### Gap
+
+The `gap` properties, `horizontal-gap` and `vertical-gap`, determines the spacing between the children of a view. They can be specified as pixels, a percentage, or a stretch factor.  
+
+![gap](/docs/images/gap.svg)
+
+#### Stretch Gap
+
+Setting the gap to a stretch factor will result in evenly distributed space between children.
+
+![stretch_gap](/docs/images/stretch_gap.svg)
+
+#### Negative Gap
+
+A negative pixels value for gap can be used and results in the children of the view overlapping.
+
+![negative_gap](/docs/images/negative_gap.svg)
+
+
+### Position Type
+The position type property determines whether a node should be positioned in-line with its siblings in a stack, or out-of-line and independently of its siblings. There are two variants:
+- `PositionType::Relative` - The node will be positioned relative to its in-line position with its siblings.
+- `PositionType::Absolute` - The node will be positioned out-of-line and relative to the top-left corner of its parent.
+
+![](/docs/images/position_type.svg)
+
+Absolute nodes do not contribute to the size of the parent when the parent size is set to auto.
+
+### Spacing
+
+Spacing applies only to children with a position type of absolute. The position of a node within a stack can be adjusted by the spacing applied to each of its four sides:
 - `left` - The space that should be applied to the left side of the node. This takes precedent over `right` spacing.
 - `right` - The space that should be applied to the right side of the node.
 - `top` - The space that should be applied to the top side of (above) the node. This takes precedent over `bottom` space.
 - `bottom` - The space that should be applied to the bottom side of (below) the node.
 
-![](/docs/images/spacing.svg)
+![spacing](/docs/images/spacing.svg)
 
 Spacing is specified with `Units`, which has four variants:
 - `Units::Pixels(val)` - Sets the spacing to a fixed number of pixels.
-
-![](/docs/images/space_pixels.svg)
 - `Units::Percentage(val)` - Sets the spacing to a percentage of the nodes parent size.
-
-![](/docs/images/space_percentage.svg)
 - `Units::Stretch(factor)` - Sets the spacing to a proportion of the free space of the parent within the same axis.
 
-![](/docs/images/space_stretch.svg)
-- `Units::Auto` - Sets the spacing to inherit the [child spacing](#child-space) of the parent.
-
-![](/docs/images/space_auto.svg)
-
-### Position Type
-The position type property determines whether a node should be positioned in-line with its siblings in a stack, or out-of-line and independently of its siblings. There are two variants:
-- `Position::Relative` - The node will be positioned relative to its in-line position with its siblings.
-- `Position::SelfDirected` - The node will be positioned out-of-line and relative to the top-left corner of its parent.
-
-![](/docs/images/position_type.svg)
-
-Self directed nodes do not contribute to the size of the parent when the parent size is set to auto.
-
-### Child Space
-The child space of a node applies space around its children by overriding the individual auto spacing of the nodes children and is also specified with `Units`.
-- `child_left` - The space that should be applied between the left side of the view and its children with individual `Auto` left spacing. Applies to all children in a vertical stack and to the first child in a horizontal stack.
-
-![](/docs/images/child_left.svg)
-- `child_right` - The space that should be applied between the right side of the view and its children with individual `Auto` right spacing. Applies to all children in a vertical stack and to the first child in a horizontal stack.
-
-![](/docs/images/child_right.svg)
-- `child_top` - The space that should be applied between the top side of the view and its children with individual `Auto` top spacing. Applies to all children in a horizontal stack and to the first child in a vertical stack.
-
-![](/docs/images/child_top.svg)
-- `child_bottom` - The space that should be applied between the bottom side of the view and its children with individual `Auto` bottom spacing. Applies to all children in a horizontal stack and to the first child in a vertical stack.
-
-![](/docs/images/child_bottom.svg)
-
-There are two additional child-spacing properties for setting the space between child nodes:
-- `row-between` - The space that should be applied between the children within a `Column` layout. Works by overriding the individual `top` and `bottom` spacing of the children if they are set to `Auto`.
-- `col-between` - The space that should be applied between the children within a `Row` layout. Works by overriding the individual `left` and `right` spacing of the children if they are set to `Auto`.
-
-![](/docs/images/space_between.svg)
-
 ### Constraints
-All spacing and size properties can be constrained with corresponding minimum and maximum properties, which are also specified using `Units`. For example, the `width` of a node can be constrained with the `min_width` and `max_width` properties.
 
-![](/docs/images/min_width_pixels.svg)
+Constraint properties can be used to specify a minimum or maximum value for size or gap.
 
-Specifying a minimum size of `Auto` will cause the node to be at least as large as its contents.
+### Size Constraints
 
-![](/docs/images/min_width_auto.svg)
+Size constraints can have a value in pixels, a percentage, or auto.
+
+The `min-size` property, which is shorthand for `min_width` and `min_height`, can be used to set a minimum constraint for the size of a view.
+
+![min_width](/docs/images/min_width.svg)
+
+The `max-size` property, which is shorthand for `max_width` and `max_height`, can be used to set a maximum constraint for the size of a view.
+
+![max_width](/docs/images/max_width.svg)
+
+#### Auto min-width/height
+
+An auto `min-width` or `min-height` can be used to specify that a view should not be any smaller than its contents, i.e. the sum or max of its children depending on layout type, in the horizontal or vertical directions respectively.
+
+This is useful in combination with a stretch size, so the view can contract with its parent container but still maintain a minimum size of its content, for example the text of a view.
+
+![auto_min_width](/docs/images/auto_min_width.svg)
+
+#### Auto max-width/height
+
+An auto `max-width` or `max-height` can be used to specify that a view should not be any larger than its contents, i.e. the sum or max of its children depending on layout type, in the horizontal or vertical directions respectively.
+
+This is useful in combination with a stretch size, so the view can grow with its parent container but no larger than the size of its content.
+
+![auto_max_width](/docs/images/auto_max_width.svg)
+
+#### Gap Constraints
+
+Gap constraints can have a value in pixels or a percentage.
+
+The `min-gap` property, which is shorthand for `min_horizontal_gap` and `min_vertical_gap`, can be used to set a minimum constraint for the gap between the children of a view. This is particularly useful in combination with a stretch gap, so that the children are evenly distributed but cannot be closer than the minimum gap When the parent container shrinks.
+
+![min_gap](/docs/images/min_gap.svg)
+
+Similarly, the `max-gap` property, which is shorthand for `max_horizontal_gap` and `max_vertical_gap`, can be used to set a maximum constraint for the gap between the children of a view.
+
+![max_gap](/docs/images/max_gap.svg)
+
 
 ## How to use
 
@@ -200,7 +248,7 @@ pub struct PropertyStore {
     pub visible: SecondaryMap<Entity, bool>,
 
     pub layout_type: SecondaryMap<Entity, LayoutType>,
-    pub position_type: SecondaryMap<Entity, Position>,
+    pub position_type: SecondaryMap<Entity, PositionType>,
 
     pub left: SecondaryMap<Entity, Units>,
     pub right: SecondaryMap<Entity, Units>,
@@ -279,6 +327,30 @@ impl Node for Entity {
 
     fn layout_type(&self, store: &Store) -> Option<LayoutType> {
         store.layout_type.get(*self).copied()
+    }
+
+    fn grid_columns(&self, store: &Store) -> Option<Vec<Units>> {
+        store.grid_columns.get(*self).cloned()
+    }
+
+    fn grid_rows(&self, store: &Store) -> Option<Vec<Units>> {
+        store.grid_rows.get(*self).cloned()
+    }
+
+    fn column_start(&self, store: &Store) -> Option<usize> {
+        store.column_start.get(*self).copied()
+    }
+
+    fn row_start(&self, store: &Store) -> Option<usize> {
+        store.row_start.get(*self).copied()
+    }
+
+    fn column_span(&self, store: &Store) -> Option<usize> {
+        store.column_span.get(*self).copied()
+    }
+
+    fn row_span(&self, store: &Store) -> Option<usize> {
+        store.row_span.get(*self).copied()
     }
 }
 ```
