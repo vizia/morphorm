@@ -2,7 +2,6 @@
 name = "morphorm"
 version = "0.7.0"
 edition = "2021"
-author = "George Atkinson <geom3trik@vizia.dev>"
 license = "MIT"
 description = "A UI layout engine"
 repository = "https://github.com/vizia/morphorm"

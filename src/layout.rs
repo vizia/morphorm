@@ -66,8 +66,8 @@ where
     N: Node,
     C: Cache<Node = N>,
 {
-    let mut computed_main = parent_main;
-    let mut computed_cross = parent_cross;
+    let computed_main = parent_main;
+    let computed_cross = parent_cross;
 
     let (mut parent_width, mut parent_height) = match parent_layout_type {
         LayoutType::Column => (parent_cross, parent_main),
@@ -267,7 +267,7 @@ where
         .peekable();
 
     // Compute space and size of non-flexible relative children.
-    while let Some((index, child)) = node_children.next() {
+    while let Some((_, child)) = node_children.next() {
         let column_start = 2 * child.column_start(store).unwrap_or_default();
         let column_span = 2 * child.column_span(store).unwrap_or(1) - 1;
         let column_end = column_start + column_span;

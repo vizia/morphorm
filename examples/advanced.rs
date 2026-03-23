@@ -212,6 +212,30 @@ impl Node for Widget {
     fn max_horizontal_gap(&self, _store: &Self::Store) -> Option<Units> {
         Some(self.max_horizontal_gap)
     }
+
+    fn grid_columns(&self, _store: &Self::Store) -> Option<Vec<Units>> {
+        None
+    }
+
+    fn grid_rows(&self, _store: &Self::Store) -> Option<Vec<Units>> {
+        None
+    }
+
+    fn column_start(&self, _store: &Self::Store) -> Option<usize> {
+        None
+    }
+
+    fn row_start(&self, _store: &Self::Store) -> Option<usize> {
+        None
+    }
+
+    fn column_span(&self, _store: &Self::Store) -> Option<usize> {
+        None
+    }
+
+    fn row_span(&self, _store: &Self::Store) -> Option<usize> {
+        None
+    }
 }
 
 #[derive(Default)]

@@ -37,9 +37,9 @@ fn main() {
     world.set_padding(child, Units::Pixels(20.0));
     world.set_vertical_gap(child, Units::Pixels(20.0));
 
-    let subchild = world.add(Some(child));
-    let subchild = world.add(Some(child));
-    let subchild = world.add(Some(child));
+    world.add(Some(child));
+    world.add(Some(child));
+    world.add(Some(child));
 
     let child = world.add(Some(node));
     world.set_column_start(child, 1);
