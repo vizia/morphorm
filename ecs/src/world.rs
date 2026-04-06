@@ -1,6 +1,6 @@
 // Part of a very simple ECS for demonstration purposes only.
 
-use morphorm::{LayoutType, PositionType, Units, Alignment};
+use morphorm::{Alignment, Direction, LayoutType, PositionType, Units};
 
 use crate::entity::{Entity, EntityManager};
 use crate::implementations::NodeCache;
@@ -66,6 +66,11 @@ impl World {
     /// Set the desired position type of the given entity.
     pub fn set_position_type(&mut self, entity: Entity, value: PositionType) {
         self.store.position_type.insert(entity, value);
+    }
+
+    /// Set the inline direction of row content for the given entity.
+    pub fn set_direction(&mut self, entity: Entity, value: Direction) {
+        self.store.direction.insert(entity, value);
     }
 
     pub fn set_alignment(&mut self, entity: Entity, value: Alignment) {

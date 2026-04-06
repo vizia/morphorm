@@ -69,6 +69,11 @@ pub trait Node: Sized {
     /// Returns the position type of the node.
     fn position_type(&self, store: &Self::Store) -> Option<PositionType>;
 
+    /// Returns the inline direction of row content.
+    fn direction(&self, _store: &Self::Store) -> Option<Direction> {
+        None
+    }
+
     /// Returns the alignment of the node.
     fn alignment(&self, store: &Self::Store) -> Option<Alignment>;
 
@@ -252,11 +257,19 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn padding_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.padding_left(store), |store| self.padding_top(store))
+        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft {
+            self.padding_right(store).unwrap_or_default()
+        } else {
+            parent_layout_type.select_unwrap(store, |store| self.padding_left(store), |store| self.padding_top(store))
+        }
     }
 
     fn padding_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.padding_right(store), |store| self.padding_bottom(store))
+        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft {
+            self.padding_left(store).unwrap_or_default()
+        } else {
+            parent_layout_type.select_unwrap(store, |store| self.padding_right(store), |store| self.padding_bottom(store))
+        }
     }
 
     fn padding_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {

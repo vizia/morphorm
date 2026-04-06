@@ -1,6 +1,6 @@
 use smallvec::SmallVec;
 
-use crate::{Alignment, Cache, CacheExt, LayoutType, Node, NodeExt, PositionType, Size, Units::*};
+use crate::{Alignment, Cache, CacheExt, Direction, LayoutType, Node, NodeExt, PositionType, Size, Units::*};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
@@ -451,25 +451,22 @@ where
     parent_main = parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
     parent_cross = parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
 
-    // Determine index of first and last relative child nodes.
-    let mut iter = node
+    let is_row_rtl = layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+
+    let mut relative_children = node
         .children(tree)
         .filter(|child| child.visible(store))
         .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
-        .enumerate();
+        .collect::<SmallVec<[&N; 32]>>();
 
-    let first = iter.next().map(|(index, _)| index);
-    let last = iter.last().map_or(first, |(index, _)| Some(index));
+    if is_row_rtl {
+        relative_children.reverse();
+    }
 
-    let mut node_children = node
-        .children(tree)
-        .filter(|child| child.visible(store))
-        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
-        .enumerate()
-        .peekable();
+    let last = relative_children.len().checked_sub(1);
 
     // Compute space and size of non-flexible relative children.
-    while let Some((index, child)) = node_children.next() {
+    for (index, child) in relative_children.into_iter().enumerate() {
         let child_main = child.main(store, layout_type);
         let child_cross = child.cross(store, layout_type);
 

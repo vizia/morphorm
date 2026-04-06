@@ -35,6 +35,10 @@ impl Node for Entity {
         store.position_type.get(*self).copied()
     }
 
+    fn direction(&self, store: &Store) -> Option<Direction> {
+        store.direction.get(*self).copied()
+    }
+
     fn alignment(&self, store: &Store) -> Option<Alignment> {
         store.alignment.get(*self).copied()
     }
