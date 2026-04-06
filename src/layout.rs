@@ -51,6 +51,18 @@ struct ChildNode<'a, N: Node> {
     main_after: f32,
 }
 
+fn flip_alignment_horizontal(alignment: Alignment) -> Alignment {
+    match alignment {
+        Alignment::TopLeft => Alignment::TopRight,
+        Alignment::TopRight => Alignment::TopLeft,
+        Alignment::Left => Alignment::Right,
+        Alignment::Right => Alignment::Left,
+        Alignment::BottomLeft => Alignment::BottomRight,
+        Alignment::BottomRight => Alignment::BottomLeft,
+        alignment => alignment,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn layout_grid<N, C>(
     node: &N,
@@ -242,7 +254,11 @@ where
 
     // println!("{:?} {:?}", computed_grid_cols, computed_grid_rows);
 
-    let alignment = node.alignment(store).unwrap_or_default();
+    let mut alignment = node.alignment(store).unwrap_or_default();
+
+    if parent_layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+        alignment = flip_alignment_horizontal(alignment);
+    }
 
     let (mut child_posx, mut child_posy) = match alignment {
         Alignment::TopLeft => (0.0, 0.0),
@@ -851,7 +867,11 @@ where
         });
     }
 
-    let alignment = node.alignment(store).unwrap_or_default();
+    let mut alignment = node.alignment(store).unwrap_or_default();
+
+    if layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+        alignment = flip_alignment_horizontal(alignment);
+    }
 
     // Set size and position of children in the cache.
     let mut main_pos = padding_main_before + border_main_before;
