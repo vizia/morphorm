@@ -81,6 +81,25 @@ impl std::fmt::Display for PositionType {
     }
 }
 
+/// The inline direction of row content.
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+    /// Lay out row children from left to right.
+    #[default]
+    LeftToRight,
+    /// Lay out row children from right to left.
+    RightToLeft,
+}
+
+impl std::fmt::Display for Direction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Direction::LeftToRight => write!(f, "ltr"),
+            Direction::RightToLeft => write!(f, "rtl"),
+        }
+    }
+}
+
 /// Units which describe spacing and size.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum Units {
