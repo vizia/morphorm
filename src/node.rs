@@ -1,4 +1,4 @@
-use crate::{layout, types::*, Cache};
+use crate::{layout, types::*, Cache, LayoutWrap};
 
 /// A `Node` represents a layout element which can be sized and positioned based on
 /// a number of layout properties.
@@ -51,7 +51,14 @@ pub trait Node: Sized {
 
         cache.set_bounds(self, cache.posx(self), cache.posy(self), width, height);
 
-        layout(self, LayoutType::Column, height, width, cache, tree, store, sublayout)
+        // Use the node's layout type instead of hardcoding Column
+        let layout_type = self.layout_type(store).unwrap_or_default();
+        let (parent_main, parent_cross) = match layout_type {
+            LayoutType::Row | LayoutType::Grid => (width, height),  // Row: main=width, cross=height
+            LayoutType::Column => (height, width),                   // Column: main=height, cross=width
+        };
+
+        layout(self, layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
@@ -71,6 +78,13 @@ pub trait Node: Sized {
 
     /// Returns the inline direction of row content.
     fn direction(&self, _store: &Self::Store) -> Option<Direction> {
+        None
+    }
+
+    /// Returns whether children wrap to a new line when they overflow the main axis.
+    ///
+    /// Defaults to `None` which is treated as [`LayoutWrap::NoWrap`].
+    fn wrap(&self, _store: &Self::Store) -> Option<LayoutWrap> {
         None
     }
 
@@ -300,8 +314,6 @@ pub(crate) trait NodeExt: Node {
         )
     }
 
-    // Currently unused until wrapping is implemented
-    #[allow(dead_code)]
     fn cross_between(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         parent_layout_type.select_unwrap(store, |store| self.vertical_gap(store), |store| self.horizontal_gap(store))
     }

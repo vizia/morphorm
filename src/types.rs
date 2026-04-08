@@ -225,6 +225,29 @@ impl std::fmt::Display for Alignment {
         }
     }
 }
+/// Determines whether children wrap to a new line when they overflow the main axis.
+///
+/// Wrapping is only applicable for [`LayoutType::Row`] and [`LayoutType::Column`] containers.
+/// The cross-axis gap ([`vertical_gap`](crate::Node::vertical_gap) for Row, [`horizontal_gap`](crate::Node::horizontal_gap) for Column)
+/// controls the spacing between lines.
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LayoutWrap {
+    /// Children do not wrap; they overflow the main axis (default).
+    #[default]
+    NoWrap,
+    /// Children wrap to a new line when they would overflow the main axis.
+    Wrap,
+}
+
+impl std::fmt::Display for LayoutWrap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LayoutWrap::NoWrap => write!(f, "no-wrap"),
+            LayoutWrap::Wrap => write!(f, "wrap"),
+        }
+    }
+}
+
 /// A type which represents the computed size of a node after [`layout`](crate::Node::layout).
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct Size {
