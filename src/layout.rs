@@ -1,6 +1,6 @@
 use smallvec::SmallVec;
 
-use crate::{Alignment, Cache, CacheExt, Direction, LayoutType, Node, NodeExt, PositionType, Size, Units::*};
+use crate::{Alignment, Cache, CacheExt, Direction, LayoutType, LayoutWrap, Node, NodeExt, PositionType, Size, Units::*};
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
@@ -313,6 +313,427 @@ where
     Size { main: computed_main, cross: computed_cross }
 }
 
+/// Performs wrapped layout on the given node, arranging children into multiple lines
+/// along the main axis when they overflow the available space.
+///
+/// Called from [`layout`] when a node has [`LayoutWrap::Wrap`] set.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn layout_wrap<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N>,
+{
+    let layout_type = node.layout_type(store).unwrap_or_default();
+
+    // Convert parent-provided main/cross (which are in parent layout axes)
+    // into this node's layout axes.
+    let (parent_main, parent_cross) = if parent_layout_type == layout_type {
+        (parent_main, parent_cross)
+    } else {
+        (parent_cross, parent_main)
+    };
+
+    let border_main_before =
+        node.border_main_before(store, layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
+    let border_main_after =
+        node.border_main_after(store, layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
+    let border_cross_before =
+        node.border_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_BORDER_WIDTH);
+    let border_cross_after =
+        node.border_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_BORDER_WIDTH);
+
+    let padding_main_before = node.padding_main_before(store, layout_type).to_px(parent_main, 0.0);
+    let padding_main_after = node.padding_main_after(store, layout_type).to_px(parent_main, 0.0);
+    let padding_cross_before = node.padding_cross_before(store, layout_type).to_px(parent_cross, 0.0);
+    let padding_cross_after = node.padding_cross_after(store, layout_type).to_px(parent_cross, 0.0);
+
+    // Available space for children after subtracting padding and border.
+    let avail_main =
+        parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
+    let avail_cross =
+        parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+
+    // Gap between items within a line (on the main axis).
+    let min_main_between = node.min_main_between(store, layout_type);
+    let max_main_between = node.max_main_between(store, layout_type);
+    let item_gap_px = node
+        .main_between(store, layout_type)
+        .to_px_clamped(avail_main, 0.0, min_main_between, max_main_between);
+
+    // Gap between lines (on the cross axis).
+    let line_gap_px = node.cross_between(store, layout_type).to_px(avail_cross, 0.0);
+
+    let is_row_rtl =
+        layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+
+    let relative_children = node
+        .children(tree)
+        .filter(|c| c.visible(store))
+        .filter(|c| c.position_type(store).unwrap_or_default() == PositionType::Relative)
+        .collect::<SmallVec<[&N; 32]>>();
+
+    let num_rel = relative_children.len();
+
+    // Per-item data used during layout.
+    struct WrapItem {
+        main: f32,
+        cross: f32,
+        /// Non-zero when this item has Stretch units on the main axis.
+        stretch_main_factor: f32,
+        min_main: f32,
+        max_main: f32,
+        min_cross: f32,
+        max_cross: f32,
+    }
+
+    // Phase 1: Compute sizes for all relative children.
+    // Stretch-main items are deferred; their sizes are resolved per-line in phase 3.
+    let mut items: SmallVec<[WrapItem; 32]> = SmallVec::with_capacity(num_rel);
+    for child in relative_children.iter() {
+        let child_main_units = child.main(store, layout_type);
+        let child_min_main = child.min_main(store, layout_type);
+        let child_max_main = child.max_main(store, layout_type);
+        let child_min_cross = child.min_cross(store, layout_type);
+        let child_max_cross = child.max_cross(store, layout_type);
+
+        let min_main_px = child_min_main.to_px(avail_main, DEFAULT_MIN);
+        let max_main_px = child_max_main.to_px(avail_main, DEFAULT_MAX);
+        let min_cross_px = child_min_cross.to_px(avail_cross, DEFAULT_MIN);
+        let max_cross_px = child_max_cross.to_px(avail_cross, DEFAULT_MAX);
+
+        if let Stretch(factor) = child_main_units {
+            // Use min size as base for line-break decisions; actual size resolved later.
+            let base = min_main_px.max(0.0);
+            items.push(WrapItem {
+                main: base,
+                cross: 0.0,
+                stretch_main_factor: factor,
+                min_main: min_main_px,
+                max_main: max_main_px,
+                min_cross: min_cross_px,
+                max_cross: max_cross_px,
+            });
+        } else {
+            let size = layout(*child, layout_type, avail_main, avail_cross, cache, tree, store, sublayout);
+            items.push(WrapItem {
+                main: size.main,
+                cross: size.cross,
+                stretch_main_factor: 0.0,
+                min_main: min_main_px,
+                max_main: max_main_px,
+                min_cross: min_cross_px,
+                max_cross: max_cross_px,
+            });
+        }
+    }
+
+    // Phase 2: Assign children to lines.
+    // A new line begins when adding the next fixed-size child would exceed avail_main.
+    // Stretch-main children are treated as zero-width for break decisions.
+    // If avail_main <= 0 (auto-width container), no breaks occur.
+    let mut lines: SmallVec<[std::ops::Range<usize>; 8]> = SmallVec::new();
+    if num_rel > 0 {
+        let mut line_start = 0usize;
+        let mut line_main_used = 0.0f32;
+        let mut items_in_line = 0usize;
+
+        for i in 0..num_rel {
+            // Stretch items contribute their min size to the line-break decision (0 if no min set).
+            let size_contribution = items[i].main;
+            let gap_before = if items_in_line > 0 { item_gap_px } else { 0.0 };
+            let projected = line_main_used + gap_before + size_contribution;
+
+            if avail_main > 0.0
+                && items_in_line > 0
+                && projected > avail_main
+                && items[i].stretch_main_factor == 0.0
+            {
+                // Finish current line and start a new one.
+                lines.push(line_start..i);
+                line_start = i;
+                line_main_used = size_contribution;
+                items_in_line = 1;
+            } else {
+                line_main_used = projected;
+                items_in_line += 1;
+            }
+        }
+        lines.push(line_start..num_rel);
+    }
+
+    // Phase 3: Per-line flex resolution for stretch-main items.
+    for line in lines.iter() {
+        let count = line.len();
+        if count == 0 {
+            continue;
+        }
+
+        let stretch_sum: f32 =
+            line.clone().filter(|&i| items[i].stretch_main_factor > 0.0).map(|i| items[i].stretch_main_factor).sum();
+
+        if stretch_sum > 0.0 {
+            let fixed_sum: f32 =
+                line.clone().filter(|&i| items[i].stretch_main_factor == 0.0).map(|i| items[i].main).sum();
+            let gap_total = (count - 1) as f32 * item_gap_px;
+            let free_main = (avail_main - fixed_sum - gap_total).max(0.0);
+
+            for i in line.clone() {
+                let factor = items[i].stretch_main_factor;
+                if factor > 0.0 {
+                    let allocated = (factor / stretch_sum * free_main).round();
+                    let clamped = allocated.clamp(items[i].min_main, items[i].max_main);
+                    let size =
+                        layout(relative_children[i], layout_type, clamped, avail_cross, cache, tree, store, sublayout);
+                    items[i].main = size.main;
+                    items[i].cross = size.cross;
+                }
+            }
+        }
+    }
+
+    // Phase 4: Compute the cross extent of each line from non-cross-stretch children.
+    let mut line_cross: SmallVec<[f32; 8]> = SmallVec::with_capacity(lines.len());
+    for line in lines.iter() {
+        let max_cross = line
+            .clone()
+            .filter(|&i| !relative_children[i].cross(store, layout_type).is_stretch())
+            .map(|i| items[i].cross)
+            .fold(0.0f32, f32::max);
+        line_cross.push(max_cross);
+    }
+
+    // Phase 5: Resolve cross-stretch children to fill their line's cross extent.
+    for (line_idx, line) in lines.iter().enumerate() {
+        let lc = line_cross[line_idx];
+        for i in line.clone() {
+            let child = relative_children[i];
+            if child.cross(store, layout_type).is_stretch() {
+                let clamped_cross = lc.clamp(items[i].min_cross, items[i].max_cross);
+                let size =
+                    layout(child, layout_type, items[i].main, clamped_cross, cache, tree, store, sublayout);
+                items[i].main = size.main;
+                items[i].cross = size.cross;
+            }
+        }
+        // Re-compute line cross to include cross-stretch items in case they changed.
+        line_cross[line_idx] = line.clone().map(|i| items[i].cross).fold(0.0f32, f32::max);
+    }
+
+    // Phase 6: Determine the final cross size of the container.
+    let num_lines = lines.len();
+    let total_content_cross = if num_lines > 0 {
+        line_cross.iter().sum::<f32>() + (num_lines.saturating_sub(1)) as f32 * line_gap_px
+    } else {
+        0.0
+    };
+
+    let cross_units = node.cross(store, layout_type);
+    let final_cross = if cross_units.is_auto() || parent_cross == 0.0 {
+        let raw =
+            total_content_cross + padding_cross_before + padding_cross_after + border_cross_before + border_cross_after;
+        let min_c = node.min_cross(store, layout_type).to_px(0.0, DEFAULT_MIN);
+        let max_c = node.max_cross(store, layout_type).to_px(0.0, DEFAULT_MAX);
+        raw.max(min_c).min(max_c)
+    } else {
+        parent_cross
+    };
+
+    // Recompute auto main size (for containers with Auto main axis).
+    let main_units = node.main(store, layout_type);
+    let final_main = if main_units.is_auto() || parent_main == 0.0 {
+        let raw = if !lines.is_empty() {
+            lines[0].clone().map(|i| items[i].main).sum::<f32>()
+                + (lines[0].len().saturating_sub(1)) as f32 * item_gap_px
+        } else {
+            0.0
+        };
+        let raw = raw + padding_main_before + padding_main_after + border_main_before + border_main_after;
+        let min_m = node.min_main(store, layout_type).to_px(0.0, DEFAULT_MIN);
+        let max_m = node.max_main(store, layout_type).to_px(0.0, DEFAULT_MAX);
+        raw.max(min_m).min(max_m)
+    } else {
+        parent_main
+    };
+
+    // Phase 7: Lay out absolute children against the container bounds.
+    let abs_avail_main = final_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
+    let abs_avail_cross =
+        final_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+
+    let abs_children = node
+        .children(tree)
+        .filter(|c| c.position_type(store).unwrap_or_default() == PositionType::Absolute)
+        .filter(|c| c.visible(store));
+
+    let mut abs_items: SmallVec<[ChildNode<N>; 8]> = SmallVec::new();
+    for child in abs_children {
+        let main = if child.main(store, layout_type).is_stretch() {
+            let child_min_main = child.min_main(store, layout_type).to_px(abs_avail_main, DEFAULT_MIN);
+            let child_max_main = child.max_main(store, layout_type).to_px(abs_avail_main, DEFAULT_MAX);
+            let main_before = child.main_before(store, layout_type).to_px(abs_avail_main, 0.0);
+            let main_after = child.main_after(store, layout_type).to_px(abs_avail_main, 0.0);
+            abs_avail_main.clamp(child_min_main, child_max_main) - main_before - main_after
+        } else {
+            abs_avail_main
+        };
+
+        let cross = if child.cross(store, layout_type).is_stretch() {
+            let child_min_cross = child.min_cross(store, layout_type).to_px(abs_avail_cross, DEFAULT_MIN);
+            let child_max_cross = child.max_cross(store, layout_type).to_px(abs_avail_cross, DEFAULT_MAX);
+            let cross_before = child.cross_before(store, layout_type).to_px(abs_avail_cross, 0.0);
+            let cross_after = child.cross_after(store, layout_type).to_px(abs_avail_cross, 0.0);
+            abs_avail_cross.clamp(child_min_cross, child_max_cross) - cross_before - cross_after
+        } else {
+            abs_avail_cross
+        };
+
+        let size = layout(child, layout_type, main, cross, cache, tree, store, sublayout);
+        abs_items.push(ChildNode { node: child, main: size.main, cross: size.cross, main_after: 0.0 });
+    }
+
+    // Phase 8: Position all children.
+    // Decompose alignment into (main-fraction, cross-fraction) where the
+    // main-fraction offsets the whole group and cross-fraction aligns each item
+    // within its line's cross extent.  The swap mirrors what the non-wrap layout
+    // does so that `TopLeft` means the same visual position regardless of
+    // layout_type.
+    let mut alignment = node.alignment(store).unwrap_or_default();
+    
+    // For RTL row layouts, flip alignment horizontally so TopLeft becomes TopRight
+    if is_row_rtl {
+        alignment = flip_alignment_horizontal(alignment);
+    }
+    
+    let (mut main_align_frac, mut cross_align_frac) = match alignment {
+        Alignment::TopLeft => (0.0f32, 0.0f32),
+        Alignment::TopCenter => (0.0, 0.5),
+        Alignment::TopRight => (0.0, 1.0),
+        Alignment::Left => (0.5, 0.0),
+        Alignment::Center => (0.5, 0.5),
+        Alignment::Right => (0.5, 1.0),
+        Alignment::BottomLeft => (1.0, 0.0),
+        Alignment::BottomCenter => (1.0, 0.5),
+        Alignment::BottomRight => (1.0, 1.0),
+    };
+    if layout_type == LayoutType::Row {
+        std::mem::swap(&mut main_align_frac, &mut cross_align_frac);
+    }
+
+    let mut cross_cursor = padding_cross_before + border_cross_before;
+
+    for (line_idx, line) in lines.iter().enumerate() {
+        let lc = line_cross[line_idx];
+        let count = line.len();
+        let gap_total = (count.saturating_sub(1)) as f32 * item_gap_px;
+        let line_main_sum: f32 = line.clone().map(|i| items[i].main).sum();
+        let free_main = (avail_main - line_main_sum - gap_total).max(0.0);
+
+        if is_row_rtl {
+            // RTL positioning: place items in reverse order within each wrapped line.
+            // Alignment is flipped above so TopLeft maps to TopRight semantics.
+            let mut main_cursor =
+                padding_main_before + border_main_before + main_align_frac * free_main;
+            
+            for (item_idx, i) in line.clone().rev().enumerate() {
+                let item = &items[i];
+                let child = relative_children[i];
+                let item_cross_offset = cross_align_frac * (lc - item.cross);
+                
+                cache.set_rect(child, layout_type, main_cursor, cross_cursor + item_cross_offset, item.main, item.cross);
+                
+                main_cursor += item.main;
+                if item_idx + 1 < count {
+                    main_cursor += item_gap_px;
+                }
+            }
+        } else {
+            // LTR positioning: items are positioned left-to-right within the line
+            let mut main_cursor =
+                padding_main_before + border_main_before + main_align_frac * free_main;
+
+            for (item_pos, i) in line.clone().enumerate() {
+                let item = &items[i];
+                let child = relative_children[i];
+
+                let item_cross_offset = cross_align_frac * (lc - item.cross);
+
+                cache.set_rect(child, layout_type, main_cursor, cross_cursor + item_cross_offset, item.main, item.cross);
+
+                main_cursor += item.main;
+                if item_pos + 1 < count {
+                    main_cursor += item_gap_px;
+                }
+            }
+        }
+
+        cross_cursor += lc;
+        if line_idx + 1 < num_lines {
+            cross_cursor += line_gap_px;
+        }
+    }
+
+    // Position absolute children.
+    for abs_child in &abs_items {
+        let child_main_before = abs_child.node.main_before(store, layout_type);
+        let child_main_after = abs_child.node.main_after(store, layout_type);
+        let child_cross_before = abs_child.node.cross_before(store, layout_type);
+        let child_cross_after = abs_child.node.cross_after(store, layout_type);
+
+        let pma = abs_avail_main + padding_main_before + padding_main_after;
+        let pca = abs_avail_cross + padding_cross_before + padding_cross_after;
+
+        let child_main_pos = match (child_main_before, child_main_after) {
+            (Pixels(val), _) => val,
+            (Percentage(val), _) => val * 0.01 * pma,
+            (_, Pixels(val)) => pma - val - abs_child.main,
+            (_, Percentage(val)) => pma - abs_child.main - val * 0.01 * pma,
+            (Stretch(b), Stretch(a)) => {
+                if b == a { (pma - abs_child.main) * 0.5 } else { (pma - abs_child.main) * (b / (b + a)) }
+            }
+            (Stretch(_), Auto) => pma - abs_child.main,
+            (Auto, Stretch(_)) => 0.0,
+            (Auto, Auto) => 0.0,
+        };
+
+        let child_cross_pos = match (child_cross_before, child_cross_after) {
+            (Pixels(val), _) => val,
+            (Percentage(val), _) => val * 0.01 * pca,
+            (_, Pixels(val)) => pca - val - abs_child.cross,
+            (_, Percentage(val)) => pca - abs_child.cross - val * 0.01 * pca,
+            (Stretch(b), Stretch(a)) => {
+                if b == a { (pca - abs_child.cross) * 0.5 } else { (pca - abs_child.cross) * (b / (b + a)) }
+            }
+            (Stretch(_), Auto) => pca - abs_child.cross,
+            (Auto, Stretch(_)) => 0.0,
+            (Auto, Auto) => 0.0,
+        };
+
+        cache.set_rect(
+            abs_child.node,
+            layout_type,
+            child_main_pos + border_main_before,
+            child_cross_pos + border_cross_before,
+            abs_child.main,
+            abs_child.cross,
+        );
+    }
+
+    if parent_layout_type == layout_type {
+        Size { main: final_main, cross: final_cross }
+    } else {
+        Size { main: final_cross, cross: final_main }
+    }
+}
+
 /// Performs layout on the given node returning its computed size.
 ///
 /// The algorithm recurses down the tree, in depth-first order, and performs
@@ -435,6 +856,10 @@ where
 
     if layout_type == LayoutType::Grid {
         return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+    }
+
+    if node.wrap(store).unwrap_or_default() == LayoutWrap::Wrap {
+        return layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
     }
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.

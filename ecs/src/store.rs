@@ -1,7 +1,7 @@
 // Part of a very simple ECS for demonstration purposes only.
 
 use crate::{entity::Entity, TextWrap};
-use morphorm::{Alignment, Direction, LayoutType, PositionType, Units};
+use morphorm::{Alignment, Direction, LayoutType, LayoutWrap, PositionType, Units};
 use slotmap::SecondaryMap;
 
 type ContentSizeType<S> = Box<dyn Fn(&S, Option<f32>, Option<f32>) -> (f32, f32)>;
@@ -15,6 +15,7 @@ pub struct Store {
     pub position_type: SecondaryMap<Entity, PositionType>,
     pub direction: SecondaryMap<Entity, Direction>,
     pub alignment: SecondaryMap<Entity, Alignment>,
+    pub wrap: SecondaryMap<Entity, LayoutWrap>,
 
     pub grid_columns: SecondaryMap<Entity, Vec<Units>>,
     pub grid_rows: SecondaryMap<Entity, Vec<Units>>,
@@ -74,6 +75,7 @@ impl Store {
         self.layout_type.remove(entity);
         self.position_type.remove(entity);
         self.direction.remove(entity);
+        self.wrap.remove(entity);
         self.left.remove(entity);
         self.right.remove(entity);
         self.top.remove(entity);

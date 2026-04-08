@@ -39,6 +39,10 @@ impl Node for Entity {
         store.direction.get(*self).copied()
     }
 
+    fn wrap(&self, store: &Store) -> Option<LayoutWrap> {
+        store.wrap.get(*self).copied()
+    }
+
     fn alignment(&self, store: &Store) -> Option<Alignment> {
         store.alignment.get(*self).copied()
     }
