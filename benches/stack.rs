@@ -130,20 +130,28 @@ fn morphorm_benchmarks(c: &mut Criterion) {
 
     let children_per_node = 10;
     let depth = 6usize;
-    let benchmark_id = BenchmarkId::new(
-        format!(
-            "Steady state bench. {children_per_node} children per node, depth: {depth}. Total nodes: {}.",
-            compute_node_count(children_per_node, depth, &mut 0)
-        ),
-        depth,
+    let mut world_baseline = World::default();
+    let root_baseline = build_tree(&mut world_baseline, None, children_per_node, depth);
+
+    let mut world_cached = World::default();
+    let root_cached = build_tree(&mut world_cached, None, children_per_node, depth);
+    world_cached.cache.enable_cross_pass_memoization(true);
+    world_cached.cache.set_layout_revision(1);
+
+    let benchmark_label = format!(
+        "Steady state bench. {children_per_node} children per node, depth: {depth}. Total nodes: {}.",
+        compute_node_count(children_per_node, depth, &mut 0)
     );
 
-    let mut world = World::default();
-    let root = build_tree(&mut world, None, children_per_node, depth);
-
-    group.bench_function(benchmark_id, |b| {
+    group.bench_function(format!("{} [baseline]", benchmark_label), |b| {
         b.iter(|| {
-            root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+            root_baseline.layout(&mut world_baseline.cache, &world_baseline.tree, &world_baseline.store, &mut ());
+        })
+    });
+
+    group.bench_function(format!("{} [cross-pass memo]", benchmark_label), |b| {
+        b.iter(|| {
+            root_cached.layout(&mut world_cached.cache, &world_cached.tree, &world_cached.store, &mut ());
         })
     });
 

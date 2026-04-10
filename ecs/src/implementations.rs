@@ -201,6 +201,8 @@ pub struct NodeCache {
     // Pass-scoped memoized layout sizes.
     layout_memo: SecondaryMap<Entity, LayoutMemo>,
     layout_pass: u64,
+    cross_pass_memo_enabled: bool,
+    layout_revision: u64,
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -210,6 +212,7 @@ struct LayoutMemo {
     parent_cross: f32,
     size: Size,
     pass: u64,
+    revision: u64,
     valid: bool,
 }
 
@@ -219,6 +222,18 @@ fn same_f32(a: f32, b: f32) -> bool {
 }
 
 impl NodeCache {
+    pub fn enable_cross_pass_memoization(&mut self, enabled: bool) {
+        self.cross_pass_memo_enabled = enabled;
+    }
+
+    pub fn set_layout_revision(&mut self, revision: u64) {
+        self.layout_revision = revision;
+    }
+
+    pub fn bump_layout_revision(&mut self) {
+        self.layout_revision = self.layout_revision.wrapping_add(1);
+    }
+
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
         self.layout_memo.insert(entity, Default::default());
@@ -233,6 +248,7 @@ impl NodeCache {
         self.rect.clear();
         self.layout_memo.clear();
         self.layout_pass = 0;
+        self.layout_revision = 0;
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
@@ -255,7 +271,13 @@ impl Cache for NodeCache {
         parent_cross: f32,
     ) -> Option<Size> {
         let memo = self.layout_memo.get(*node)?;
-        if !memo.valid || memo.pass != self.layout_pass {
+        if !memo.valid {
+            return None;
+        }
+
+        let pass_match = memo.pass == self.layout_pass;
+        let revision_match = self.cross_pass_memo_enabled && memo.revision == self.layout_revision;
+        if !pass_match && !revision_match {
             return None;
         }
 
@@ -283,6 +305,7 @@ impl Cache for NodeCache {
             memo.parent_cross = parent_cross;
             memo.size = size;
             memo.pass = self.layout_pass;
+            memo.revision = self.layout_revision;
             memo.valid = true;
         }
     }
