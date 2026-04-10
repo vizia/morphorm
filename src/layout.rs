@@ -1160,6 +1160,22 @@ where
 
                     match item.item_type {
                         ItemType::Size => {
+                            let child_size = layout(
+                                child.node,
+                                layout_type,
+                                item.computed,
+                                if child.node.cross(store, layout_type).is_stretch() {
+                                    child.cross
+                                } else {
+                                    parent_cross
+                                },
+                                cache,
+                                tree,
+                                store,
+                                sublayout,
+                            );
+
+                            child.cross = child_size.cross;
                             child.main = item.computed;
                         }
 
@@ -1244,6 +1260,33 @@ where
         let child_max_cross = child.node.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
 
         child.cross = parent_cross.clamp(child_min_cross, child_max_cross);
+    }
+
+    // Re-run relative children with their final resolved constraints so descendant
+    // layout uses the same dimensions that are ultimately cached for each child.
+    for child in children
+        .iter_mut()
+        .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::Relative)
+    {
+        let child_main_is_stretch = child.node.main(store, layout_type).is_stretch();
+        let child_cross_is_stretch = child.node.cross(store, layout_type).is_stretch();
+
+        let child_size = layout(
+            child.node,
+            layout_type,
+            if child_main_is_stretch { child.main } else { parent_main },
+            if child_cross_is_stretch { child.cross } else { parent_cross },
+            cache,
+            tree,
+            store,
+            sublayout,
+        );
+
+        if !child_main_is_stretch {
+            child.main = child_size.main;
+        }
+
+        child.cross = child_size.cross;
     }
 
     // Absolute Children
