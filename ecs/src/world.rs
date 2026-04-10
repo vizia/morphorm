@@ -28,6 +28,10 @@ pub struct World {
 }
 
 impl World {
+    fn bump_layout_revision(&mut self) {
+        self.cache.bump_layout_revision();
+    }
+
     /// Add a node to the world with a specified parent node.
     pub fn add(&mut self, parent: Option<Entity>) -> Entity {
         let entity = self.entity_manager.create();
@@ -41,6 +45,7 @@ impl World {
         self.store.red.insert(entity, random_red);
         self.store.green.insert(entity, random_green);
         self.store.blue.insert(entity, random_blue);
+        self.bump_layout_revision();
         entity
     }
 
@@ -49,6 +54,7 @@ impl World {
         self.store.remove(entity);
         self.cache.remove(entity);
         self.tree.remove(&entity);
+        self.bump_layout_revision();
     }
 
     pub fn clear(&mut self) {
@@ -56,79 +62,95 @@ impl World {
         self.store.clear();
         self.cache.clear();
         self.tree.clear();
+        self.bump_layout_revision();
     }
 
     /// Set the desired layout type of the given entity.
     pub fn set_layout_type(&mut self, entity: Entity, value: LayoutType) {
         self.store.layout_type.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired position type of the given entity.
     pub fn set_position_type(&mut self, entity: Entity, value: PositionType) {
         self.store.position_type.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the inline direction of row content for the given entity.
     pub fn set_direction(&mut self, entity: Entity, value: Direction) {
         self.store.direction.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the wrap mode for children of the given entity.
     pub fn set_wrap(&mut self, entity: Entity, value: LayoutWrap) {
         self.store.wrap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     pub fn set_alignment(&mut self, entity: Entity, value: Alignment) {
         self.store.alignment.insert(entity, value);
+        self.bump_layout_revision();
     }
     /// Set the desired width of the given entity.
     pub fn set_width(&mut self, entity: Entity, value: Units) {
         self.store.width.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the minimum width of the given entity.
     pub fn set_min_width(&mut self, entity: Entity, value: Units) {
         self.store.min_width.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the maximum width of the given entity.
     pub fn set_max_width(&mut self, entity: Entity, value: Units) {
         self.store.max_width.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the minimum height of the given entity.
     pub fn set_min_height(&mut self, entity: Entity, value: Units) {
         self.store.min_height.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the maximum height of the given entity.
     pub fn set_max_height(&mut self, entity: Entity, value: Units) {
         self.store.max_height.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired height of the given entity.
     pub fn set_height(&mut self, entity: Entity, value: Units) {
         self.store.height.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired left space of the given entity.
     pub fn set_left(&mut self, entity: Entity, value: Units) {
         self.store.left.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired right space of the given entity.
     pub fn set_right(&mut self, entity: Entity, value: Units) {
         self.store.right.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired top space of the given entity.
     pub fn set_top(&mut self, entity: Entity, value: Units) {
         self.store.top.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired bottom space of the given entity.
     pub fn set_bottom(&mut self, entity: Entity, value: Units) {
         self.store.bottom.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired padding of the given entity.
@@ -137,92 +159,111 @@ impl World {
         self.store.padding_right.insert(entity, value);
         self.store.padding_top.insert(entity, value);
         self.store.padding_bottom.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired padding_left space of the given entity.
     pub fn set_padding_left(&mut self, entity: Entity, value: Units) {
         self.store.padding_left.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired padding_right space of the given entity.
     pub fn set_padding_right(&mut self, entity: Entity, value: Units) {
         self.store.padding_right.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired padding_top space of the given entity.
     pub fn set_padding_top(&mut self, entity: Entity, value: Units) {
         self.store.padding_top.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired padding_bottom space of the given entity.
     pub fn set_padding_bottom(&mut self, entity: Entity, value: Units) {
         self.store.padding_bottom.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired vertical (row) space between children of the given entity.
     pub fn set_vertical_gap(&mut self, entity: Entity, value: Units) {
         self.store.vertical_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired horizontal (column) space between children of the given entity.
     pub fn set_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.horizontal_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired minimum vertical (row) space between children of the given entity.
     pub fn set_min_vertical_gap(&mut self, entity: Entity, value: Units) {
         self.store.min_vertical_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired minimum horizontal (column) space between children of the given entity.
     pub fn set_min_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.min_horizontal_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired maximum vertical (row) space between children of the given entity.
     pub fn set_max_vertical_gap(&mut self, entity: Entity, value: Units) {
         self.store.max_vertical_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired maximum horizontal (column) space between children of the given entity.
     pub fn set_max_horizontal_gap(&mut self, entity: Entity, value: Units) {
         self.store.max_horizontal_gap.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the desired vertical scroll offset.
     pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
         self.store.vertical_scroll.insert(entity, value);
+        self.bump_layout_revision();
     }
     
     /// Set the desired horizontal scroll offset.
     pub fn set_horizontal_scroll(&mut self, entity: Entity, value: f32) {
         self.store.horizontal_scroll.insert(entity, value);
+        self.bump_layout_revision();
     }
 
        
     pub fn set_grid_columns(&mut self, entity: Entity, value: Vec<Units>) {
         self.store.grid_columns.insert(entity, value);
+        self.bump_layout_revision();
     }
         
  
     pub fn set_grid_rows(&mut self, entity: Entity, value: Vec<Units>) {
         self.store.grid_rows.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     pub fn set_column_start(&mut self, entity: Entity, value: usize) {
         self.store.column_start.insert(entity, value);
+        self.bump_layout_revision();
     }
         
     pub fn set_row_start(&mut self, entity: Entity, value: usize) {
         self.store.row_start.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     pub fn set_column_span(&mut self, entity: Entity, value: usize) {
         self.store.column_span.insert(entity, value);
+        self.bump_layout_revision();
     }
         
     pub fn set_row_span(&mut self, entity: Entity, value: usize) {
         self.store.row_span.insert(entity, value);
+        self.bump_layout_revision();
     }
 
     /// Set the content size function for the given entity.
@@ -232,20 +273,24 @@ impl World {
         content: impl Fn(&Store, Option<f32>, Option<f32>) -> (f32, f32) + 'static,
     ) {
         self.store.content_size.insert(entity, Box::new(content));
+        self.bump_layout_revision();
     }
 
     pub fn set_visibility(&mut self, entity: Entity, visible: bool) {
         self.store.visible.insert(entity, visible);
+        self.bump_layout_revision();
     }
 
     /// Set the text to be displayed on the given entity.
     pub fn set_text(&mut self, entity: Entity, text: &str) {
         self.store.text.insert(entity, String::from(text));
+        self.bump_layout_revision();
     }
 
     /// Set whether the text should wrap for the given entity.
     pub fn set_text_wrap(&mut self, entity: Entity, text_wrap: TextWrap) {
         self.store.text_wrap.insert(entity, text_wrap);
+        self.bump_layout_revision();
     }
 
     /// Set all space and size properties of the given node to stretch.
@@ -263,5 +308,6 @@ impl World {
         self.store.border_right.insert(entity, width);
         self.store.border_top.insert(entity, width);
         self.store.border_bottom.insert(entity, width);
+        self.bump_layout_revision();
     }
 }
