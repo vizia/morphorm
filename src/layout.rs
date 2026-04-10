@@ -822,6 +822,13 @@ where
     N: Node,
     C: Cache<Node = N>,
 {
+    let requested_main = parent_main;
+    let requested_cross = parent_cross;
+
+    if let Some(cached) = cache.get_layout_result(node, parent_layout_type, requested_main, requested_cross) {
+        return cached;
+    }
+
     // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
 
@@ -913,11 +920,15 @@ where
     computed_cross = computed_cross.max(min_cross).min(max_cross);
 
     if layout_type == LayoutType::Grid {
-        return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        let size = layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        cache.set_layout_result(node, parent_layout_type, requested_main, requested_cross, size);
+        return size;
     }
 
     if node.wrap(store).unwrap_or_default() == LayoutWrap::Wrap {
-        return layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        let size = layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        cache.set_layout_result(node, parent_layout_type, requested_main, requested_cross, size);
+        return size;
     }
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
@@ -1547,5 +1558,7 @@ where
     }
 
     // Return the computed size, propagating it back up the tree.
-    Size { main: computed_main, cross: computed_cross }
+    let size = Size { main: computed_main, cross: computed_cross };
+    cache.set_layout_result(node, parent_layout_type, requested_main, requested_cross, size);
+    size
 }
