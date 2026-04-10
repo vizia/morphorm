@@ -1264,9 +1264,11 @@ where
 
     // Re-run relative children with their final resolved constraints so descendant
     // layout uses the same dimensions that are ultimately cached for each child.
+    // Only rerun children that have descendants (skip leaf nodes).
     for child in children
         .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::Relative)
+        .filter(|child| child.node.children(tree).next().is_some())
     {
         let child_main_is_stretch = child.node.main(store, layout_type).is_stretch();
         let child_cross_is_stretch = child.node.cross(store, layout_type).is_stretch();
