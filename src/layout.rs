@@ -51,6 +51,10 @@ struct ChildNode<'a, N: Node> {
     main: f32,
 
     main_after: f32,
+    // Last parent constraints used to lay out this child.
+    last_layout_main: f32,
+    last_layout_cross: f32,
+    has_layout_constraints: bool,
 }
 
 fn flip_alignment_horizontal(alignment: Alignment) -> Alignment {
@@ -63,6 +67,11 @@ fn flip_alignment_horizontal(alignment: Alignment) -> Alignment {
         Alignment::BottomRight => Alignment::BottomLeft,
         alignment => alignment,
     }
+}
+
+#[inline]
+fn same_f32(a: f32, b: f32) -> bool {
+    a.to_bits() == b.to_bits()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -601,7 +610,15 @@ where
         };
 
         let size = layout(child, layout_type, main, cross, cache, tree, store, sublayout);
-        abs_items.push(ChildNode { node: child, main: size.main, cross: size.cross, main_after: 0.0 });
+        abs_items.push(ChildNode {
+            node: child,
+            main: size.main,
+            cross: size.cross,
+            main_after: 0.0,
+            last_layout_main: 0.0,
+            last_layout_cross: 0.0,
+            has_layout_constraints: false,
+        });
     }
 
     // Phase 8: Position all children.
@@ -961,11 +978,18 @@ where
         let mut computed_child_cross = child_cross.to_px_clamped(parent_cross, 0.0, child_min_cross, child_max_cross);
 
         // Compute fixed-size child main and cross.
+        let mut has_layout_constraints = false;
+        let mut last_layout_main = 0.0;
+        let mut last_layout_cross = 0.0;
+
         if !child_main.is_stretch() && (!child_cross.is_stretch() || child_min_cross.is_auto()) {
             let child_size = layout(child, layout_type, parent_main, parent_cross, cache, tree, store, sublayout);
 
             computed_child_main = child_size.main;
             computed_child_cross = child_size.cross;
+            has_layout_constraints = true;
+            last_layout_main = parent_main;
+            last_layout_cross = parent_cross;
         }
 
         children.push(ChildNode {
@@ -973,6 +997,9 @@ where
             cross: computed_child_cross,
             main: computed_child_main,
             main_after: computed_child_main_after,
+            last_layout_main,
+            last_layout_cross,
+            has_layout_constraints,
         });
     }
 
@@ -1042,9 +1069,17 @@ where
         .filter(|child| child.node.cross(store, layout_type).is_stretch())
     {
         if !child.node.main(store, layout_type).is_stretch() {
-            let child_size = layout(child.node, layout_type, parent_main, parent_cross, cache, tree, store, sublayout);
-            child.main = child_size.main;
-            child.cross = child_size.cross;
+            if !child.has_layout_constraints
+                || !same_f32(child.last_layout_main, parent_main)
+                || !same_f32(child.last_layout_cross, parent_cross)
+            {
+                let child_size = layout(child.node, layout_type, parent_main, parent_cross, cache, tree, store, sublayout);
+                child.main = child_size.main;
+                child.cross = child_size.cross;
+                child.last_layout_main = parent_main;
+                child.last_layout_cross = parent_cross;
+                child.has_layout_constraints = true;
+            }
         } else {
             let child_min_cross = if child.node.min_cross(store, layout_type).is_auto() {
                 child.cross
@@ -1124,21 +1159,37 @@ where
                 let child = &mut children[item.index];
 
                 if item.item_type == ItemType::Size {
-                    let child_size = layout(
-                        child.node,
-                        layout_type,
-                        actual_main,
-                        if child.node.cross(store, layout_type).is_stretch() { child.cross } else { parent_cross },
-                        cache,
-                        tree,
-                        store,
-                        sublayout,
-                    );
-                    child.cross = child_size.cross;
-                    actual_main = child_size.main;
+                    let target_cross = if child.node.cross(store, layout_type).is_stretch() {
+                        child.cross
+                    } else {
+                        parent_cross
+                    };
+
+                    if !child.has_layout_constraints
+                        || !same_f32(child.last_layout_main, actual_main)
+                        || !same_f32(child.last_layout_cross, target_cross)
+                    {
+                        let child_size = layout(
+                            child.node,
+                            layout_type,
+                            actual_main,
+                            target_cross,
+                            cache,
+                            tree,
+                            store,
+                            sublayout,
+                        );
+                        child.cross = child_size.cross;
+                        actual_main = child_size.main;
+                        child.last_layout_main = actual_main;
+                        child.last_layout_cross = target_cross;
+                        child.has_layout_constraints = true;
+                    } else {
+                        actual_main = child.main;
+                    }
 
                     if child.node.min_main(store, layout_type).is_auto() {
-                        item.min = child_size.main;
+                        item.min = child.main;
                     }
                 }
 
@@ -1166,22 +1217,32 @@ where
                     match item.item_type {
                         ItemType::Size => {
                             if (item.computed - item.measured).abs() > f32::EPSILON {
-                                let child_size = layout(
-                                    child.node,
-                                    layout_type,
-                                    item.computed,
-                                    if child.node.cross(store, layout_type).is_stretch() {
-                                        child.cross
-                                    } else {
-                                        parent_cross
-                                    },
-                                    cache,
-                                    tree,
-                                    store,
-                                    sublayout,
-                                );
+                                let target_cross = if child.node.cross(store, layout_type).is_stretch() {
+                                    child.cross
+                                } else {
+                                    parent_cross
+                                };
 
-                                child.cross = child_size.cross;
+                                if !child.has_layout_constraints
+                                    || !same_f32(child.last_layout_main, item.computed)
+                                    || !same_f32(child.last_layout_cross, target_cross)
+                                {
+                                    let child_size = layout(
+                                        child.node,
+                                        layout_type,
+                                        item.computed,
+                                        target_cross,
+                                        cache,
+                                        tree,
+                                        store,
+                                        sublayout,
+                                    );
+
+                                    child.cross = child_size.cross;
+                                    child.last_layout_main = item.computed;
+                                    child.last_layout_cross = target_cross;
+                                    child.has_layout_constraints = true;
+                                }
                             }
 
                             child.main = item.computed;
@@ -1281,16 +1342,21 @@ where
         let child_main_is_stretch = child.node.main(store, layout_type).is_stretch();
         let child_cross_is_stretch = child.node.cross(store, layout_type).is_stretch();
 
-        let child_size = layout(
-            child.node,
-            layout_type,
-            if child_main_is_stretch { child.main } else { parent_main },
-            if child_cross_is_stretch { child.cross } else { parent_cross },
-            cache,
-            tree,
-            store,
-            sublayout,
-        );
+        let target_main = if child_main_is_stretch { child.main } else { parent_main };
+        let target_cross = if child_cross_is_stretch { child.cross } else { parent_cross };
+
+        if child.has_layout_constraints
+            && same_f32(child.last_layout_main, target_main)
+            && same_f32(child.last_layout_cross, target_cross)
+        {
+            continue;
+        }
+
+        let child_size = layout(child.node, layout_type, target_main, target_cross, cache, tree, store, sublayout);
+
+        child.last_layout_main = target_main;
+        child.last_layout_cross = target_cross;
+        child.has_layout_constraints = true;
 
         if !child_main_is_stretch {
             child.main = child_size.main;
@@ -1337,6 +1403,9 @@ where
             cross: computed_child_cross,
             main: computed_child_main,
             main_after: 0.0,
+            last_layout_main: 0.0,
+            last_layout_cross: 0.0,
+            has_layout_constraints: false,
         });
     }
 
