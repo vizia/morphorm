@@ -190,9 +190,9 @@ where
                 // If the item is frozen, adjust the used_space and sum of cross stretch factors.
                 if item.frozen {
                     col_flex_sum -= item.factor;
+                    let prev = computed_grid_cols[item.index];
                     computed_grid_cols[item.index] = item.computed;
-
-                    width_sum = computed_grid_cols.iter().sum();
+                    width_sum += item.computed - prev;
                 }
             }
         }
@@ -230,9 +230,9 @@ where
                 // If the item is frozen, adjust the used_space and sum of cross stretch factors.
                 if item.frozen {
                     row_flex_sum -= item.factor;
+                    let prev = computed_grid_rows[item.index];
                     computed_grid_rows[item.index] = item.computed;
-
-                    height_sum = computed_grid_rows.iter().sum();
+                    height_sum += item.computed - prev;
                 }
             }
         }
@@ -818,15 +818,21 @@ where
     let border_cross_after =
         node.border_cross_after(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
 
+    // Classify visible children once to avoid repeated tree traversals.
+    let mut relative_children = SmallVec::<[&N; 32]>::new();
+    let mut absolute_children = SmallVec::<[&N; 8]>::new();
+    for child in node.children(tree).filter(|child| child.visible(store)) {
+        match child.position_type(store).unwrap_or_default() {
+            PositionType::Relative => relative_children.push(child),
+            PositionType::Absolute => absolute_children.push(child),
+        }
+    }
+
     // Get the total number of children of the node.
-    let num_children = node.children(tree).filter(|child| child.visible(store)).count();
+    let num_children = relative_children.len() + absolute_children.len();
 
     // Get the total number of relative children of the node.
-    let num_parent_directed_children = node
-        .children(tree)
-        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
-        .filter(|child| child.visible(store))
-        .count();
+    let num_parent_directed_children = relative_children.len();
 
     // Apply content sizing.
     if (node.min_main(store, parent_layout_type).is_auto() || node.min_cross(store, parent_layout_type).is_auto())
@@ -893,12 +899,6 @@ where
     parent_cross = parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
 
     let is_row_rtl = layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
-
-    let mut relative_children = node
-        .children(tree)
-        .filter(|child| child.visible(store))
-        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
-        .collect::<SmallVec<[&N; 32]>>();
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1157,6 +1157,7 @@ where
                 // If the item is frozen, adjust the used_space and sum of cross stretch factors.
                 if item.frozen {
                     main_flex_sum -= item.factor;
+                    let previous_total = child.main + child.main_after;
 
                     match item.item_type {
                         ItemType::Size => {
@@ -1184,7 +1185,7 @@ where
                         }
                     }
 
-                    main_sum = children.iter().map(|child| child.main + child.main_after).sum();
+                    main_sum += (child.main + child.main_after) - previous_total;
                 }
             }
         }
@@ -1293,13 +1294,8 @@ where
 
     // Absolute Children
 
-    let node_children = node
-        .children(tree)
-        .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Absolute)
-        .filter(|child| child.visible(store));
-
     // Compute space and size of non-flexible absolute children.
-    for child in node_children {
+    for child in absolute_children.into_iter() {
         let main = if child.main(store, layout_type).is_stretch() {
             let child_min_main = child.min_main(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
             let child_max_main = child.max_main(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
