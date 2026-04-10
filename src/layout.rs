@@ -25,6 +25,8 @@ struct StretchItem {
     violation: f32,
     // The computed size of the stretch item.
     computed: f32,
+    // The measured size from the current flex iteration.
+    measured: f32,
     // Whether or not the stretch item is frozen.
     frozen: bool,
     // The minimum size of the stretch item.
@@ -35,7 +37,7 @@ struct StretchItem {
 
 impl StretchItem {
     pub fn new(index: usize, factor: f32, item_type: ItemType, min: f32, max: f32) -> Self {
-        Self { index, factor, item_type, violation: 0.0, computed: 0.0, frozen: false, min, max }
+        Self { index, factor, item_type, violation: 0.0, computed: 0.0, measured: 0.0, frozen: false, min, max }
     }
 }
 
@@ -176,6 +178,7 @@ where
                 let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
                 total_violation += item.violation;
+                item.measured = actual_main;
                 item.computed = clamped;
             }
 
@@ -216,6 +219,7 @@ where
                 let clamped = actual_main.min(item.max).max(item.min);
                 item.violation = clamped - actual_main;
                 total_violation += item.violation;
+                item.measured = actual_main;
                 item.computed = clamped;
             }
 
@@ -1161,22 +1165,25 @@ where
 
                     match item.item_type {
                         ItemType::Size => {
-                            let child_size = layout(
-                                child.node,
-                                layout_type,
-                                item.computed,
-                                if child.node.cross(store, layout_type).is_stretch() {
-                                    child.cross
-                                } else {
-                                    parent_cross
-                                },
-                                cache,
-                                tree,
-                                store,
-                                sublayout,
-                            );
+                            if (item.computed - item.measured).abs() > f32::EPSILON {
+                                let child_size = layout(
+                                    child.node,
+                                    layout_type,
+                                    item.computed,
+                                    if child.node.cross(store, layout_type).is_stretch() {
+                                        child.cross
+                                    } else {
+                                        parent_cross
+                                    },
+                                    cache,
+                                    tree,
+                                    store,
+                                    sublayout,
+                                );
 
-                            child.cross = child_size.cross;
+                                child.cross = child_size.cross;
+                            }
+
                             child.main = item.computed;
                         }
 
