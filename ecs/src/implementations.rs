@@ -198,19 +198,41 @@ pub struct Rect {
 pub struct NodeCache {
     // Computed size and position of nodes.
     pub rect: SecondaryMap<Entity, Rect>,
+    // Pass-scoped memoized layout sizes.
+    layout_memo: SecondaryMap<Entity, LayoutMemo>,
+    layout_pass: u64,
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+struct LayoutMemo {
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    size: Size,
+    pass: u64,
+    valid: bool,
+}
+
+#[inline]
+fn same_f32(a: f32, b: f32) -> bool {
+    a.to_bits() == b.to_bits()
 }
 
 impl NodeCache {
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
+        self.layout_memo.insert(entity, Default::default());
     }
 
     pub fn remove(&mut self, entity: Entity) {
         self.rect.remove(entity);
+        self.layout_memo.remove(entity);
     }
 
     pub fn clear(&mut self) {
         self.rect.clear();
+        self.layout_memo.clear();
+        self.layout_pass = 0;
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
@@ -220,6 +242,50 @@ impl NodeCache {
 
 impl Cache for NodeCache {
     type Node = Entity;
+
+    fn begin_layout_pass(&mut self) {
+        self.layout_pass = self.layout_pass.wrapping_add(1);
+    }
+
+    fn get_layout_result(
+        &self,
+        node: &Self::Node,
+        parent_layout_type: LayoutType,
+        parent_main: f32,
+        parent_cross: f32,
+    ) -> Option<Size> {
+        let memo = self.layout_memo.get(*node)?;
+        if !memo.valid || memo.pass != self.layout_pass {
+            return None;
+        }
+
+        if memo.parent_layout_type == parent_layout_type
+            && same_f32(memo.parent_main, parent_main)
+            && same_f32(memo.parent_cross, parent_cross)
+        {
+            Some(memo.size)
+        } else {
+            None
+        }
+    }
+
+    fn set_layout_result(
+        &mut self,
+        node: &Self::Node,
+        parent_layout_type: LayoutType,
+        parent_main: f32,
+        parent_cross: f32,
+        size: Size,
+    ) {
+        if let Some(memo) = self.layout_memo.get_mut(*node) {
+            memo.parent_layout_type = parent_layout_type;
+            memo.parent_main = parent_main;
+            memo.parent_cross = parent_cross;
+            memo.size = size;
+            memo.pass = self.layout_pass;
+            memo.valid = true;
+        }
+    }
 
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32) {
         if let Some(rect) = self.rect.get_mut(*node) {

@@ -124,6 +124,30 @@ fn morphorm_benchmarks(c: &mut Criterion) {
     });
 
     group.finish();
+
+    let mut group = c.benchmark_group("Steady State Tree");
+    group.sample_size(20);
+
+    let children_per_node = 10;
+    let depth = 6usize;
+    let benchmark_id = BenchmarkId::new(
+        format!(
+            "Steady state bench. {children_per_node} children per node, depth: {depth}. Total nodes: {}.",
+            compute_node_count(children_per_node, depth, &mut 0)
+        ),
+        depth,
+    );
+
+    let mut world = World::default();
+    let root = build_tree(&mut world, None, children_per_node, depth);
+
+    group.bench_function(benchmark_id, |b| {
+        b.iter(|| {
+            root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+        })
+    });
+
+    group.finish();
 }
 
 criterion_group!(benches, morphorm_benchmarks);
