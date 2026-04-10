@@ -210,6 +210,40 @@ fn auto_min_width4() {
     assert_eq!(world.cache.bounds(child2), Some(&Rect { posx: 50.0, posy: 0.0, width: 50.0, height: 80.0 }));
 }
 
+#[test]
+fn auto_min_width_propagates_to_nested_children_after_flex_clamp() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(300.0));
+    world.set_height(root, Units::Pixels(100.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_layout_type(root, LayoutType::Row);
+
+    let child1 = world.add(Some(root));
+    world.set_width(child1, Units::Stretch(1.0));
+    world.set_min_width(child1, Units::Pixels(200.0));
+    world.set_height(child1, Units::Stretch(1.0));
+    world.set_layout_type(child1, LayoutType::Row);
+
+    let grandchild1 = world.add(Some(child1));
+    world.set_width(grandchild1, Units::Stretch(1.0));
+    world.set_height(grandchild1, Units::Stretch(1.0));
+    world.set_content_size(grandchild1, |_, width, height| (width.unwrap(), height.unwrap()));
+
+    let child2 = world.add(Some(root));
+    world.set_width(child2, Units::Stretch(1.0));
+    world.set_min_width(child2, Units::Auto);
+    world.set_height(child2, Units::Stretch(1.0));
+    world.set_content_size(child2, |_, _, height| (80.0, height.unwrap()));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(child1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(grandchild1), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(child2), Some(&Rect { posx: 200.0, posy: 0.0, width: 100.0, height: 100.0 }));
+}
+
 // #[test]
 // fn percentage_left_pixels_width() {
 //     let mut world = World::default();
