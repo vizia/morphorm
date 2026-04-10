@@ -46,8 +46,6 @@ pub trait Node: Sized {
         store: &Self::Store,
         sublayout: &mut Self::SubLayout<'_>,
     ) -> Size {
-        cache.begin_layout_pass();
-
         let width = self.width(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
         let height = self.height(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
 
