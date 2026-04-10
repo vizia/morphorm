@@ -402,6 +402,7 @@ where
         cross: f32,
         /// Non-zero when this item has Stretch units on the main axis.
         stretch_main_factor: f32,
+        cross_is_stretch: bool,
         min_main: f32,
         max_main: f32,
         min_cross: f32,
@@ -417,6 +418,7 @@ where
         let child_max_main = child.max_main(store, layout_type);
         let child_min_cross = child.min_cross(store, layout_type);
         let child_max_cross = child.max_cross(store, layout_type);
+        let child_cross_is_stretch = child.cross(store, layout_type).is_stretch();
 
         let min_main_px = child_min_main.to_px(avail_main, DEFAULT_MIN);
         let max_main_px = child_max_main.to_px(avail_main, DEFAULT_MAX);
@@ -430,6 +432,7 @@ where
                 main: base,
                 cross: 0.0,
                 stretch_main_factor: factor,
+                cross_is_stretch: child_cross_is_stretch,
                 min_main: min_main_px,
                 max_main: max_main_px,
                 min_cross: min_cross_px,
@@ -441,6 +444,7 @@ where
                 main: size.main,
                 cross: size.cross,
                 stretch_main_factor: 0.0,
+                cross_is_stretch: child_cross_is_stretch,
                 min_main: min_main_px,
                 max_main: max_main_px,
                 min_cross: min_cross_px,
@@ -485,21 +489,28 @@ where
 
     // Phase 3: Per-line flex resolution for stretch-main items.
     for line in lines.iter() {
+        let start = line.start;
+        let end = line.end;
         let count = line.len();
         if count == 0 {
             continue;
         }
 
-        let stretch_sum: f32 =
-            line.clone().filter(|&i| items[i].stretch_main_factor > 0.0).map(|i| items[i].stretch_main_factor).sum();
+        let mut stretch_sum = 0.0f32;
+        let mut fixed_sum = 0.0f32;
+        for i in start..end {
+            if items[i].stretch_main_factor > 0.0 {
+                stretch_sum += items[i].stretch_main_factor;
+            } else {
+                fixed_sum += items[i].main;
+            }
+        }
 
         if stretch_sum > 0.0 {
-            let fixed_sum: f32 =
-                line.clone().filter(|&i| items[i].stretch_main_factor == 0.0).map(|i| items[i].main).sum();
             let gap_total = (count - 1) as f32 * item_gap_px;
             let free_main = (avail_main - fixed_sum - gap_total).max(0.0);
 
-            for i in line.clone() {
+            for i in start..end {
                 let factor = items[i].stretch_main_factor;
                 if factor > 0.0 {
                     let allocated = (factor / stretch_sum * free_main).round();
@@ -516,20 +527,25 @@ where
     // Phase 4: Compute the cross extent of each line from non-cross-stretch children.
     let mut line_cross: SmallVec<[f32; 8]> = SmallVec::with_capacity(lines.len());
     for line in lines.iter() {
-        let max_cross = line
-            .clone()
-            .filter(|&i| !relative_children[i].cross(store, layout_type).is_stretch())
-            .map(|i| items[i].cross)
-            .fold(0.0f32, f32::max);
+        let start = line.start;
+        let end = line.end;
+        let mut max_cross = 0.0f32;
+        for i in start..end {
+            if !items[i].cross_is_stretch {
+                max_cross = max_cross.max(items[i].cross);
+            }
+        }
         line_cross.push(max_cross);
     }
 
     // Phase 5: Resolve cross-stretch children to fill their line's cross extent.
     for (line_idx, line) in lines.iter().enumerate() {
+        let start = line.start;
+        let end = line.end;
         let lc = line_cross[line_idx];
-        for i in line.clone() {
-            let child = relative_children[i];
-            if child.cross(store, layout_type).is_stretch() {
+        for i in start..end {
+            if items[i].cross_is_stretch {
+                let child = relative_children[i];
                 let clamped_cross = lc.clamp(items[i].min_cross, items[i].max_cross);
                 let size =
                     layout(child, layout_type, items[i].main, clamped_cross, cache, tree, store, sublayout);
@@ -538,7 +554,11 @@ where
             }
         }
         // Re-compute line cross to include cross-stretch items in case they changed.
-        line_cross[line_idx] = line.clone().map(|i| items[i].cross).fold(0.0f32, f32::max);
+        let mut max_cross = 0.0f32;
+        for i in start..end {
+            max_cross = max_cross.max(items[i].cross);
+        }
+        line_cross[line_idx] = max_cross;
     }
 
     // Phase 6: Determine the final cross size of the container.
@@ -564,8 +584,12 @@ where
     let main_units = node.main(store, layout_type);
     let final_main = if main_units.is_auto() || parent_main == 0.0 {
         let raw = if !lines.is_empty() {
-            lines[0].clone().map(|i| items[i].main).sum::<f32>()
-                + (lines[0].len().saturating_sub(1)) as f32 * item_gap_px
+            let first = &lines[0];
+            let mut sum = 0.0f32;
+            for i in first.start..first.end {
+                sum += items[i].main;
+            }
+            sum + (first.len().saturating_sub(1)) as f32 * item_gap_px
         } else {
             0.0
         };
@@ -652,10 +676,15 @@ where
     let mut cross_cursor = padding_cross_before + border_cross_before;
 
     for (line_idx, line) in lines.iter().enumerate() {
+        let start = line.start;
+        let end = line.end;
         let lc = line_cross[line_idx];
         let count = line.len();
         let gap_total = (count.saturating_sub(1)) as f32 * item_gap_px;
-        let line_main_sum: f32 = line.clone().map(|i| items[i].main).sum();
+        let mut line_main_sum = 0.0f32;
+        for i in start..end {
+            line_main_sum += items[i].main;
+        }
         let free_main = (avail_main - line_main_sum - gap_total).max(0.0);
 
         if is_row_rtl {
@@ -663,25 +692,27 @@ where
             // Alignment is flipped above so TopLeft maps to TopRight semantics.
             let mut main_cursor =
                 padding_main_before + border_main_before + main_align_frac * free_main;
-            
-            for (item_idx, i) in line.clone().rev().enumerate() {
+
+            let mut item_idx = 0usize;
+            for i in (start..end).rev() {
                 let item = &items[i];
                 let child = relative_children[i];
                 let item_cross_offset = cross_align_frac * (lc - item.cross);
-                
+
                 cache.set_rect(child, layout_type, main_cursor, cross_cursor + item_cross_offset, item.main, item.cross);
-                
+
                 main_cursor += item.main;
                 if item_idx + 1 < count {
                     main_cursor += item_gap_px;
                 }
+                item_idx += 1;
             }
         } else {
             // LTR positioning: items are positioned left-to-right within the line
             let mut main_cursor =
                 padding_main_before + border_main_before + main_align_frac * free_main;
 
-            for (item_pos, i) in line.clone().enumerate() {
+            for i in start..end {
                 let item = &items[i];
                 let child = relative_children[i];
 
@@ -690,7 +721,7 @@ where
                 cache.set_rect(child, layout_type, main_cursor, cross_cursor + item_cross_offset, item.main, item.cross);
 
                 main_cursor += item.main;
-                if item_pos + 1 < count {
+                if i + 1 < end {
                     main_cursor += item_gap_px;
                 }
             }
