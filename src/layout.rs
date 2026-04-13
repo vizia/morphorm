@@ -269,7 +269,9 @@ where
 
     let mut alignment = node.alignment(store).unwrap_or_default();
 
-    if parent_layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+    if matches!(parent_layout_type, LayoutType::Row | LayoutType::Column)
+        && node.direction(store).unwrap_or_default() == Direction::RightToLeft
+    {
         alignment = flip_alignment_horizontal(alignment);
     }
 
@@ -385,8 +387,8 @@ where
     // Gap between lines (on the cross axis).
     let line_gap_px = node.cross_between(store, layout_type).to_px(avail_cross, 0.0);
 
-    let is_row_rtl =
-        layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let is_inline_rtl = matches!(layout_type, LayoutType::Row | LayoutType::Column)
+        && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
     let relative_children = node
         .children(tree)
@@ -653,8 +655,8 @@ where
     // layout_type.
     let mut alignment = node.alignment(store).unwrap_or_default();
     
-    // For RTL row layouts, flip alignment horizontally so TopLeft becomes TopRight
-    if is_row_rtl {
+    // For RTL inline layouts, flip horizontal alignment so TopLeft becomes TopRight.
+    if is_inline_rtl {
         alignment = flip_alignment_horizontal(alignment);
     }
     
@@ -687,7 +689,7 @@ where
         }
         let free_main = (avail_main - line_main_sum - gap_total).max(0.0);
 
-        if is_row_rtl {
+        if is_inline_rtl {
             // RTL positioning: place items in reverse order within each wrapped line.
             // Alignment is flipped above so TopLeft maps to TopRight semantics.
             let mut main_cursor =
@@ -1453,7 +1455,9 @@ where
 
     let mut alignment = node.alignment(store).unwrap_or_default();
 
-    if layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+    if matches!(layout_type, LayoutType::Row | LayoutType::Column)
+        && node.direction(store).unwrap_or_default() == Direction::RightToLeft
+    {
         alignment = flip_alignment_horizontal(alignment);
     }
 
