@@ -604,9 +604,9 @@ where
     };
 
     // Phase 7: Lay out absolute children against the container bounds.
-    let abs_avail_main = final_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
-    let abs_avail_cross =
-        final_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+    // Absolute children are sized without parent padding influence.
+    let abs_avail_main = final_main - border_main_before - border_main_after;
+    let abs_avail_cross = final_cross - border_cross_before - border_cross_after;
 
     let abs_children = node
         .children(tree)
@@ -742,8 +742,8 @@ where
         let child_cross_before = abs_child.node.cross_before(store, layout_type);
         let child_cross_after = abs_child.node.cross_after(store, layout_type);
 
-        let pma = abs_avail_main + padding_main_before + padding_main_after;
-        let pca = abs_avail_cross + padding_cross_before + padding_cross_after;
+        let pma = abs_avail_main;
+        let pca = abs_avail_cross;
 
         let child_main_pos = match (child_main_before, child_main_after) {
             (Pixels(val), _) => val,
@@ -1411,30 +1411,34 @@ where
 
     // Absolute Children
 
+    // Absolute children are sized without parent padding influence.
+    let abs_size_main = parent_main + padding_main_before + padding_main_after;
+    let abs_size_cross = parent_cross + padding_cross_before + padding_cross_after;
+
     // Compute space and size of non-flexible absolute children.
     for child in absolute_children.into_iter() {
         let main = if child.main(store, layout_type).is_stretch() {
-            let child_min_main = child.min_main(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
-            let child_max_main = child.max_main(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+            let child_min_main = child.min_main(store, layout_type).to_px(abs_size_cross, DEFAULT_MIN);
+            let child_max_main = child.max_main(store, layout_type).to_px(abs_size_cross, DEFAULT_MAX);
 
-            let child_main_before = child.main_before(store, layout_type).to_px(parent_main, 0.0);
-            let child_main_after = child.main_after(store, layout_type).to_px(parent_main, 0.0);
+            let child_main_before = child.main_before(store, layout_type).to_px(abs_size_main, 0.0);
+            let child_main_after = child.main_after(store, layout_type).to_px(abs_size_main, 0.0);
 
-            parent_main.clamp(child_min_main, child_max_main) - child_main_before - child_main_after
+            abs_size_main.clamp(child_min_main, child_max_main) - child_main_before - child_main_after
         } else {
-            parent_main
+            abs_size_main
         };
 
         let cross = if child.cross(store, layout_type).is_stretch() {
-            let child_min_cross = child.min_cross(store, layout_type).to_px(parent_cross, DEFAULT_MIN);
-            let child_max_cross = child.max_cross(store, layout_type).to_px(parent_cross, DEFAULT_MAX);
+            let child_min_cross = child.min_cross(store, layout_type).to_px(abs_size_cross, DEFAULT_MIN);
+            let child_max_cross = child.max_cross(store, layout_type).to_px(abs_size_cross, DEFAULT_MAX);
 
-            let child_cross_before = child.cross_before(store, layout_type).to_px(parent_main, 0.0);
-            let child_cross_after = child.cross_after(store, layout_type).to_px(parent_main, 0.0);
+            let child_cross_before = child.cross_before(store, layout_type).to_px(abs_size_cross, 0.0);
+            let child_cross_after = child.cross_after(store, layout_type).to_px(abs_size_cross, 0.0);
 
-            parent_cross.clamp(child_min_cross, child_max_cross) - child_cross_before - child_cross_after
+            abs_size_cross.clamp(child_min_cross, child_max_cross) - child_cross_before - child_cross_after
         } else {
-            parent_cross
+            abs_size_cross
         };
 
         let child_size = layout(child, layout_type, main, cross, cache, tree, store, sublayout);
