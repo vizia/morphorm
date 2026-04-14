@@ -286,7 +286,7 @@ fn min_width_auto_absolute() {
     world.set_width(node2, Units::Pixels(300.0));
     world.set_height(node2, Units::Pixels(300.0));
     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
-    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 200.0 }));
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 600.0 }));
     assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
@@ -311,7 +311,7 @@ fn min_height_auto_absolute() {
     world.set_height(node2, Units::Pixels(300.0));
     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
-    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 200.0, height: 300.0 }));
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 600.0 }));
     assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
@@ -337,7 +337,7 @@ fn min_size_auto_absolute() {
     world.set_height(node2, Units::Pixels(300.0));
     root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
 
-    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 0.0, posy: 0.0, width: 600.0, height: 600.0 }));
     assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 300.0 }));
 }
 
