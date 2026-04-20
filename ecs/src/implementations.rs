@@ -264,8 +264,6 @@ impl Cache for NodeCache {
 
 impl Default for NodeCache {
     fn default() -> Self {
-        Self {
-            rect: SecondaryMap::new(),
-        }
+        Self { rect: SecondaryMap::new() }
     }
 }

@@ -28,7 +28,6 @@ pub struct World {
 }
 
 impl World {
-
     /// Add a node to the world with a specified parent node.
     pub fn add(&mut self, parent: Option<Entity>) -> Entity {
         let entity = self.entity_manager.create();
@@ -194,18 +193,16 @@ impl World {
     pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
         self.store.vertical_scroll.insert(entity, value);
     }
-    
+
     /// Set the desired horizontal scroll offset.
     pub fn set_horizontal_scroll(&mut self, entity: Entity, value: f32) {
         self.store.horizontal_scroll.insert(entity, value);
     }
 
-       
     pub fn set_grid_columns(&mut self, entity: Entity, value: Vec<Units>) {
         self.store.grid_columns.insert(entity, value);
     }
-        
- 
+
     pub fn set_grid_rows(&mut self, entity: Entity, value: Vec<Units>) {
         self.store.grid_rows.insert(entity, value);
     }
@@ -213,7 +210,7 @@ impl World {
     pub fn set_column_start(&mut self, entity: Entity, value: usize) {
         self.store.column_start.insert(entity, value);
     }
-        
+
     pub fn set_row_start(&mut self, entity: Entity, value: usize) {
         self.store.row_start.insert(entity, value);
     }
@@ -221,7 +218,7 @@ impl World {
     pub fn set_column_span(&mut self, entity: Entity, value: usize) {
         self.store.column_span.insert(entity, value);
     }
-        
+
     pub fn set_row_span(&mut self, entity: Entity, value: usize) {
         self.store.row_span.insert(entity, value);
     }
