@@ -91,7 +91,7 @@ fn content_size(node: Entity, store: &Store, width: Option<f32>, height: Option<
     paint.set_font_size(48.0);
     paint.set_text_align(femtovg::Align::Left);
     paint.set_text_baseline(femtovg::Baseline::Top);
-    paint.set_font(&vec![store.font_id.unwrap()]);
+    paint.set_font(&[store.font_id.unwrap()]);
     // let should_wrap = store.text_wrap.get(&node).copied().unwrap_or_default();
     let text_wrap = store.text_wrap.get(node).copied().unwrap_or_default();
 

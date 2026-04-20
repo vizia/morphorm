@@ -115,6 +115,7 @@ impl Store {
         self.layout_type.clear();
         self.position_type.clear();
         self.direction.clear();
+        self.wrap.clear();
         self.left.clear();
         self.right.clear();
         self.top.clear();

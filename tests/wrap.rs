@@ -268,9 +268,8 @@ fn wrap_auto_container() {
     assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 0.0, posy: 50.0, width: 100.0, height: 50.0 }));
 }
 
-// TODO: wrap_with_different_line_heights test - currently fails because the line-wrapping
-// logic in layout_wrap doesn't properly wrap items when they exceed available space.
-// This is a known issue with the Phase 2 line assignment algorithm that needs fixing.
+// Regression test for wrapping when items on different lines have different heights.
+// Verifies line assignment and vertical positioning use each line's maximum height.
 
 #[test]
 fn wrap_with_different_line_heights() {
@@ -352,7 +351,7 @@ fn wrap_row_with_padding() {
 
 #[test]
 fn wrap_row_rtl() {
-    // Test row wrapping with right-to-left direction  
+    // Test row wrapping with right-to-left direction
     let mut world = World::default();
 
     let root = world.add(None);
@@ -429,4 +428,3 @@ fn wrap_row_auto_height_includes_lines_gap_and_padding() {
     assert_eq!(world.cache.bounds(b), Some(&Rect { posx: 100.0, posy: 5.0, width: 100.0, height: 50.0 }));
     assert_eq!(world.cache.bounds(c), Some(&Rect { posx: 0.0, posy: 65.0, width: 100.0, height: 50.0 }));
 }
-

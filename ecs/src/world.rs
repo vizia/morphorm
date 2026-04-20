@@ -77,7 +77,7 @@ impl World {
         self.bump_layout_revision();
     }
 
-    /// Set the inline direction of row content for the given entity.
+    /// Set the inline direction used for horizontal positioning semantics for the given entity.
     pub fn set_direction(&mut self, entity: Entity, value: Direction) {
         self.store.direction.insert(entity, value);
         self.bump_layout_revision();

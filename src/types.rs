@@ -81,13 +81,13 @@ impl std::fmt::Display for PositionType {
     }
 }
 
-/// The inline direction of row content.
+/// The inline direction used for horizontal positioning semantics.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
-    /// Lay out row children from left to right.
+    /// Lay out inline horizontal semantics from left to right.
     #[default]
     LeftToRight,
-    /// Lay out row children from right to left.
+    /// Lay out inline horizontal semantics from right to left.
     RightToLeft,
 }
 

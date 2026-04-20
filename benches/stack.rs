@@ -36,7 +36,7 @@ fn compute_node_count(children_per_node: usize, depth: usize, node_count: &mut u
         }
     }
 
-    return *node_count;
+    *node_count
 }
 
 fn morphorm_benchmarks(c: &mut Criterion) {
@@ -132,6 +132,7 @@ fn morphorm_benchmarks(c: &mut Criterion) {
     let depth = 6usize;
     let mut world_baseline = World::default();
     let root_baseline = build_tree(&mut world_baseline, None, children_per_node, depth);
+    world_baseline.cache.enable_cross_pass_memoization(false);
 
     let mut world_cached = World::default();
     let root_cached = build_tree(&mut world_cached, None, children_per_node, depth);

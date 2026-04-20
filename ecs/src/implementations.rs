@@ -355,7 +355,7 @@ impl Default for NodeCache {
             rect: SecondaryMap::new(),
             layout_memo: SecondaryMap::new(),
             layout_generation: 0,
-            memoization_enabled: true,
+            memoization_enabled: false,
         }
     }
 }

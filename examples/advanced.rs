@@ -374,7 +374,7 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::LoopDestroyed => return,
+            Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(size) => {
                     surface.resize(&context, size.width.try_into().unwrap(), size.height.try_into().unwrap());
@@ -386,10 +386,10 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
-                WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
-                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
-                        print_node(&root, &cache, &(), true, false, String::new());
-                    }
+                WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ }
+                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed =>
+                {
+                    print_node(&root, &cache, &(), true, false, String::new());
                 }
                 _ => (),
             },
@@ -397,8 +397,8 @@ pub fn render(mut cache: LayoutCache, mut root: Widget) {
                 let dpi_factor = window.scale_factor();
                 let size = window.inner_size();
 
-                canvas.set_size(size.width as u32, size.height as u32, dpi_factor as f32);
-                canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
+                canvas.set_size(size.width, size.height, dpi_factor as f32);
+                canvas.clear_rect(0, 0, size.width, size.height, Color::rgbf(0.3, 0.3, 0.32));
 
                 draw_node(&root, &cache, &mut canvas, font);
 
@@ -422,16 +422,16 @@ fn draw_node(node: &Widget, cache: &LayoutCache, canvas: &mut Canvas<OpenGl>, fo
     let mut path = Path::new();
     path.rect(posx, posy, width, height);
     let paint = Paint::color(color);
-    canvas.fill_path(&mut path, &paint);
+    canvas.fill_path(&path, &paint);
 
     let mut paint = Paint::color(Color::black());
     paint.set_font_size(24.0);
     paint.set_text_align(Align::Center);
     paint.set_text_baseline(Baseline::Middle);
-    paint.set_font(&vec![font]);
-    let _ = canvas.fill_text(posx + width / 2.0, posy + height / 2.0, &node.key().to_string(), &paint);
+    paint.set_font(&[font]);
+    let _ = canvas.fill_text(posx + width / 2.0, posy + height / 2.0, node.key().to_string(), &paint);
 
-    for child in (&node).children(&()) {
+    for child in node.children(&()) {
         draw_node(child, cache, canvas, font);
     }
 }
