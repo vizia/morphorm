@@ -271,9 +271,7 @@ where
 
     let mut alignment = node.alignment(store).unwrap_or_default();
 
-    if matches!(parent_layout_type, LayoutType::Row | LayoutType::Column)
-        && node.direction(store).unwrap_or_default() == Direction::RightToLeft
-    {
+    if node.direction(store).unwrap_or_default() == Direction::RightToLeft {
         alignment = flip_alignment_horizontal(alignment);
     }
 
@@ -590,7 +588,7 @@ where
     };
 
     // Phase 7: Lay out absolute children against the container bounds.
-    // Absolute children are sized without parent padding influence.
+    // Absolute children are sized against the padding box (content box + padding, excluding border).
     let abs_avail_main = final_main - border_main_before - border_main_after;
     let abs_avail_cross = final_cross - border_cross_before - border_cross_after;
 
@@ -675,7 +673,7 @@ where
         }
         let free_main = (avail_main - line_main_sum - gap_total).max(0.0);
 
-        if is_inline_rtl {
+        if layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
             // RTL positioning: place items in reverse order within each wrapped line.
             // Alignment is flipped above so TopLeft maps to TopRight semantics.
             let mut main_cursor = padding_main_before + border_main_before + main_align_frac * free_main;
@@ -1193,7 +1191,8 @@ where
             let mut total_violation = 0.0;
 
             for item in main_axis.iter_mut().filter(|item| !item.frozen) {
-                let mut actual_main = (item.factor * free_main_space / main_flex_sum).round();
+                let input_main = (item.factor * free_main_space / main_flex_sum).round();
+                let mut actual_main = input_main;
 
                 let child = &mut children[item.index];
 
@@ -1202,18 +1201,19 @@ where
                         if child.node.cross(store, layout_type).is_stretch() { child.cross } else { parent_cross };
 
                     if !child.has_layout_constraints
-                        || !same_f32(child.last_layout_main, actual_main)
+                        || !same_f32(child.last_layout_main, input_main)
                         || !same_f32(child.last_layout_cross, target_cross)
                     {
                         let child_size =
-                            layout(child.node, layout_type, actual_main, target_cross, cache, tree, store, sublayout);
+                            layout(child.node, layout_type, input_main, target_cross, cache, tree, store, sublayout);
                         child.cross = child_size.cross;
                         actual_main = child_size.main;
-                        child.last_layout_main = actual_main;
+                        item.measured = actual_main;
+                        child.last_layout_main = input_main;
                         child.last_layout_cross = target_cross;
                         child.has_layout_constraints = true;
                     } else {
-                        actual_main = child.main;
+                        actual_main = item.measured;
                     }
 
                     if child.node.min_main(store, layout_type).is_auto() {
@@ -1267,6 +1267,7 @@ where
                                     );
 
                                     child.cross = child_size.cross;
+                                    item.measured = child_size.main;
                                     child.last_layout_main = item.computed;
                                     child.last_layout_cross = target_cross;
                                     child.has_layout_constraints = true;
@@ -1395,7 +1396,7 @@ where
 
     // Absolute Children
 
-    // Absolute children are sized without parent padding influence.
+    // Absolute children are sized against the padding box (content box + padding, excluding border).
     let abs_size_main = parent_main + padding_main_before + padding_main_after;
     let abs_size_cross = parent_cross + padding_cross_before + padding_cross_after;
 
