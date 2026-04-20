@@ -828,8 +828,6 @@ where
     N: Node,
     C: Cache<Node = N>,
 {
-
-
     // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
 
