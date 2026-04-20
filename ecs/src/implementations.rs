@@ -197,58 +197,19 @@ pub struct Rect {
 pub struct NodeCache {
     // Computed size and position of nodes.
     pub rect: SecondaryMap<Entity, Rect>,
-    // Memoized layout sizes for the current invalidation generation.
-    layout_memo: SecondaryMap<Entity, LayoutMemo>,
-    layout_generation: u64,
-    memoization_enabled: bool,
-}
-
-#[derive(Default, Debug, Clone, Copy)]
-struct LayoutMemo {
-    parent_layout_type: LayoutType,
-    parent_main: f32,
-    parent_cross: f32,
-    size: Size,
-    generation: u64,
-    valid: bool,
-}
-
-#[inline]
-fn same_f32(a: f32, b: f32) -> bool {
-    a.to_bits() == b.to_bits()
 }
 
 impl NodeCache {
-    pub fn enable_layout_memoization(&mut self, enabled: bool) {
-        self.memoization_enabled = enabled;
-    }
-
-    pub fn enable_cross_pass_memoization(&mut self, enabled: bool) {
-        self.enable_layout_memoization(enabled);
-    }
-
-    pub fn set_layout_revision(&mut self, revision: u64) {
-        self.layout_generation = revision;
-    }
-
-    pub fn bump_layout_revision(&mut self) {
-        self.layout_generation = self.layout_generation.wrapping_add(1);
-    }
-
     pub fn add(&mut self, entity: Entity) {
         self.rect.insert(entity, Default::default());
-        self.layout_memo.insert(entity, Default::default());
     }
 
     pub fn remove(&mut self, entity: Entity) {
         self.rect.remove(entity);
-        self.layout_memo.remove(entity);
     }
 
     pub fn clear(&mut self) {
         self.rect.clear();
-        self.layout_memo.clear();
-        self.layout_generation = 0;
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
@@ -258,54 +219,6 @@ impl NodeCache {
 
 impl Cache for NodeCache {
     type Node = Entity;
-
-    fn get_layout_result(
-        &self,
-        node: &Self::Node,
-        parent_layout_type: LayoutType,
-        parent_main: f32,
-        parent_cross: f32,
-    ) -> Option<Size> {
-        if !self.memoization_enabled {
-            return None;
-        }
-
-        let memo = self.layout_memo.get(*node)?;
-        if !memo.valid || memo.generation != self.layout_generation {
-            return None;
-        }
-
-        if memo.parent_layout_type == parent_layout_type
-            && same_f32(memo.parent_main, parent_main)
-            && same_f32(memo.parent_cross, parent_cross)
-        {
-            Some(memo.size)
-        } else {
-            None
-        }
-    }
-
-    fn set_layout_result(
-        &mut self,
-        node: &Self::Node,
-        parent_layout_type: LayoutType,
-        parent_main: f32,
-        parent_cross: f32,
-        size: Size,
-    ) {
-        if !self.memoization_enabled {
-            return;
-        }
-
-        if let Some(memo) = self.layout_memo.get_mut(*node) {
-            memo.parent_layout_type = parent_layout_type;
-            memo.parent_main = parent_main;
-            memo.parent_cross = parent_cross;
-            memo.size = size;
-            memo.generation = self.layout_generation;
-            memo.valid = true;
-        }
-    }
 
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32) {
         if let Some(rect) = self.rect.get_mut(*node) {
@@ -353,9 +266,6 @@ impl Default for NodeCache {
     fn default() -> Self {
         Self {
             rect: SecondaryMap::new(),
-            layout_memo: SecondaryMap::new(),
-            layout_generation: 0,
-            memoization_enabled: false,
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::{LayoutType, Node, Size};
+use crate::{LayoutType, Node};
 
 /// The `Cache` is a store which contains the computed size and position of nodes
 /// after a layout calculation.
@@ -20,38 +20,6 @@ pub trait Cache {
 
     /// Sets the cached position and size of the given node.
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32);
-
-    /// Starts a new layout pass.
-    ///
-    /// Caches can use this to invalidate pass-scoped memoized results.
-    /// Default implementation is a no-op for backward compatibility.
-    fn begin_layout_pass(&mut self) {}
-
-    /// Returns a memoized layout size for a node under the given parent constraints.
-    ///
-    /// Default implementation disables memoization.
-    fn get_layout_result(
-        &self,
-        _node: &Self::Node,
-        _parent_layout_type: LayoutType,
-        _parent_main: f32,
-        _parent_cross: f32,
-    ) -> Option<Size> {
-        None
-    }
-
-    /// Stores a memoized layout size for a node under the given parent constraints.
-    ///
-    /// Default implementation is a no-op.
-    fn set_layout_result(
-        &mut self,
-        _node: &Self::Node,
-        _parent_layout_type: LayoutType,
-        _parent_main: f32,
-        _parent_cross: f32,
-        _size: Size,
-    ) {
-    }
 }
 
 /// Helper trait for getting/setting node position/size in a direction agnostic way.
