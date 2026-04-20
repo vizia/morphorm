@@ -46,6 +46,8 @@ pub trait Node: Sized {
         store: &Self::Store,
         sublayout: &mut Self::SubLayout<'_>,
     ) -> Size {
+        cache.begin_layout_pass();
+
         let width = self.width(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
         let height = self.height(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
 
@@ -54,8 +56,8 @@ pub trait Node: Sized {
         // Use the node's layout type instead of hardcoding Column
         let layout_type = self.layout_type(store).unwrap_or_default();
         let (parent_main, parent_cross) = match layout_type {
-            LayoutType::Row | LayoutType::Grid => (width, height),  // Row: main=width, cross=height
-            LayoutType::Column => (height, width),                   // Column: main=height, cross=width
+            LayoutType::Row | LayoutType::Grid => (width, height), // Row: main=width, cross=height
+            LayoutType::Column => (height, width),                 // Column: main=height, cross=width
         };
 
         layout(self, layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
@@ -76,7 +78,7 @@ pub trait Node: Sized {
     /// Returns the position type of the node.
     fn position_type(&self, store: &Self::Store) -> Option<PositionType>;
 
-    /// Returns the inline direction of row content.
+    /// Returns the inline direction used for horizontal positioning semantics.
     fn direction(&self, _store: &Self::Store) -> Option<Direction> {
         None
     }
@@ -271,7 +273,8 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn padding_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft {
+        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft
+        {
             self.padding_right(store).unwrap_or_default()
         } else {
             parent_layout_type.select_unwrap(store, |store| self.padding_left(store), |store| self.padding_top(store))
@@ -279,10 +282,15 @@ pub(crate) trait NodeExt: Node {
     }
 
     fn padding_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft {
+        if parent_layout_type == LayoutType::Row && self.direction(store).unwrap_or_default() == Direction::RightToLeft
+        {
             self.padding_left(store).unwrap_or_default()
         } else {
-            parent_layout_type.select_unwrap(store, |store| self.padding_right(store), |store| self.padding_bottom(store))
+            parent_layout_type.select_unwrap(
+                store,
+                |store| self.padding_right(store),
+                |store| self.padding_bottom(store),
+            )
         }
     }
 

@@ -102,7 +102,7 @@ pub fn render(mut world: World, root: Entity) {
         *control_flow = ControlFlow::Wait;
 
         match event {
-            Event::LoopDestroyed => return,
+            Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
                 WindowEvent::Resized(size) => {
                     surface.resize(&context, size.width.try_into().unwrap(), size.height.try_into().unwrap());
@@ -126,20 +126,20 @@ pub fn render(mut world: World, root: Entity) {
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
-                WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ } => {
-                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed {
-                        print_node(&root, &world.cache, &world.tree, true, false, String::new());
-                    }
+                WindowEvent::KeyboardInput { device_id: _, input, is_synthetic: _ }
+                    if input.virtual_keycode == Some(VirtualKeyCode::H) && input.state == ElementState::Pressed =>
+                {
+                    print_node(&root, &world.cache, &world.tree, true, false, String::new());
                 }
                 _ => (),
             },
             Event::RedrawRequested(_) => {
                 let size = window.inner_size();
 
-                canvas.set_size(size.width as u32, size.height as u32, 1.0);
-                canvas.clear_rect(0, 0, size.width as u32, size.height as u32, Color::rgbf(0.3, 0.3, 0.32));
+                canvas.set_size(size.width, size.height, 1.0);
+                canvas.clear_rect(0, 0, size.width, size.height, Color::rgbf(0.3, 0.3, 0.32));
 
-                draw_node(&root, &world.tree, &world.cache, &world.store, 0.0, 0.0, font, &mut canvas);
+                draw_node(&root, &world.tree, &world.cache, &world.store, (0.0, 0.0), font, &mut canvas);
 
                 canvas.flush();
                 surface.swap_buffers(&context).unwrap();
@@ -157,11 +157,11 @@ fn draw_node<N: Node<CacheKey = Entity>>(
     tree: &N::Tree,
     cache: &impl Cache<Node = N>,
     store: &Store,
-    parent_posx: f32,
-    parent_posy: f32,
+    parent_pos: (f32, f32),
     font: FontId,
     canvas: &mut Canvas<OpenGl>,
 ) {
+    let (parent_posx, parent_posy) = parent_pos;
     let posx = cache.posx(node);
     let posy = cache.posy(node);
     let width = cache.width(node);
@@ -174,14 +174,14 @@ fn draw_node<N: Node<CacheKey = Entity>>(
     let mut path = Path::new();
     path.rect(parent_posx + posx, parent_posy + posy, width, height);
     let paint = Paint::color(Color::rgb(*red, *green, *blue));
-    canvas.fill_path(&mut path, &paint);
+    canvas.fill_path(&path, &paint);
 
     if let Some(text) = store.text.get(node.key()) {
         let mut paint = Paint::color(Color::black());
         paint.set_font_size(48.0);
         paint.set_text_align(Align::Left);
         paint.set_text_baseline(Baseline::Top);
-        paint.set_font(&vec![font]);
+        paint.set_font(&[font]);
 
         let font_metrics = canvas.measure_font(&paint).expect("Error measuring font");
 
@@ -199,17 +199,17 @@ fn draw_node<N: Node<CacheKey = Entity>>(
         paint.set_font_size(48.0);
         paint.set_text_align(Align::Center);
         paint.set_text_baseline(Baseline::Middle);
-        paint.set_font(&vec![font]);
+        paint.set_font(&[font]);
 
         let _ = canvas.fill_text(
             parent_posx + posx + width / 2.0,
             parent_posy + posy + height / 2.0,
-            &node.key().0.to_string(),
+            node.key().0.to_string(),
             &paint,
         );
     }
 
     for child in node.children(tree) {
-        draw_node(child, tree, cache, store, posx + parent_posx, posy + parent_posy, font, canvas);
+        draw_node(child, tree, cache, store, (posx + parent_posx, posy + parent_posy), font, canvas);
     }
 }
