@@ -731,8 +731,11 @@ where
 
     // Position absolute children.
     for abs_child in &abs_items {
-        let child_main_before = abs_child.node.main_before(store, layout_type);
-        let child_main_after = abs_child.node.main_after(store, layout_type);
+        let (child_main_before, child_main_after) = if is_inline_rtl {
+            (abs_child.node.main_after(store, layout_type), abs_child.node.main_before(store, layout_type))
+        } else {
+            (abs_child.node.main_before(store, layout_type), abs_child.node.main_after(store, layout_type))
+        };
         let child_cross_before = abs_child.node.cross_before(store, layout_type);
         let child_cross_after = abs_child.node.cross_after(store, layout_type);
 
@@ -956,6 +959,9 @@ where
 
     let is_row_rtl =
         layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+
+    let is_rtl = matches!(layout_type, LayoutType::Row | LayoutType::Column)
+        && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1457,8 +1463,11 @@ where
 
         match child_position {
             PositionType::Absolute => {
-                let child_main_before = child.node.main_before(store, layout_type);
-                let child_main_after = child.node.main_after(store, layout_type);
+                let (child_main_before, child_main_after) = if is_rtl {
+                    (child.node.main_after(store, layout_type), child.node.main_before(store, layout_type))
+                } else {
+                    (child.node.main_before(store, layout_type), child.node.main_after(store, layout_type))
+                };
                 let child_cross_before = child.node.cross_before(store, layout_type);
                 let child_cross_after = child.node.cross_after(store, layout_type);
 
