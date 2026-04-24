@@ -103,6 +103,31 @@ fn overlay_auto_size_uses_max_child_extent() {
 }
 
 #[test]
+fn overlay_rtl_flips_absolute_child_horizontal_offset() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(300.0));
+    world.set_height(root, Units::Pixels(200.0));
+    world.set_layout_type(root, LayoutType::Overlay);
+    // RightToLeft: `left` becomes the trailing edge, so a `left: 20px` absolute child
+    // should be placed 20px from the *right* edge (x = 300 - 20 - 60 = 220).
+    world.set_direction(root, Direction::RightToLeft);
+
+    let absolute = world.add(Some(root));
+    world.set_position_type(absolute, PositionType::Absolute);
+    world.set_width(absolute, Units::Pixels(60.0));
+    world.set_height(absolute, Units::Pixels(40.0));
+    world.set_left(absolute, Units::Pixels(20.0));
+    world.set_top(absolute, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // Under RTL `left` is the trailing edge, so x = parent_width - left - child_width.
+    assert_eq!(world.cache.bounds(absolute), Some(&Rect { posx: 220.0, posy: 10.0, width: 60.0, height: 40.0 }));
+}
+
+#[test]
 fn overlay_preserves_absolute_child_positioning() {
     let mut world = World::default();
 

@@ -129,28 +129,34 @@ where
     C: Cache<Node = N>,
 {
     // Interpret parent-provided main/cross as concrete width/height for overlay.
-    let (mut computed_width, mut computed_height) = match parent_layout_type {
+    // Use parent dimensions as the containing block for percentage-based constraints,
+    // so that auto-sizing doesn't collapse percentage max constraints to zero.
+    let (contain_width, contain_height) = match parent_layout_type {
         LayoutType::Column => (parent_cross, parent_main),
         LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => (parent_main, parent_cross),
     };
 
+    let (mut computed_width, mut computed_height) = (contain_width, contain_height);
+
     // Resolve this node's own size constraints in physical width/height axes.
+    // Use containing block dimensions (parent) as the reference for percentage resolution,
+    // not the computed size (which may be 0 during auto-sizing).
     let width = node.width(store).unwrap_or(Stretch(1.0));
     let height = node.height(store).unwrap_or(Stretch(1.0));
-    let mut min_width = node.min_width(store).unwrap_or(Pixels(0.0)).to_px(computed_width, DEFAULT_MIN);
-    let mut max_width = node.max_width(store).unwrap_or(Pixels(f32::MAX)).to_px(computed_width, DEFAULT_MAX);
-    let mut min_height = node.min_height(store).unwrap_or(Pixels(0.0)).to_px(computed_height, DEFAULT_MIN);
-    let mut max_height = node.max_height(store).unwrap_or(Pixels(f32::MAX)).to_px(computed_height, DEFAULT_MAX);
+    let mut min_width = node.min_width(store).unwrap_or(Pixels(0.0)).to_px(contain_width, DEFAULT_MIN);
+    let mut max_width = node.max_width(store).unwrap_or(Pixels(f32::MAX)).to_px(contain_width, DEFAULT_MAX);
+    let mut min_height = node.min_height(store).unwrap_or(Pixels(0.0)).to_px(contain_height, DEFAULT_MIN);
+    let mut max_height = node.max_height(store).unwrap_or(Pixels(f32::MAX)).to_px(contain_height, DEFAULT_MAX);
 
-    let border_left = node.border_left(store).unwrap_or_default().to_px(computed_width, DEFAULT_BORDER_WIDTH);
-    let border_right = node.border_right(store).unwrap_or_default().to_px(computed_width, DEFAULT_BORDER_WIDTH);
-    let border_top = node.border_top(store).unwrap_or_default().to_px(computed_height, DEFAULT_BORDER_WIDTH);
-    let border_bottom = node.border_bottom(store).unwrap_or_default().to_px(computed_height, DEFAULT_BORDER_WIDTH);
+    let border_left = node.border_left(store).unwrap_or_default().to_px(contain_width, DEFAULT_BORDER_WIDTH);
+    let border_right = node.border_right(store).unwrap_or_default().to_px(contain_width, DEFAULT_BORDER_WIDTH);
+    let border_top = node.border_top(store).unwrap_or_default().to_px(contain_height, DEFAULT_BORDER_WIDTH);
+    let border_bottom = node.border_bottom(store).unwrap_or_default().to_px(contain_height, DEFAULT_BORDER_WIDTH);
 
-    let padding_left = node.padding_left(store).unwrap_or_default().to_px(computed_width, 0.0);
-    let padding_right = node.padding_right(store).unwrap_or_default().to_px(computed_width, 0.0);
-    let padding_top = node.padding_top(store).unwrap_or_default().to_px(computed_height, 0.0);
-    let padding_bottom = node.padding_bottom(store).unwrap_or_default().to_px(computed_height, 0.0);
+    let padding_left = node.padding_left(store).unwrap_or_default().to_px(contain_width, 0.0);
+    let padding_right = node.padding_right(store).unwrap_or_default().to_px(contain_width, 0.0);
+    let padding_top = node.padding_top(store).unwrap_or_default().to_px(contain_height, 0.0);
+    let padding_bottom = node.padding_bottom(store).unwrap_or_default().to_px(contain_height, 0.0);
 
     // Split visible children by position type; relative children participate in
     // overlay alignment, absolute children keep explicit edge-based positioning.
@@ -303,15 +309,27 @@ where
     let abs_width = computed_width - border_left - border_right;
     let abs_height = computed_height - border_top - border_bottom;
 
+    // Mirror the stack layout's RTL semantics: under RightToLeft, left/right are
+    // swapped so that `left` becomes the trailing edge and `right` the leading edge,
+    // matching the behavior of absolute children in Row/Column parents.
+    let is_rtl = node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+
     for child in absolute_children.into_iter() {
+        // Under RTL, left and right are logically swapped on the horizontal axis.
+        let (child_leading, child_trailing) = if is_rtl {
+            (child.right(store).unwrap_or_default(), child.left(store).unwrap_or_default())
+        } else {
+            (child.left(store).unwrap_or_default(), child.right(store).unwrap_or_default())
+        };
+
         // Stretch sizing for absolute children consumes remaining axis size after offsets.
         let child_width = if child.width(store).unwrap_or(Stretch(1.0)).is_stretch() {
             let child_min_width = child.min_width(store).unwrap_or(Pixels(0.0)).to_px(abs_width, DEFAULT_MIN);
             let child_max_width = child.max_width(store).unwrap_or(Pixels(f32::MAX)).to_px(abs_width, DEFAULT_MAX);
-            let child_left = child.left(store).unwrap_or_default().to_px(abs_width, 0.0);
-            let child_right = child.right(store).unwrap_or_default().to_px(abs_width, 0.0);
+            let leading_px = child_leading.to_px(abs_width, 0.0);
+            let trailing_px = child_trailing.to_px(abs_width, 0.0);
 
-            abs_width.clamp(child_min_width, child_max_width) - child_left - child_right
+            abs_width.clamp(child_min_width, child_max_width) - leading_px - trailing_px
         } else {
             abs_width
         };
@@ -331,12 +349,8 @@ where
         let child_size = layout(child, LayoutType::Overlay, child_width, child_height, cache, tree, store, sublayout);
 
         // Then resolve explicit absolute offsets for final placement.
-        let child_posx = absolute_axis_position(
-            child.left(store).unwrap_or_default(),
-            child.right(store).unwrap_or_default(),
-            abs_width,
-            child_size.main,
-        );
+        // Horizontal axis respects RTL via the already-swapped leading/trailing values.
+        let child_posx = absolute_axis_position(child_leading, child_trailing, abs_width, child_size.main);
         let child_posy = absolute_axis_position(
             child.top(store).unwrap_or_default(),
             child.bottom(store).unwrap_or_default(),
