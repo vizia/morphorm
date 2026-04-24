@@ -6,6 +6,8 @@ pub enum LayoutType {
     /// Stack child elements vertically.
     #[default]
     Column,
+    /// Place child elements independently within the parent's padded box.
+    Overlay,
     /// Place child elements in a grid.
     Grid,
 }
@@ -19,7 +21,7 @@ impl LayoutType {
         second: impl FnOnce(S) -> Option<T>,
     ) -> Option<T> {
         match self {
-            LayoutType::Row => first(s),
+            LayoutType::Row | LayoutType::Overlay => first(s),
             LayoutType::Column | LayoutType::Grid => second(s),
         }
     }
@@ -32,7 +34,7 @@ impl LayoutType {
         second: impl FnOnce(S) -> Option<T>,
     ) -> T {
         match self {
-            LayoutType::Row => first(s).unwrap_or_default(),
+            LayoutType::Row | LayoutType::Overlay => first(s).unwrap_or_default(),
             LayoutType::Column | LayoutType::Grid => second(s).unwrap_or_default(),
         }
     }
@@ -46,7 +48,7 @@ impl LayoutType {
         default: T,
     ) -> T {
         match self {
-            LayoutType::Row => first(s).unwrap_or(default),
+            LayoutType::Row | LayoutType::Overlay => first(s).unwrap_or(default),
             LayoutType::Column | LayoutType::Grid => second(s).unwrap_or(default),
         }
     }
@@ -57,6 +59,7 @@ impl std::fmt::Display for LayoutType {
         match self {
             LayoutType::Column => write!(f, "column"),
             LayoutType::Row => write!(f, "row"),
+            LayoutType::Overlay => write!(f, "overlay"),
             LayoutType::Grid => write!(f, "grid"),
         }
     }

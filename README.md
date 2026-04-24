@@ -7,9 +7,11 @@ Morphorm is a crate for efficiently determining the size and position of UI elem
 Morphorm is a 'one-pass' algorithm which recurses down the layout tree (depth-first), and determines the position and size of nodes based on their parent and children. It can produce similar layouts to flexbox, but with fewer concepts that need to be learned.
 
 ### Layout Type
-The `layout-type` determines the direction which a parent will stack its children. There are three variants:
+The `layout-type` determines how a parent arranges its children. There are four variants:
 - `LayoutType::Row` - The node will arrange its children into a horizontal row.
 - `LayoutType::Column` - The node will arrange its children into a vertical column.
+- `LayoutType::Overlay` - The node will align each relative child independently within its padded bounds, allowing children to overlap.
+- `LayoutType::Grid` - The node will arrange its children into rows and columns.
 
 ![](docs/images/layout_type.svg)
 

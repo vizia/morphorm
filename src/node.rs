@@ -54,8 +54,8 @@ pub trait Node: Sized {
         // Use the node's layout type instead of hardcoding Column
         let layout_type = self.layout_type(store).unwrap_or_default();
         let (parent_main, parent_cross) = match layout_type {
-            LayoutType::Row | LayoutType::Grid => (width, height), // Row: main=width, cross=height
-            LayoutType::Column => (height, width),                 // Column: main=height, cross=width
+            LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => (width, height), // Row/Overlay/Grid: main=width, cross=height
+            LayoutType::Column => (height, width), // Column: main=height, cross=width
         };
 
         layout(self, layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
@@ -196,7 +196,9 @@ pub trait Node: Sized {
 pub(crate) trait NodeExt: Node {
     fn main(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
-            LayoutType::Row | LayoutType::Grid => self.width(store).unwrap_or(Units::Stretch(1.0)),
+            LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => {
+                self.width(store).unwrap_or(Units::Stretch(1.0))
+            }
             LayoutType::Column => self.height(store).unwrap_or(Units::Stretch(1.0)),
         }
     }
@@ -221,7 +223,9 @@ pub(crate) trait NodeExt: Node {
 
     fn cross(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
         match parent_layout_type {
-            LayoutType::Row | LayoutType::Grid => self.height(store).unwrap_or(Units::Stretch(1.0)),
+            LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => {
+                self.height(store).unwrap_or(Units::Stretch(1.0))
+            }
             LayoutType::Column => self.width(store).unwrap_or(Units::Stretch(1.0)),
         }
     }
@@ -349,7 +353,9 @@ pub(crate) trait NodeExt: Node {
         parent_cross: Option<f32>,
     ) -> Option<(f32, f32)> {
         match parent_layout_type {
-            LayoutType::Row | LayoutType::Grid => self.content_size(store, sublayout, parent_main, parent_cross),
+            LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => {
+                self.content_size(store, sublayout, parent_main, parent_cross)
+            }
 
             LayoutType::Column => {
                 self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))

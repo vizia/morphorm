@@ -1,7 +1,7 @@
 use smallvec::SmallVec;
 
 use crate::{
-    Alignment, Cache, CacheExt, Direction, LayoutType, LayoutWrap, Node, NodeExt, PositionType, Size, Units::*,
+    Alignment, Cache, CacheExt, Direction, LayoutType, LayoutWrap, Node, NodeExt, PositionType, Size, Units, Units::*,
 };
 
 const DEFAULT_MIN: f32 = -f32::MAX;
@@ -76,6 +76,293 @@ fn same_f32(a: f32, b: f32) -> bool {
     a.to_bits() == b.to_bits()
 }
 
+fn alignment_fractions(alignment: Alignment) -> (f32, f32) {
+    // Convert alignment into normalized horizontal/vertical fractions in [0, 1].
+    // These fractions are later multiplied by available free space.
+    match alignment {
+        Alignment::TopLeft => (0.0, 0.0),
+        Alignment::TopCenter => (0.5, 0.0),
+        Alignment::TopRight => (1.0, 0.0),
+        Alignment::Left => (0.0, 0.5),
+        Alignment::Center => (0.5, 0.5),
+        Alignment::Right => (1.0, 0.5),
+        Alignment::BottomLeft => (0.0, 1.0),
+        Alignment::BottomCenter => (0.5, 1.0),
+        Alignment::BottomRight => (1.0, 1.0),
+    }
+}
+
+fn absolute_axis_position(before: Units, after: Units, parent_size: f32, child_size: f32) -> f32 {
+    // Resolve a child position on one axis from before/after offsets.
+    // This is shared by absolute positioning in stack and overlay layouts.
+    match (before, after) {
+        (Pixels(val), _) => val,
+        (Percentage(val), _) => val * 0.01 * parent_size,
+        (_, Pixels(val)) => parent_size - val - child_size,
+        (_, Percentage(val)) => parent_size - child_size - val * 0.01 * parent_size,
+        (Stretch(b), Stretch(a)) => {
+            if b == a {
+                (parent_size - child_size) * 0.5
+            } else {
+                (parent_size - child_size) * (b / (b + a))
+            }
+        }
+        (Stretch(_), Auto) => parent_size - child_size,
+        (Auto, Stretch(_)) => 0.0,
+        (Auto, Auto) => 0.0,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn layout_overlay<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N>,
+{
+    // Interpret parent-provided main/cross as concrete width/height for overlay.
+    let (mut computed_width, mut computed_height) = match parent_layout_type {
+        LayoutType::Column => (parent_cross, parent_main),
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => (parent_main, parent_cross),
+    };
+
+    // Resolve this node's own size constraints in physical width/height axes.
+    let width = node.width(store).unwrap_or(Stretch(1.0));
+    let height = node.height(store).unwrap_or(Stretch(1.0));
+    let mut min_width = node.min_width(store).unwrap_or(Pixels(0.0)).to_px(computed_width, DEFAULT_MIN);
+    let mut max_width = node.max_width(store).unwrap_or(Pixels(f32::MAX)).to_px(computed_width, DEFAULT_MAX);
+    let mut min_height = node.min_height(store).unwrap_or(Pixels(0.0)).to_px(computed_height, DEFAULT_MIN);
+    let mut max_height = node.max_height(store).unwrap_or(Pixels(f32::MAX)).to_px(computed_height, DEFAULT_MAX);
+
+    let border_left = node.border_left(store).unwrap_or_default().to_px(computed_width, DEFAULT_BORDER_WIDTH);
+    let border_right = node.border_right(store).unwrap_or_default().to_px(computed_width, DEFAULT_BORDER_WIDTH);
+    let border_top = node.border_top(store).unwrap_or_default().to_px(computed_height, DEFAULT_BORDER_WIDTH);
+    let border_bottom = node.border_bottom(store).unwrap_or_default().to_px(computed_height, DEFAULT_BORDER_WIDTH);
+
+    let padding_left = node.padding_left(store).unwrap_or_default().to_px(computed_width, 0.0);
+    let padding_right = node.padding_right(store).unwrap_or_default().to_px(computed_width, 0.0);
+    let padding_top = node.padding_top(store).unwrap_or_default().to_px(computed_height, 0.0);
+    let padding_bottom = node.padding_bottom(store).unwrap_or_default().to_px(computed_height, 0.0);
+
+    // Split visible children by position type; relative children participate in
+    // overlay alignment, absolute children keep explicit edge-based positioning.
+    let mut relative_children = SmallVec::<[&N; 32]>::new();
+    let mut absolute_children = SmallVec::<[&N; 8]>::new();
+    for child in node.children(tree).filter(|child| child.visible(store)) {
+        match child.position_type(store).unwrap_or_default() {
+            PositionType::Relative => relative_children.push(child),
+            PositionType::Absolute => absolute_children.push(child),
+        }
+    }
+
+    let num_children = relative_children.len() + absolute_children.len();
+    let num_relative_children = relative_children.len();
+
+    let mut children = SmallVec::<[ChildNode<N>; 32]>::with_capacity(num_children);
+
+    // Two-pass stabilization:
+    // pass 1 measures children with initial size,
+    // pass 2 remeasures only if auto/min/max constraints changed the container size.
+    for _ in 0..2 {
+        children.clear();
+
+        // Relative children are laid out against the parent content box.
+        let available_width = computed_width - padding_left - padding_right - border_left - border_right;
+        let available_height = computed_height - padding_top - padding_bottom - border_top - border_bottom;
+
+        for child in relative_children.iter().copied() {
+            let child_width = child.width(store).unwrap_or(Stretch(1.0));
+            let child_height = child.height(store).unwrap_or(Stretch(1.0));
+
+            let child_min_width = child.min_width(store).unwrap_or(Pixels(0.0));
+            let child_max_width = child.max_width(store).unwrap_or(Pixels(f32::MAX));
+            let child_min_height = child.min_height(store).unwrap_or(Pixels(0.0));
+            let child_max_height = child.max_height(store).unwrap_or(Pixels(f32::MAX));
+
+            // Stretch children are constrained directly to available space,
+            // while non-stretch children are measured against that space.
+            let target_width = if child_width.is_stretch() {
+                available_width.clamp(
+                    child_min_width.to_px(available_width, DEFAULT_MIN),
+                    child_max_width.to_px(available_width, DEFAULT_MAX),
+                )
+            } else {
+                available_width
+            };
+
+            let target_height = if child_height.is_stretch() {
+                available_height.clamp(
+                    child_min_height.to_px(available_height, DEFAULT_MIN),
+                    child_max_height.to_px(available_height, DEFAULT_MAX),
+                )
+            } else {
+                available_height
+            };
+
+            // Overlay children recurse with Overlay parent semantics so descendants
+            // inherit overlay axis behavior when needed.
+            let child_size =
+                layout(child, LayoutType::Overlay, target_width, target_height, cache, tree, store, sublayout);
+
+            children.push(ChildNode {
+                node: child,
+                cross: child_size.cross,
+                main: child_size.main,
+                main_after: 0.0,
+                last_layout_main: target_width,
+                last_layout_cross: target_height,
+                has_layout_constraints: true,
+            });
+        }
+
+        if num_relative_children == 0 {
+            break;
+        }
+
+        let max_child_width = children.iter().map(|child| child.main).reduce(f32::max).unwrap_or_default();
+        let max_child_height = children.iter().map(|child| child.cross).reduce(f32::max).unwrap_or_default();
+
+        // Auto-size in overlay is based on max extents (not sums), because
+        // children can overlap and are independently aligned in the same box.
+        if width.is_auto() || node.min_width(store).unwrap_or(Pixels(0.0)).is_auto() {
+            min_width = max_child_width + padding_left + padding_right + border_left + border_right;
+        }
+
+        if node.max_width(store).unwrap_or(Pixels(f32::MAX)).is_auto() && max_child_width != 0.0 {
+            max_width = max_child_width + padding_left + padding_right + border_left + border_right;
+        }
+
+        if height.is_auto() || node.min_height(store).unwrap_or(Pixels(0.0)).is_auto() {
+            min_height = max_child_height + padding_top + padding_bottom + border_top + border_bottom;
+        }
+
+        if node.max_height(store).unwrap_or(Pixels(f32::MAX)).is_auto() && max_child_height != 0.0 {
+            max_height = max_child_height + padding_top + padding_bottom + border_top + border_bottom;
+        }
+
+        let next_width = computed_width.max(min_width).min(max_width);
+        let next_height = computed_height.max(min_height).min(max_height);
+
+        if same_f32(next_width, computed_width) && same_f32(next_height, computed_height) {
+            break;
+        }
+
+        computed_width = next_width;
+        computed_height = next_height;
+    }
+
+    // Final clamped container size after stabilization.
+    computed_width = computed_width.max(min_width).min(max_width);
+    computed_height = computed_height.max(min_height).min(max_height);
+
+    // Relative children are positioned inside the padded content box.
+    let available_width = computed_width - padding_left - padding_right - border_left - border_right;
+    let available_height = computed_height - padding_top - padding_bottom - border_top - border_bottom;
+
+    let mut alignment = node.alignment(store).unwrap_or_default();
+    if node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+        alignment = flip_alignment_horizontal(alignment);
+    }
+    // Alignment gives each child its own anchor point in the same content box,
+    // which is what enables intentional overlap.
+    let (align_x, align_y) = alignment_fractions(alignment);
+
+    for child in &children {
+        let mut child_posx = align_x * (available_width - child.main);
+        let mut child_posy = align_y * (available_height - child.cross);
+
+        // Parent scroll offsets can override alignment-derived positions.
+        if let Some(scroll_x) = node.horizontal_scroll(store) {
+            child_posx = scroll_x;
+        }
+
+        if let Some(scroll_y) = node.vertical_scroll(store) {
+            child_posy = scroll_y;
+        }
+
+        cache.set_rect(
+            child.node,
+            LayoutType::Overlay,
+            child_posx + padding_left + border_left,
+            child_posy + padding_top + border_top,
+            child.main,
+            child.cross,
+        );
+    }
+
+    // Absolute children are sized in the same box model used by stack/wrap:
+    // padding box (content + padding), excluding border.
+    let abs_width = computed_width - border_left - border_right;
+    let abs_height = computed_height - border_top - border_bottom;
+
+    for child in absolute_children.into_iter() {
+        // Stretch sizing for absolute children consumes remaining axis size after offsets.
+        let child_width = if child.width(store).unwrap_or(Stretch(1.0)).is_stretch() {
+            let child_min_width = child.min_width(store).unwrap_or(Pixels(0.0)).to_px(abs_width, DEFAULT_MIN);
+            let child_max_width = child.max_width(store).unwrap_or(Pixels(f32::MAX)).to_px(abs_width, DEFAULT_MAX);
+            let child_left = child.left(store).unwrap_or_default().to_px(abs_width, 0.0);
+            let child_right = child.right(store).unwrap_or_default().to_px(abs_width, 0.0);
+
+            abs_width.clamp(child_min_width, child_max_width) - child_left - child_right
+        } else {
+            abs_width
+        };
+
+        let child_height = if child.height(store).unwrap_or(Stretch(1.0)).is_stretch() {
+            let child_min_height = child.min_height(store).unwrap_or(Pixels(0.0)).to_px(abs_height, DEFAULT_MIN);
+            let child_max_height = child.max_height(store).unwrap_or(Pixels(f32::MAX)).to_px(abs_height, DEFAULT_MAX);
+            let child_top = child.top(store).unwrap_or_default().to_px(abs_height, 0.0);
+            let child_bottom = child.bottom(store).unwrap_or_default().to_px(abs_height, 0.0);
+
+            abs_height.clamp(child_min_height, child_max_height) - child_top - child_bottom
+        } else {
+            abs_height
+        };
+
+        // Recurse first to resolve intrinsic/auto behavior under the resolved constraints.
+        let child_size = layout(child, LayoutType::Overlay, child_width, child_height, cache, tree, store, sublayout);
+
+        // Then resolve explicit absolute offsets for final placement.
+        let child_posx = absolute_axis_position(
+            child.left(store).unwrap_or_default(),
+            child.right(store).unwrap_or_default(),
+            abs_width,
+            child_size.main,
+        );
+        let child_posy = absolute_axis_position(
+            child.top(store).unwrap_or_default(),
+            child.bottom(store).unwrap_or_default(),
+            abs_height,
+            child_size.cross,
+        );
+
+        cache.set_rect(
+            child,
+            LayoutType::Overlay,
+            child_posx + border_left,
+            child_posy + border_top,
+            child_size.main,
+            child_size.cross,
+        );
+    }
+
+    // Return in caller's axis orientation (main/cross abstraction).
+    match parent_layout_type {
+        LayoutType::Column => Size { main: computed_height, cross: computed_width },
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => {
+            Size { main: computed_width, cross: computed_height }
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn layout_grid<N, C>(
     node: &N,
@@ -96,7 +383,7 @@ where
 
     let (mut parent_width, mut parent_height) = match parent_layout_type {
         LayoutType::Column => (parent_cross, parent_main),
-        LayoutType::Row | LayoutType::Grid => (parent_main, parent_cross),
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => (parent_main, parent_cross),
     };
 
     let padding_left = node.padding_left(store).unwrap_or_default().to_px(parent_width, 0.0);
@@ -923,6 +1210,10 @@ where
         return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
     }
 
+    if layout_type == LayoutType::Overlay {
+        return layout_overlay(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+    }
+
     if node.wrap(store).unwrap_or_default() == LayoutWrap::Wrap {
         return layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
     }
@@ -1474,39 +1765,11 @@ where
                 let parent_main = parent_main + padding_main_before + padding_main_after;
                 let parent_cross = parent_cross + padding_cross_before + padding_cross_after;
 
-                let child_main_pos = match (child_main_before, child_main_after) {
-                    (Pixels(val), _) => val,
-                    (Percentage(val), _) => val * 0.01 * parent_main,
-                    (_, Pixels(val)) => parent_main - val - child.main,
-                    (_, Percentage(val)) => parent_main - child.main - val * 0.01 * parent_main,
-                    (Stretch(b), Stretch(a)) => {
-                        if b == a {
-                            (parent_main - child.main) * 0.5
-                        } else {
-                            (parent_main - child.main) * (b / (b + a))
-                        }
-                    }
-                    (Stretch(_), Auto) => parent_main - child.main,
-                    (Auto, Stretch(_)) => 0.0,
-                    (Auto, Auto) => 0.0,
-                };
+                let child_main_pos =
+                    absolute_axis_position(child_main_before, child_main_after, parent_main, child.main);
 
-                let child_cross_pos = match (child_cross_before, child_cross_after) {
-                    (Pixels(val), _) => val,
-                    (Percentage(val), _) => val * 0.01 * parent_cross,
-                    (_, Pixels(val)) => parent_cross - val - child.cross,
-                    (_, Percentage(val)) => parent_cross - child.cross - val * 0.01 * parent_cross,
-                    (Stretch(b), Stretch(a)) => {
-                        if b == a {
-                            (parent_cross - child.cross) * 0.5
-                        } else {
-                            (parent_cross - child.cross) * (b / (b + a))
-                        }
-                    }
-                    (Stretch(_), Auto) => parent_cross - child.cross,
-                    (Auto, Stretch(_)) => 0.0,
-                    (Auto, Auto) => 0.0,
-                };
+                let child_cross_pos =
+                    absolute_axis_position(child_cross_before, child_cross_after, parent_cross, child.cross);
 
                 cache.set_rect(
                     child.node,
