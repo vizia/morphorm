@@ -330,3 +330,26 @@ fn auto_parent_pixels_child_percentage_absolute_child() {
     assert_eq!(world.cache.bounds(child1), Some(&Rect { posx: 0.0, posy: 0.0, width: 50.0, height: 50.0 }));
     assert_eq!(world.cache.bounds(child2), Some(&Rect { posx: 0.0, posy: 0.0, width: 25.0, height: 13.0 }));
 }
+
+#[test]
+fn rtl_absolute_in_column_only_flips_horizontal_offsets() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_layout_type(root, LayoutType::Column);
+    world.set_direction(root, Direction::RightToLeft);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(400.0));
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(100.0));
+    world.set_height(node, Units::Pixels(80.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_top(node, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // RTL mirrors only horizontal offsets, so left becomes trailing while top is unchanged.
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 10.0, width: 100.0, height: 80.0 }));
+}
