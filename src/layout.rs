@@ -1768,13 +1768,16 @@ where
 
         match child_position {
             PositionType::Absolute => {
-                let (child_main_before, child_main_after) = if is_rtl {
+                let (child_main_before, child_main_after) = if is_row_rtl {
                     (child.node.main_after(store, layout_type), child.node.main_before(store, layout_type))
                 } else {
                     (child.node.main_before(store, layout_type), child.node.main_after(store, layout_type))
                 };
-                let child_cross_before = child.node.cross_before(store, layout_type);
-                let child_cross_after = child.node.cross_after(store, layout_type);
+                let (child_cross_before, child_cross_after) = if is_rtl && layout_type == LayoutType::Column {
+                    (child.node.cross_after(store, layout_type), child.node.cross_before(store, layout_type))
+                } else {
+                    (child.node.cross_before(store, layout_type), child.node.cross_after(store, layout_type))
+                };
 
                 let parent_main = parent_main + padding_main_before + padding_main_after;
                 let parent_cross = parent_cross + padding_cross_before + padding_cross_after;
