@@ -168,6 +168,185 @@ fn wrap_row_with_stretch() {
 }
 
 #[test]
+fn wrap_row_stretch_children_resolve_to_line_max_cross() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(260.0));
+    world.set_height(root, Units::Pixels(220.0));
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_horizontal_gap(root, Units::Pixels(10.0));
+    world.set_vertical_gap(root, Units::Pixels(8.0));
+
+    let node1 = world.add(Some(root));
+    world.set_width(node1, Units::Stretch(1.0));
+    world.set_height(node1, Units::Stretch(1.0));
+    world.set_min_width(node1, Units::Pixels(80.0));
+    world.set_min_height(node1, Units::Pixels(30.0));
+
+    let node2 = world.add(Some(root));
+    world.set_width(node2, Units::Stretch(1.0));
+    world.set_height(node2, Units::Stretch(1.0));
+    world.set_min_width(node2, Units::Pixels(120.0));
+    world.set_min_height(node2, Units::Pixels(70.0));
+
+    let node3 = world.add(Some(root));
+    world.set_width(node3, Units::Stretch(1.0));
+    world.set_height(node3, Units::Stretch(1.0));
+    world.set_min_width(node3, Units::Pixels(80.0));
+    world.set_min_height(node3, Units::Pixels(30.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // First line should resolve to node2's larger min-height, and node1 should
+    // stretch to that same line height.
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 0.0, posy: 0.0, width: 125.0, height: 70.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 135.0, posy: 0.0, width: 125.0, height: 70.0 }));
+
+    // Second line starts after first line cross size plus vertical gap.
+    assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 0.0, posy: 78.0, width: 260.0, height: 30.0 }));
+}
+
+#[test]
+fn wrap_row_stretch_mixed_min_cross_respects_parent_padding() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(280.0));
+    world.set_height(root, Units::Pixels(240.0));
+    world.set_padding_left(root, Units::Pixels(10.0));
+    world.set_padding_right(root, Units::Pixels(10.0));
+    world.set_padding_top(root, Units::Pixels(10.0));
+    world.set_padding_bottom(root, Units::Pixels(10.0));
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_horizontal_gap(root, Units::Pixels(10.0));
+    world.set_vertical_gap(root, Units::Pixels(8.0));
+
+    let node1 = world.add(Some(root));
+    world.set_width(node1, Units::Stretch(1.0));
+    world.set_height(node1, Units::Stretch(1.0));
+    world.set_min_width(node1, Units::Pixels(80.0));
+    world.set_min_height(node1, Units::Pixels(30.0));
+
+    let node2 = world.add(Some(root));
+    world.set_width(node2, Units::Stretch(1.0));
+    world.set_height(node2, Units::Stretch(1.0));
+    world.set_min_width(node2, Units::Pixels(120.0));
+    world.set_min_height(node2, Units::Pixels(70.0));
+
+    let node3 = world.add(Some(root));
+    world.set_width(node3, Units::Stretch(1.0));
+    world.set_height(node3, Units::Stretch(1.0));
+    world.set_min_width(node3, Units::Pixels(80.0));
+    world.set_min_height(node3, Units::Pixels(30.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // Available width = 280 - left/right padding (20) = 260.
+    // Line 1 has node1 + gap + node2; line height settles to 70.
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 10.0, posy: 10.0, width: 125.0, height: 70.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 145.0, posy: 10.0, width: 125.0, height: 70.0 }));
+
+    // Line 2 starts at padding_top + first_line_height + vertical_gap.
+    assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 10.0, posy: 88.0, width: 260.0, height: 30.0 }));
+}
+
+#[test]
+fn wrap_column_stretch_mixed_min_cross_respects_parent_padding() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(240.0));
+    world.set_height(root, Units::Pixels(280.0));
+    world.set_padding_left(root, Units::Pixels(10.0));
+    world.set_padding_right(root, Units::Pixels(10.0));
+    world.set_padding_top(root, Units::Pixels(10.0));
+    world.set_padding_bottom(root, Units::Pixels(10.0));
+    world.set_layout_type(root, LayoutType::Column);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_vertical_gap(root, Units::Pixels(10.0));
+    world.set_horizontal_gap(root, Units::Pixels(8.0));
+
+    let node1 = world.add(Some(root));
+    world.set_width(node1, Units::Stretch(1.0));
+    world.set_height(node1, Units::Stretch(1.0));
+    world.set_min_width(node1, Units::Pixels(30.0));
+    world.set_min_height(node1, Units::Pixels(80.0));
+
+    let node2 = world.add(Some(root));
+    world.set_width(node2, Units::Stretch(1.0));
+    world.set_height(node2, Units::Stretch(1.0));
+    world.set_min_width(node2, Units::Pixels(70.0));
+    world.set_min_height(node2, Units::Pixels(120.0));
+
+    let node3 = world.add(Some(root));
+    world.set_width(node3, Units::Stretch(1.0));
+    world.set_height(node3, Units::Stretch(1.0));
+    world.set_min_width(node3, Units::Pixels(30.0));
+    world.set_min_height(node3, Units::Pixels(80.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // Available height = 280 - top/bottom padding (20) = 260.
+    // First column has node1 + gap + node2; column width settles to 70.
+    assert_eq!(world.cache.bounds(node1), Some(&Rect { posx: 10.0, posy: 10.0, width: 70.0, height: 125.0 }));
+    assert_eq!(world.cache.bounds(node2), Some(&Rect { posx: 10.0, posy: 145.0, width: 70.0, height: 125.0 }));
+
+    // Second column starts at padding_left + first_column_width + horizontal_gap.
+    assert_eq!(world.cache.bounds(node3), Some(&Rect { posx: 88.0, posy: 10.0, width: 30.0, height: 260.0 }));
+}
+
+#[test]
+fn wrap_row_stretch_large_min_main_preserves_line_padding() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(872.0));
+    world.set_height(root, Units::Pixels(934.0));
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_padding_left(root, Units::Pixels(10.0));
+    world.set_padding_right(root, Units::Pixels(10.0));
+    world.set_padding_top(root, Units::Pixels(10.0));
+    world.set_padding_bottom(root, Units::Pixels(10.0));
+    world.set_horizontal_gap(root, Units::Pixels(10.0));
+    world.set_vertical_gap(root, Units::Pixels(10.0));
+
+    let mins = [180.0, 180.0, 180.0, 300.0, 180.0, 180.0, 180.0];
+    let mut nodes = Vec::new();
+    for min in mins {
+        let node = world.add(Some(root));
+        world.set_width(node, Units::Stretch(1.0));
+        world.set_height(node, Units::Stretch(1.0));
+        world.set_min_width(node, Units::Pixels(min));
+        world.set_min_height(node, Units::Pixels(min));
+        nodes.push(node);
+    }
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // First line: three equal stretch children.
+    assert_eq!(world.cache.bounds(nodes[0]), Some(&Rect { posx: 10.0, posy: 10.0, width: 277.0, height: 180.0 }));
+    assert_eq!(world.cache.bounds(nodes[1]), Some(&Rect { posx: 297.0, posy: 10.0, width: 277.0, height: 180.0 }));
+    assert_eq!(world.cache.bounds(nodes[2]), Some(&Rect { posx: 584.0, posy: 10.0, width: 277.0, height: 180.0 }));
+
+    // Second line: larger min-width item should clamp to 300 and siblings re-resolve
+    // so the line still respects right padding.
+    assert_eq!(world.cache.bounds(nodes[3]), Some(&Rect { posx: 10.0, posy: 200.0, width: 300.0, height: 300.0 }));
+    assert_eq!(world.cache.bounds(nodes[4]), Some(&Rect { posx: 320.0, posy: 200.0, width: 266.0, height: 300.0 }));
+    assert_eq!(world.cache.bounds(nodes[5]), Some(&Rect { posx: 596.0, posy: 200.0, width: 266.0, height: 300.0 }));
+
+    // Third line.
+    assert_eq!(world.cache.bounds(nodes[6]), Some(&Rect { posx: 10.0, posy: 510.0, width: 852.0, height: 180.0 }));
+}
+
+#[test]
 fn wrap_row_no_wrap_mode() {
     // Test that NoWrap mode (default) doesn't wrap items
     let mut world = World::default();
