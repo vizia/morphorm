@@ -859,8 +859,16 @@ where
             }
 
             for item in stretch_items.iter() {
-                let size =
-                    layout(relative_children[item.index], layout_type, item.computed, avail_cross, cache, tree, store, sublayout);
+                let size = layout(
+                    relative_children[item.index],
+                    layout_type,
+                    item.computed,
+                    avail_cross,
+                    cache,
+                    tree,
+                    store,
+                    sublayout,
+                );
                 items[item.index].main = size.main;
                 items[item.index].cross = size.cross;
             }
@@ -892,9 +900,9 @@ where
         let end = line.end;
 
         let resolve_stretch_line = |target_cross: f32,
-                        items: &mut SmallVec<[WrapItem; 32]>,
-                        cache: &mut C,
-                        sublayout: &mut <N as Node>::SubLayout<'_>| {
+                                    items: &mut SmallVec<[WrapItem; 32]>,
+                                    cache: &mut C,
+                                    sublayout: &mut <N as Node>::SubLayout<'_>| {
             for i in start..end {
                 if items[i].cross_is_stretch {
                     let child = relative_children[i];
@@ -1343,8 +1351,8 @@ where
     let is_row_rtl =
         layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
-    let is_rtl = matches!(layout_type, LayoutType::Row | LayoutType::Column)
-        && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let is_column_rtl =
+        layout_type == LayoutType::Column && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1846,13 +1854,18 @@ where
 
         match child_position {
             PositionType::Absolute => {
-                let (child_main_before, child_main_after) = if is_rtl {
+                // RTL mirrors horizontal offsets only.
+                // In rows, horizontal is the main axis; in columns, horizontal is the cross axis.
+                let (child_main_before, child_main_after) = if is_row_rtl {
                     (child.node.main_after(store, layout_type), child.node.main_before(store, layout_type))
                 } else {
                     (child.node.main_before(store, layout_type), child.node.main_after(store, layout_type))
                 };
-                let child_cross_before = child.node.cross_before(store, layout_type);
-                let child_cross_after = child.node.cross_after(store, layout_type);
+                let (child_cross_before, child_cross_after) = if is_column_rtl {
+                    (child.node.cross_after(store, layout_type), child.node.cross_before(store, layout_type))
+                } else {
+                    (child.node.cross_before(store, layout_type), child.node.cross_after(store, layout_type))
+                };
 
                 let parent_main = parent_main + padding_main_before + padding_main_after;
                 let parent_cross = parent_cross + padding_cross_before + padding_cross_after;
