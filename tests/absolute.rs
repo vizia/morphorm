@@ -353,3 +353,95 @@ fn rtl_absolute_in_column_only_flips_horizontal_offsets() {
     // RTL mirrors only horizontal offsets, so left becomes trailing while top is unchanged.
     assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 10.0, width: 100.0, height: 80.0 }));
 }
+
+#[test]
+fn rtl_absolute_in_column_bottom_offset_is_not_flipped() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_layout_type(root, LayoutType::Column);
+    world.set_direction(root, Direction::RightToLeft);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(400.0));
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(100.0));
+    world.set_height(node, Units::Pixels(80.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_bottom(node, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // RTL mirrors only horizontal offsets, so left becomes trailing while bottom remains bottom.
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 310.0, width: 100.0, height: 80.0 }));
+}
+
+#[test]
+fn rtl_absolute_stretch_height_in_column_uses_top_and_bottom_without_flip() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_layout_type(root, LayoutType::Column);
+    world.set_direction(root, Direction::RightToLeft);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(400.0));
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(100.0));
+    world.set_height(node, Units::Stretch(1.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_top(node, Units::Pixels(10.0));
+    world.set_bottom(node, Units::Pixels(30.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 10.0, width: 100.0, height: 360.0 }));
+}
+
+#[test]
+fn rtl_absolute_in_row_only_flips_horizontal_offsets() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_direction(root, Direction::RightToLeft);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(400.0));
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(100.0));
+    world.set_height(node, Units::Pixels(80.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_top(node, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // RTL mirrors only horizontal offsets, so left becomes trailing while top is unchanged.
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 10.0, width: 100.0, height: 80.0 }));
+}
+
+#[test]
+fn rtl_absolute_bottom_offset_is_not_flipped() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_direction(root, Direction::RightToLeft);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(400.0));
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(100.0));
+    world.set_height(node, Units::Pixels(80.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_bottom(node, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // RTL mirrors only horizontal offsets, so left becomes trailing while bottom remains bottom.
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 480.0, posy: 310.0, width: 100.0, height: 80.0 }));
+}

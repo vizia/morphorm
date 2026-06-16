@@ -110,6 +110,30 @@ fn wrap_column_basic() {
 }
 
 #[test]
+fn wrap_column_rtl_absolute_only_flips_horizontal_offsets() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(200.0));
+    world.set_height(root, Units::Pixels(250.0));
+    world.set_layout_type(root, LayoutType::Column);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_direction(root, Direction::RightToLeft);
+
+    let node = world.add(Some(root));
+    world.set_position_type(node, PositionType::Absolute);
+    world.set_width(node, Units::Pixels(80.0));
+    world.set_height(node, Units::Pixels(100.0));
+    world.set_left(node, Units::Pixels(20.0));
+    world.set_top(node, Units::Pixels(10.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    // RTL should mirror only the horizontal offset in a wrapped column.
+    assert_eq!(world.cache.bounds(node), Some(&Rect { posx: 100.0, posy: 10.0, width: 80.0, height: 100.0 }));
+}
+
+#[test]
 fn wrap_row_with_stretch() {
     // Test row wrapping with stretch items filling available space on each line
     let mut world = World::default();
