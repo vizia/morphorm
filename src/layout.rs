@@ -796,18 +796,81 @@ where
 
         if stretch_sum > 0.0 {
             let gap_total = (count - 1) as f32 * item_gap_px;
-            let free_main = (avail_main - fixed_sum - gap_total).max(0.0);
+            let mut remaining_main = (avail_main - fixed_sum - gap_total).max(0.0);
+            let mut remaining_stretch_sum = stretch_sum;
 
+            #[derive(Clone, Copy)]
+            struct StretchAlloc {
+                index: usize,
+                factor: f32,
+                min: f32,
+                max: f32,
+                frozen: bool,
+                measured: f32,
+                computed: f32,
+                violation: f32,
+            }
+
+            let mut stretch_items: SmallVec<[StretchAlloc; 16]> = SmallVec::new();
             for i in start..end {
-                let factor = items[i].stretch_main_factor;
-                if factor > 0.0 {
-                    let allocated = (factor / stretch_sum * free_main).round();
-                    let clamped = allocated.clamp(items[i].min_main, items[i].max_main);
-                    let size =
-                        layout(relative_children[i], layout_type, clamped, avail_cross, cache, tree, store, sublayout);
-                    items[i].main = size.main;
-                    items[i].cross = size.cross;
+                if items[i].stretch_main_factor > 0.0 {
+                    stretch_items.push(StretchAlloc {
+                        index: i,
+                        factor: items[i].stretch_main_factor,
+                        min: items[i].min_main,
+                        max: items[i].max_main,
+                        frozen: false,
+                        measured: 0.0,
+                        computed: 0.0,
+                        violation: 0.0,
+                    });
                 }
+            }
+
+            while !stretch_items.iter().all(|item| item.frozen) {
+                let mut total_violation = 0.0f32;
+
+                for item in stretch_items.iter_mut().filter(|item| !item.frozen) {
+                    let measured = if remaining_stretch_sum > 0.0 {
+                        (item.factor * remaining_main / remaining_stretch_sum).round()
+                    } else {
+                        0.0
+                    };
+                    let computed = measured.clamp(item.min, item.max);
+
+                    item.measured = measured;
+                    item.computed = computed;
+                    item.violation = computed - measured;
+                    total_violation += item.violation;
+                }
+
+                for item in stretch_items.iter_mut().filter(|item| !item.frozen) {
+                    item.frozen = match total_violation {
+                        total if total > 0.0 => item.violation > 0.0,
+                        total if total < 0.0 => item.violation < 0.0,
+                        _ => true,
+                    };
+
+                    if item.frozen {
+                        remaining_stretch_sum -= item.factor;
+                        remaining_main = (remaining_main - item.computed).max(0.0);
+                    }
+                }
+            }
+
+            for item in stretch_items.iter() {
+                let size = layout(
+                    relative_children[item.index],
+                    layout_type,
+                    item.computed,
+                    avail_cross,
+                    cache,
+                    tree,
+                    store,
+                    sublayout,
+                );
+                items[item.index].main = size.main;
+                items[item.index].cross = size.cross;
             }
         }
     }
@@ -827,25 +890,42 @@ where
     }
 
     // Phase 5: Resolve cross-stretch children to fill their line's cross extent.
+    // This runs in two passes:
+    // 1) stretch against the current estimate,
+    // 2) stretch again against the settled line max.
+    // The second pass is required when all line items are cross-stretch and one
+    // item's min/max constraint determines the line cross-size.
     for (line_idx, line) in lines.iter().enumerate() {
         let start = line.start;
         let end = line.end;
-        let lc = line_cross[line_idx];
-        for i in start..end {
-            if items[i].cross_is_stretch {
-                let child = relative_children[i];
-                let clamped_cross = lc.clamp(items[i].min_cross, items[i].max_cross);
-                let size = layout(child, layout_type, items[i].main, clamped_cross, cache, tree, store, sublayout);
-                items[i].main = size.main;
-                items[i].cross = size.cross;
+
+        let resolve_stretch_line = |target_cross: f32,
+                                    items: &mut SmallVec<[WrapItem; 32]>,
+                                    cache: &mut C,
+                                    sublayout: &mut <N as Node>::SubLayout<'_>| {
+            for i in start..end {
+                if items[i].cross_is_stretch {
+                    let child = relative_children[i];
+                    let clamped_cross = target_cross.clamp(items[i].min_cross, items[i].max_cross);
+                    let size = layout(child, layout_type, items[i].main, clamped_cross, cache, tree, store, sublayout);
+                    items[i].main = size.main;
+                    items[i].cross = size.cross;
+                }
             }
-        }
-        // Re-compute line cross to include cross-stretch items in case they changed.
-        let mut max_cross = 0.0f32;
-        for i in start..end {
-            max_cross = max_cross.max(items[i].cross);
-        }
-        line_cross[line_idx] = max_cross;
+        };
+
+        let compute_line_max = |items: &SmallVec<[WrapItem; 32]>| {
+            let mut max_cross = 0.0f32;
+            for i in start..end {
+                max_cross = max_cross.max(items[i].cross);
+            }
+            max_cross
+        };
+
+        resolve_stretch_line(line_cross[line_idx], &mut items, cache, sublayout);
+        let settled_cross = compute_line_max(&items);
+        resolve_stretch_line(settled_cross, &mut items, cache, sublayout);
+        line_cross[line_idx] = compute_line_max(&items);
     }
 
     // Phase 6: Determine the final cross size of the container.
@@ -1271,8 +1351,8 @@ where
     let is_row_rtl =
         layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
-    let is_rtl = matches!(layout_type, LayoutType::Row | LayoutType::Column)
-        && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let is_column_rtl =
+        layout_type == LayoutType::Column && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1774,12 +1854,14 @@ where
 
         match child_position {
             PositionType::Absolute => {
+                // RTL mirrors horizontal offsets only.
+                // In rows, horizontal is the main axis; in columns, horizontal is the cross axis.
                 let (child_main_before, child_main_after) = if is_row_rtl {
                     (child.node.main_after(store, layout_type), child.node.main_before(store, layout_type))
                 } else {
                     (child.node.main_before(store, layout_type), child.node.main_after(store, layout_type))
                 };
-                let (child_cross_before, child_cross_after) = if is_rtl && layout_type == LayoutType::Column {
+                let (child_cross_before, child_cross_after) = if is_column_rtl {
                     (child.node.cross_after(store, layout_type), child.node.cross_before(store, layout_type))
                 } else {
                     (child.node.cross_before(store, layout_type), child.node.cross_after(store, layout_type))
