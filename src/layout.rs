@@ -1032,13 +1032,12 @@ where
 
     // Position absolute children.
     for abs_child in &abs_items {
-        let (child_main_before, child_main_after) = if layout_type == LayoutType::Row
-            && node.direction(store).unwrap_or_default() == Direction::RightToLeft
-        {
-            (abs_child.node.main_after(store, layout_type), abs_child.node.main_before(store, layout_type))
-        } else {
-            (abs_child.node.main_before(store, layout_type), abs_child.node.main_after(store, layout_type))
-        };
+        let (child_main_before, child_main_after) =
+            if layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
+                (abs_child.node.main_after(store, layout_type), abs_child.node.main_before(store, layout_type))
+            } else {
+                (abs_child.node.main_before(store, layout_type), abs_child.node.main_after(store, layout_type))
+            };
         let (child_cross_before, child_cross_after) = if layout_type == LayoutType::Column
             && node.direction(store).unwrap_or_default() == Direction::RightToLeft
         {
