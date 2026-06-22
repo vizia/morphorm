@@ -6,7 +6,6 @@ use crate::{
 
 const DEFAULT_MIN: f32 = -f32::MAX;
 const DEFAULT_MAX: f32 = f32::MAX;
-const DEFAULT_BORDER_WIDTH: f32 = 0.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ItemType {
@@ -148,11 +147,6 @@ where
     let mut min_height = node.min_height(store).unwrap_or(Pixels(0.0)).to_px(contain_height, DEFAULT_MIN);
     let mut max_height = node.max_height(store).unwrap_or(Pixels(f32::MAX)).to_px(contain_height, DEFAULT_MAX);
 
-    let border_left = node.border_left(store).unwrap_or_default().to_px(contain_width, DEFAULT_BORDER_WIDTH);
-    let border_right = node.border_right(store).unwrap_or_default().to_px(contain_width, DEFAULT_BORDER_WIDTH);
-    let border_top = node.border_top(store).unwrap_or_default().to_px(contain_height, DEFAULT_BORDER_WIDTH);
-    let border_bottom = node.border_bottom(store).unwrap_or_default().to_px(contain_height, DEFAULT_BORDER_WIDTH);
-
     let padding_left = node.padding_left(store).unwrap_or_default().to_px(contain_width, 0.0);
     let padding_right = node.padding_right(store).unwrap_or_default().to_px(contain_width, 0.0);
     let padding_top = node.padding_top(store).unwrap_or_default().to_px(contain_height, 0.0);
@@ -181,8 +175,8 @@ where
         children.clear();
 
         // Relative children are laid out against the parent content box.
-        let available_width = computed_width - padding_left - padding_right - border_left - border_right;
-        let available_height = computed_height - padding_top - padding_bottom - border_top - border_bottom;
+        let available_width = computed_width - padding_left - padding_right;
+        let available_height = computed_height - padding_top - padding_bottom;
 
         for child in relative_children.iter().copied() {
             let child_width = child.width(store).unwrap_or(Stretch(1.0));
@@ -239,19 +233,19 @@ where
         // Auto-size in overlay is based on max extents (not sums), because
         // children can overlap and are independently aligned in the same box.
         if width.is_auto() || node.min_width(store).unwrap_or(Pixels(0.0)).is_auto() {
-            min_width = max_child_width + padding_left + padding_right + border_left + border_right;
+            min_width = max_child_width + padding_left + padding_right;
         }
 
         if node.max_width(store).unwrap_or(Pixels(f32::MAX)).is_auto() && max_child_width != 0.0 {
-            max_width = max_child_width + padding_left + padding_right + border_left + border_right;
+            max_width = max_child_width + padding_left + padding_right;
         }
 
         if height.is_auto() || node.min_height(store).unwrap_or(Pixels(0.0)).is_auto() {
-            min_height = max_child_height + padding_top + padding_bottom + border_top + border_bottom;
+            min_height = max_child_height + padding_top + padding_bottom;
         }
 
         if node.max_height(store).unwrap_or(Pixels(f32::MAX)).is_auto() && max_child_height != 0.0 {
-            max_height = max_child_height + padding_top + padding_bottom + border_top + border_bottom;
+            max_height = max_child_height + padding_top + padding_bottom;
         }
 
         let next_width = computed_width.max(min_width).min(max_width);
@@ -270,8 +264,8 @@ where
     computed_height = computed_height.max(min_height).min(max_height);
 
     // Relative children are positioned inside the padded content box.
-    let available_width = computed_width - padding_left - padding_right - border_left - border_right;
-    let available_height = computed_height - padding_top - padding_bottom - border_top - border_bottom;
+    let available_width = computed_width - padding_left - padding_right;
+    let available_height = computed_height - padding_top - padding_bottom;
 
     let mut alignment = node.alignment(store).unwrap_or_default();
     if node.direction(store).unwrap_or_default() == Direction::RightToLeft {
@@ -282,23 +276,14 @@ where
     let (align_x, align_y) = alignment_fractions(alignment);
 
     for child in &children {
-        let mut child_posx = align_x * (available_width - child.main);
-        let mut child_posy = align_y * (available_height - child.cross);
-
-        // Parent scroll offsets can override alignment-derived positions.
-        if let Some(scroll_x) = node.horizontal_scroll(store) {
-            child_posx = scroll_x;
-        }
-
-        if let Some(scroll_y) = node.vertical_scroll(store) {
-            child_posy = scroll_y;
-        }
+        let child_posx = align_x * (available_width - child.main);
+        let child_posy = align_y * (available_height - child.cross);
 
         cache.set_rect(
             child.node,
             LayoutType::Overlay,
-            child_posx + padding_left + border_left,
-            child_posy + padding_top + border_top,
+            child_posx + padding_left,
+            child_posy + padding_top,
             child.main,
             child.cross,
         );
@@ -306,8 +291,8 @@ where
 
     // Absolute children are sized in the same box model used by stack/wrap:
     // padding box (content + padding), excluding border.
-    let abs_width = computed_width - border_left - border_right;
-    let abs_height = computed_height - border_top - border_bottom;
+    let abs_width = computed_width - padding_left - padding_right;
+    let abs_height = computed_height - padding_top - padding_bottom;
 
     // Mirror the stack layout's RTL semantics: under RightToLeft, left/right are
     // swapped so that `left` becomes the trailing edge and `right` the leading edge,
@@ -361,8 +346,8 @@ where
         cache.set_rect(
             child,
             LayoutType::Overlay,
-            child_posx + border_left,
-            child_posy + border_top,
+            child_posx,
+            child_posy,
             child_size.main,
             child_size.cross,
         );
@@ -653,20 +638,15 @@ where
     let (parent_main, parent_cross) =
         if parent_layout_type == layout_type { (parent_main, parent_cross) } else { (parent_cross, parent_main) };
 
-    let border_main_before = node.border_main_before(store, layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
-    let border_main_after = node.border_main_after(store, layout_type).to_px(parent_main, DEFAULT_BORDER_WIDTH);
-    let border_cross_before = node.border_cross_before(store, layout_type).to_px(parent_cross, DEFAULT_BORDER_WIDTH);
-    let border_cross_after = node.border_cross_after(store, layout_type).to_px(parent_cross, DEFAULT_BORDER_WIDTH);
-
     let padding_main_before = node.padding_main_before(store, layout_type).to_px(parent_main, 0.0);
     let padding_main_after = node.padding_main_after(store, layout_type).to_px(parent_main, 0.0);
     let padding_cross_before = node.padding_cross_before(store, layout_type).to_px(parent_cross, 0.0);
     let padding_cross_after = node.padding_cross_after(store, layout_type).to_px(parent_cross, 0.0);
 
     // Available space for children after subtracting padding and border.
-    let avail_main = parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
+    let avail_main = parent_main - padding_main_before - padding_main_after;
     let avail_cross =
-        parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+        parent_cross - padding_cross_before - padding_cross_after;
 
     // Gap between items within a line (on the main axis).
     let min_main_between = node.min_main_between(store, layout_type);
@@ -939,7 +919,7 @@ where
     let cross_units = node.cross(store, layout_type);
     let final_cross = if cross_units.is_auto() || parent_cross == 0.0 {
         let raw =
-            total_content_cross + padding_cross_before + padding_cross_after + border_cross_before + border_cross_after;
+            total_content_cross + padding_cross_before + padding_cross_after;
         let min_c = node.min_cross(store, layout_type).to_px(0.0, DEFAULT_MIN);
         let max_c = node.max_cross(store, layout_type).to_px(0.0, DEFAULT_MAX);
         raw.max(min_c).min(max_c)
@@ -960,7 +940,7 @@ where
                 sum + (line.len().saturating_sub(1)) as f32 * item_gap_px
             })
             .fold(0.0f32, f32::max);
-        let raw = raw + padding_main_before + padding_main_after + border_main_before + border_main_after;
+        let raw = raw + padding_main_before + padding_main_after;
         let min_m = node.min_main(store, layout_type).to_px(0.0, DEFAULT_MIN);
         let max_m = node.max_main(store, layout_type).to_px(0.0, DEFAULT_MAX);
         raw.max(min_m).min(max_m)
@@ -970,8 +950,8 @@ where
 
     // Phase 7: Lay out absolute children against the container bounds.
     // Absolute children are sized against the padding box (content box + padding, excluding border).
-    let abs_avail_main = final_main - border_main_before - border_main_after;
-    let abs_avail_cross = final_cross - border_cross_before - border_cross_after;
+    let abs_avail_main = final_main;
+    let abs_avail_cross = final_cross;
 
     let abs_children = node
         .children(tree)
@@ -1040,7 +1020,7 @@ where
         std::mem::swap(&mut main_align_frac, &mut cross_align_frac);
     }
 
-    let mut cross_cursor = padding_cross_before + border_cross_before;
+    let mut cross_cursor = padding_cross_before;
 
     for (line_idx, line) in lines.iter().enumerate() {
         let start = line.start;
@@ -1057,7 +1037,7 @@ where
         if layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft {
             // RTL positioning: place items in reverse order within each wrapped line.
             // Alignment is flipped above so TopLeft maps to TopRight semantics.
-            let mut main_cursor = padding_main_before + border_main_before + main_align_frac * free_main;
+            let mut main_cursor = padding_main_before + main_align_frac * free_main;
 
             for (item_idx, i) in (start..end).rev().enumerate() {
                 let item = &items[i];
@@ -1080,7 +1060,7 @@ where
             }
         } else {
             // LTR positioning: items are positioned left-to-right within the line
-            let mut main_cursor = padding_main_before + border_main_before + main_align_frac * free_main;
+            let mut main_cursor = padding_main_before + main_align_frac * free_main;
 
             for i in start..end {
                 let item = &items[i];
@@ -1166,8 +1146,8 @@ where
         cache.set_rect(
             abs_child.node,
             layout_type,
-            child_main_pos + border_main_before,
-            child_cross_pos + border_cross_before,
+            child_main_pos,
+            child_cross_pos,
             abs_child.main,
             abs_child.cross,
         );
@@ -1255,15 +1235,6 @@ where
         Auto => 0.0,
     };
 
-    let border_main_before =
-        node.border_main_before(store, parent_layout_type).to_px(computed_main, DEFAULT_BORDER_WIDTH);
-    let border_main_after =
-        node.border_main_after(store, parent_layout_type).to_px(computed_main, DEFAULT_BORDER_WIDTH);
-    let border_cross_before =
-        node.border_cross_before(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
-    let border_cross_after =
-        node.border_cross_after(store, parent_layout_type).to_px(computed_cross, DEFAULT_BORDER_WIDTH);
-
     // Classify visible children once to avoid repeated tree traversals.
     let mut relative_children = SmallVec::<[&N; 32]>::new();
     let mut absolute_children = SmallVec::<[&N; 8]>::new();
@@ -1345,8 +1316,8 @@ where
     let min_main_between = node.min_main_between(store, layout_type);
     let max_main_between = node.max_main_between(store, layout_type);
 
-    parent_main = parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
-    parent_cross = parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+    parent_main = parent_main - padding_main_before - padding_main_after;
+    parent_cross = parent_cross - padding_cross_before - padding_cross_after;
 
     let is_row_rtl =
         layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
@@ -1446,39 +1417,39 @@ where
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && main_sum != 0.0 {
-                max_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
                 max_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1492,8 +1463,8 @@ where
         (computed_cross, computed_main)
     };
 
-    parent_main = parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
-    parent_cross = parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+    parent_main = parent_main - padding_main_before - padding_main_after;
+    parent_cross = parent_cross - padding_cross_before - padding_cross_after;
 
     // Compute stretch size on the cross-axis for relative children.
     for child in children
@@ -1534,39 +1505,39 @@ where
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && main_sum != 0.0 {
-                max_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
                 max_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1692,39 +1663,39 @@ where
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && main_sum != 0.0 {
-                max_main = main_sum + border_main_before + border_main_after + padding_main_before + padding_main_after;
+                max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main =
-                    cross_max + border_main_before + border_main_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
                 min_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
                 max_cross =
-                    cross_max + border_cross_before + border_cross_after + padding_cross_before + padding_cross_after;
+                    cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross =
-                    main_sum + border_cross_before + border_cross_after + padding_main_before + padding_main_after;
+                    main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1738,8 +1709,8 @@ where
         (computed_cross, computed_main)
     };
 
-    parent_main = parent_main - padding_main_before - padding_main_after - border_main_before - border_main_after;
-    parent_cross = parent_cross - padding_cross_before - padding_cross_after - border_cross_before - border_cross_after;
+    parent_main = parent_main - padding_main_before - padding_main_after;
+    parent_cross = parent_cross - padding_cross_before - padding_cross_after;
 
     for child in children
         .iter_mut()
@@ -1848,7 +1819,7 @@ where
     }
 
     // Set size and position of children in the cache.
-    let mut main_pos = padding_main_before + border_main_before;
+    let mut main_pos = padding_main_before;
     for child in children.iter() {
         let child_position = child.node.position_type(store).unwrap_or_default();
 
@@ -1879,8 +1850,8 @@ where
                 cache.set_rect(
                     child.node,
                     layout_type,
-                    child_main_pos + border_main_before,
-                    child_cross_pos + border_cross_before,
+                    child_main_pos,
+                    child_cross_pos,
                     child.main,
                     child.cross,
                 );
@@ -1906,19 +1877,11 @@ where
                 child_main_pos *= parent_main - main_sum;
                 child_cross_pos *= parent_cross - child.cross;
 
-                if let Some(main_scroll) = node.main_scroll(store, layout_type) {
-                    child_main_pos = main_scroll
-                }
-
-                if let Some(cross_scroll) = node.cross_scroll(store, layout_type) {
-                    child_cross_pos = cross_scroll
-                }
-
                 cache.set_rect(
                     child.node,
                     layout_type,
                     main_pos + child_main_pos,
-                    child_cross_pos + padding_cross_before + border_cross_before,
+                    child_cross_pos + padding_cross_before,
                     child.main,
                     child.cross,
                 );

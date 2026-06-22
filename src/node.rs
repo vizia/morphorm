@@ -45,7 +45,8 @@ pub trait Node: Sized {
         tree: &Self::Tree,
         store: &Self::Store,
         sublayout: &mut Self::SubLayout<'_>,
-    ) -> Size {
+    ) {
+
         let width = self.width(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
         let height = self.height(store).unwrap_or(Units::Pixels(0.0)).to_px(0.0, 0.0);
 
@@ -58,7 +59,7 @@ pub trait Node: Sized {
             LayoutType::Column => (height, width), // Column: main=height, cross=width
         };
 
-        layout(self, layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
+        layout(self, layout_type, parent_main, parent_cross, cache, tree, store, sublayout);
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
@@ -66,6 +67,9 @@ pub trait Node: Sized {
 
     /// Returns an iterator over the children of the node.
     fn children<'t>(&'t self, tree: &'t Self::Tree) -> Self::ChildIter<'t>;
+
+    /// Returns an optional reference to the parent of the node.
+    fn parent<'t>(&'t self, tree: &'t Self::Tree) -> Option<&'t Self>;
 
     /// Returns a boolean representing whether the node is visible to layout.
     fn visible(&self, store: &Self::Store) -> bool;
@@ -160,24 +164,6 @@ pub trait Node: Sized {
 
     /// Returns the maximum height of the node.
     fn max_height(&self, store: &Self::Store) -> Option<Units>;
-
-    /// Returns the left-side border width of the node.
-    fn border_left(&self, store: &Self::Store) -> Option<Units>;
-
-    /// Returns the right-side border width of the node.
-    fn border_right(&self, store: &Self::Store) -> Option<Units>;
-
-    /// Returns the top-side border width of the node.
-    fn border_top(&self, store: &Self::Store) -> Option<Units>;
-
-    /// Returns the bottom-side border width of the node.
-    fn border_bottom(&self, store: &Self::Store) -> Option<Units>;
-
-    /// Returns the vertical scroll offset of the node.
-    fn vertical_scroll(&self, store: &Self::Store) -> Option<f32>;
-
-    /// Returns the horizontal scroll offset of the node.
-    fn horizontal_scroll(&self, store: &Self::Store) -> Option<f32>;
 
     fn grid_columns(&self, store: &Self::Store) -> Option<Vec<Units>>;
 
@@ -328,22 +314,6 @@ pub(crate) trait NodeExt: Node {
         parent_layout_type.select_unwrap(store, |store| self.vertical_gap(store), |store| self.horizontal_gap(store))
     }
 
-    fn border_main_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.border_left(store), |store| self.border_top(store))
-    }
-
-    fn border_main_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.border_right(store), |store| self.border_bottom(store))
-    }
-
-    fn border_cross_before(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.border_top(store), |store| self.border_left(store))
-    }
-
-    fn border_cross_after(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Units {
-        parent_layout_type.select_unwrap(store, |store| self.border_bottom(store), |store| self.border_right(store))
-    }
-
     fn content_sizing(
         &self,
         store: &Self::Store,
@@ -361,14 +331,6 @@ pub(crate) trait NodeExt: Node {
                 self.content_size(store, sublayout, parent_cross, parent_main).map(|(width, height)| (height, width))
             }
         }
-    }
-
-    fn cross_scroll(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<f32> {
-        parent_layout_type.select(store, |store| self.vertical_scroll(store), |store| self.horizontal_scroll(store))
-    }
-
-    fn main_scroll(&self, store: &Self::Store, parent_layout_type: LayoutType) -> Option<f32> {
-        parent_layout_type.select(store, |store| self.horizontal_scroll(store), |store| self.vertical_scroll(store))
     }
 }
 
