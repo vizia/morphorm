@@ -12,5 +12,14 @@ pub use cache::*;
 pub mod node;
 pub use node::*;
 
+pub mod incremental;
+pub use incremental::*;
+
+pub mod incremental_engine;
+pub use incremental_engine::*;
+
+pub mod layout_ext;
+pub use layout_ext::*;
+
 mod layout;
 use layout::layout;

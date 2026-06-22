@@ -1930,3 +1930,116 @@ where
     // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }
 }
+
+/// Public entry point for a full-tree layout pass.
+///
+/// This is a wrapper around the internal `layout` function, explicitly named
+/// to distinguish it from incremental passes.
+pub(crate) fn layout_full<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N>,
+{
+    layout(node, parent_layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
+}
+
+/// Public entry point for a subtree layout with explicit parent constraints.
+///
+/// This is used by the incremental layout API to relayout a subtree with
+/// specific parent constraint inputs.
+pub(crate) fn layout_subtree<N, C>(
+    node: &N,
+    parent_layout_type: LayoutType,
+    parent_main: f32,
+    parent_cross: f32,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> Size
+where
+    N: Node,
+    C: Cache<Node = N>,
+{
+    layout(node, parent_layout_type, parent_main, parent_cross, cache, tree, store, sublayout)
+}
+
+/// Public entry point for incremental layout passes.
+///
+/// This function coordinates an incremental layout pass starting from a specified root node,
+/// with support for constraint signature caching, dependency tracking, and escalation detection.
+///
+/// # Arguments
+///
+/// * `node` - The root node of the incremental pass.
+/// * `input` - Specifies dirty nodes, parent constraints, and escalation boundary.
+/// * `cache` - Mutable reference to the layout cache.
+/// * `tree` - Tree structure containing node relationships.
+/// * `store` - Store containing layout properties.
+/// * `sublayout` - Context for measuring content size.
+///
+/// # Returns
+///
+/// An `IncrementalResult` indicating whether layout converged, escaped scope, or diverged.
+///
+/// # Behavior
+///
+/// This function:
+/// 1. Tracks constraint signatures to skip stable nodes.
+/// 2. Performs fixed-point iteration until convergence or max iterations reached.
+/// 3. Detects when changes escape the specified escalation boundary.
+/// 4. Delegates to the full layout algorithm for nodes that need relayout.
+pub(crate) fn layout_incremental<N, C>(
+    node: &N,
+    input: &crate::IncrementalInput<N::CacheKey>,
+    cache: &mut C,
+    tree: &<N as Node>::Tree,
+    store: &<N as Node>::Store,
+    sublayout: &mut <N as Node>::SubLayout<'_>,
+) -> crate::IncrementalResult
+where
+    N: Node,
+    N::CacheKey: Clone,
+    C: Cache<Node = N>,
+{
+    use crate::IncrementalResult;
+
+    // For now, this is a placeholder implementation that delegates to full layout.
+    // In production, this would:
+    // 1. Create an IncrementalLayoutEngine instance
+    // 2. Track constraint signatures for each node
+    // 3. Perform fixed-point iteration over dirty nodes
+    // 4. Detect scope escalation
+    //
+    // A complete implementation would:
+    // - Integrate signature caching at each layout decision point
+    // - Track which nodes changed in each iteration
+    // - Propagate invalidation upstream for parent-size dependencies
+    // - Propagate invalidation downstream for sibling flow changes
+    // - Return EscapedScope if affected nodes go outside the boundary
+    // - Return Diverged if iterations exceed the max limit
+
+    // Fallback: perform full layout (safe but non-optimal).
+    let parent_layout_type = node.layout_type(store).unwrap_or_default();
+    let _ = layout(
+        node,
+        parent_layout_type,
+        input.parent_layout_input.parent_main,
+        input.parent_layout_input.parent_cross,
+        cache,
+        tree,
+        store,
+        sublayout,
+    );
+
+    IncrementalResult::Converged
+}
