@@ -43,8 +43,6 @@ pub struct Widget {
     min_horizontal_gap: Units,
     max_vertical_gap: Units,
     max_horizontal_gap: Units,
-    vertical_scroll: f32,
-    horizontal_scroll: f32,
     alignment: Alignment,
     layout_type: LayoutType,
     position_type: PositionType,
@@ -77,6 +75,10 @@ impl Node for Widget {
 
     fn children<'t>(&'t self, _tree: &'t Self::Tree) -> Self::ChildIter<'t> {
         self.child.iter()
+    }
+
+    fn parent<'t>(&'t self, _tree: &'t Self::Tree) -> Option<&'t Self> {
+        None
     }
 
     fn key(&self) -> Self::CacheKey {
@@ -169,32 +171,8 @@ impl Node for Widget {
         Some(self.horizontal_gap)
     }
 
-    fn border_left(&self, _store: &Self::Store) -> Option<Units> {
-        Some(Units::Pixels(0.0))
-    }
-
-    fn border_right(&self, _store: &Self::Store) -> Option<Units> {
-        Some(Units::Pixels(0.0))
-    }
-
-    fn border_top(&self, _store: &Self::Store) -> Option<Units> {
-        Some(Units::Pixels(0.0))
-    }
-
-    fn border_bottom(&self, _store: &Self::Store) -> Option<Units> {
-        Some(Units::Pixels(0.0))
-    }
-
     fn alignment(&self, _store: &Self::Store) -> Option<Alignment> {
         Some(self.alignment)
-    }
-
-    fn vertical_scroll(&self, _store: &Self::Store) -> Option<f32> {
-        Some(self.vertical_scroll)
-    }
-
-    fn horizontal_scroll(&self, _store: &Self::Store) -> Option<f32> {
-        Some(self.horizontal_scroll)
     }
 
     fn min_vertical_gap(&self, _store: &Self::Store) -> Option<Units> {

@@ -23,6 +23,10 @@ impl Node for Entity {
         ChildIterator { tree, current_node }
     }
 
+    fn parent<'t>(&'t self, tree: &'t Tree) -> Option<&'t Self> {
+        tree.get_parent(self)
+    }
+
     fn visible(&self, store: &Store) -> bool {
         store.visible.get(*self).copied().unwrap_or(true)
     }
@@ -105,14 +109,6 @@ impl Node for Entity {
         store.horizontal_gap.get(*self).copied()
     }
 
-    fn vertical_scroll(&self, store: &Store) -> Option<f32> {
-        store.vertical_scroll.get(*self).copied()
-    }
-
-    fn horizontal_scroll(&self, store: &Store) -> Option<f32> {
-        store.horizontal_scroll.get(*self).copied()
-    }
-
     fn min_width(&self, store: &Store) -> Option<Units> {
         store.min_width.get(*self).copied()
     }
@@ -127,22 +123,6 @@ impl Node for Entity {
 
     fn max_height(&self, store: &Store) -> Option<Units> {
         store.max_height.get(*self).copied()
-    }
-
-    fn border_left(&self, store: &Store) -> Option<Units> {
-        store.border_left.get(*self).copied()
-    }
-
-    fn border_right(&self, store: &Store) -> Option<Units> {
-        store.border_right.get(*self).copied()
-    }
-
-    fn border_top(&self, store: &Store) -> Option<Units> {
-        store.border_top.get(*self).copied()
-    }
-
-    fn border_bottom(&self, store: &Store) -> Option<Units> {
-        store.border_bottom.get(*self).copied()
     }
 
     fn min_horizontal_gap(&self, store: &Store) -> Option<Units> {

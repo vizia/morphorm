@@ -13,6 +13,7 @@ pub enum LayoutType {
 }
 
 impl LayoutType {
+    #[allow(dead_code)]
     // Helper function for selecting between optional values depending on the layout type.
     pub(crate) fn select<T: Default, S>(
         &self,

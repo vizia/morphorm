@@ -189,16 +189,6 @@ impl World {
         self.store.max_horizontal_gap.insert(entity, value);
     }
 
-    /// Set the desired vertical scroll offset.
-    pub fn set_vertical_scroll(&mut self, entity: Entity, value: f32) {
-        self.store.vertical_scroll.insert(entity, value);
-    }
-
-    /// Set the desired horizontal scroll offset.
-    pub fn set_horizontal_scroll(&mut self, entity: Entity, value: f32) {
-        self.store.horizontal_scroll.insert(entity, value);
-    }
-
     pub fn set_grid_columns(&mut self, entity: Entity, value: Vec<Units>) {
         self.store.grid_columns.insert(entity, value);
     }
@@ -254,12 +244,5 @@ impl World {
         self.set_bottom(entity, Units::Stretch(1.0));
         self.set_width(entity, Units::Stretch(1.0));
         self.set_height(entity, Units::Stretch(1.0));
-    }
-
-    pub fn set_border(&mut self, entity: Entity, width: Units) {
-        self.store.border_left.insert(entity, width);
-        self.store.border_right.insert(entity, width);
-        self.store.border_top.insert(entity, width);
-        self.store.border_bottom.insert(entity, width);
     }
 }

@@ -24,9 +24,6 @@ pub struct Store {
     pub column_span: SecondaryMap<Entity, usize>,
     pub row_span: SecondaryMap<Entity, usize>,
 
-    pub vertical_scroll: SecondaryMap<Entity, f32>,
-    pub horizontal_scroll: SecondaryMap<Entity, f32>,
-
     pub left: SecondaryMap<Entity, Units>,
     pub right: SecondaryMap<Entity, Units>,
     pub top: SecondaryMap<Entity, Units>,
@@ -62,11 +59,6 @@ pub struct Store {
     pub red: SecondaryMap<Entity, u8>,
     pub green: SecondaryMap<Entity, u8>,
     pub blue: SecondaryMap<Entity, u8>,
-
-    pub border_left: SecondaryMap<Entity, Units>,
-    pub border_right: SecondaryMap<Entity, Units>,
-    pub border_top: SecondaryMap<Entity, Units>,
-    pub border_bottom: SecondaryMap<Entity, Units>,
 }
 
 impl Store {
@@ -80,8 +72,6 @@ impl Store {
         self.right.remove(entity);
         self.top.remove(entity);
         self.bottom.remove(entity);
-        self.vertical_scroll.remove(entity);
-        self.horizontal_scroll.remove(entity);
         self.width.remove(entity);
         self.height.remove(entity);
         self.min_width.remove(entity);
@@ -104,10 +94,6 @@ impl Store {
         self.red.remove(entity);
         self.green.remove(entity);
         self.blue.remove(entity);
-        self.border_left.remove(entity);
-        self.border_right.remove(entity);
-        self.border_top.remove(entity);
-        self.border_bottom.remove(entity);
     }
 
     pub fn clear(&mut self) {
@@ -120,8 +106,6 @@ impl Store {
         self.right.clear();
         self.top.clear();
         self.bottom.clear();
-        self.vertical_scroll.clear();
-        self.horizontal_scroll.clear();
         self.width.clear();
         self.height.clear();
         self.min_width.clear();
@@ -144,9 +128,5 @@ impl Store {
         self.red.clear();
         self.green.clear();
         self.blue.clear();
-        self.border_left.clear();
-        self.border_right.clear();
-        self.border_top.clear();
-        self.border_bottom.clear();
     }
 }
