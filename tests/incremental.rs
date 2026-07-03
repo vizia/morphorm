@@ -145,6 +145,47 @@ fn incremental_restarts_at_stretch_ancestor() {
     assert_eq!(world.cache.bounds(child2).unwrap().posy, 180.0);
 }
 
+/// If an absolutely-positioned ancestor is right/bottom anchored, changing its child size must
+/// restart at the absolute node's parent so the ancestor is repositioned.
+#[test]
+fn incremental_repositions_right_bottom_anchored_absolute_ancestor() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(400.0));
+    world.set_height(root, Units::Pixels(400.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_layout_type(root, LayoutType::Overlay);
+
+    let absolute = world.add(Some(root));
+    world.set_position_type(absolute, PositionType::Absolute);
+    world.set_layout_type(absolute, LayoutType::Column);
+    world.set_width(absolute, Units::Auto);
+    world.set_height(absolute, Units::Auto);
+    world.set_right(absolute, Units::Pixels(0.0));
+    world.set_bottom(absolute, Units::Pixels(0.0));
+
+    let child = world.add(Some(absolute));
+    world.set_width(child, Units::Pixels(100.0));
+    world.set_height(child, Units::Pixels(100.0));
+
+    full_layout(&mut world, root);
+    assert_eq!(world.cache.bounds(absolute).unwrap().posx, 300.0);
+    assert_eq!(world.cache.bounds(absolute).unwrap().posy, 300.0);
+
+    world.set_width(child, Units::Pixels(150.0));
+    world.set_height(child, Units::Pixels(150.0));
+    incremental_layout(&mut world, child);
+    let incremental = snapshot(&world, &[root, absolute, child]);
+
+    full_layout(&mut world, root);
+    let full = snapshot(&world, &[root, absolute, child]);
+
+    assert_eq!(incremental, full);
+    assert_eq!(world.cache.bounds(absolute).unwrap().posx, 250.0);
+    assert_eq!(world.cache.bounds(absolute).unwrap().posy, 250.0);
+}
+
 /// A `Percentage`-sized ancestor cannot be reproduced from the cached size alone, so the search
 /// bubbles past it up to the fixed root, still matching a full layout pass.
 #[test]

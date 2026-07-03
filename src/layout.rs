@@ -290,9 +290,9 @@ where
     }
 
     // Absolute children are sized in the same box model used by stack/wrap:
-    // padding box (content + padding), excluding border.
-    let abs_width = computed_width - padding_left - padding_right;
-    let abs_height = computed_height - padding_top - padding_bottom;
+    // padding box (content + padding).
+    let abs_width = computed_width;
+    let abs_height = computed_height;
 
     // Mirror the stack layout's RTL semantics: under RightToLeft, left/right are
     // swapped so that `left` becomes the trailing edge and `right` the leading edge,
@@ -343,14 +343,7 @@ where
             child_size.cross,
         );
 
-        cache.set_rect(
-            child,
-            LayoutType::Overlay,
-            child_posx,
-            child_posy,
-            child_size.main,
-            child_size.cross,
-        );
+        cache.set_rect(child, LayoutType::Overlay, child_posx, child_posy, child_size.main, child_size.cross);
     }
 
     // Return in caller's axis orientation (main/cross abstraction).
@@ -643,10 +636,9 @@ where
     let padding_cross_before = node.padding_cross_before(store, layout_type).to_px(parent_cross, 0.0);
     let padding_cross_after = node.padding_cross_after(store, layout_type).to_px(parent_cross, 0.0);
 
-    // Available space for children after subtracting padding and border.
+    // Available space for children after subtracting padding.
     let avail_main = parent_main - padding_main_before - padding_main_after;
-    let avail_cross =
-        parent_cross - padding_cross_before - padding_cross_after;
+    let avail_cross = parent_cross - padding_cross_before - padding_cross_after;
 
     // Gap between items within a line (on the main axis).
     let min_main_between = node.min_main_between(store, layout_type);
@@ -918,8 +910,7 @@ where
 
     let cross_units = node.cross(store, layout_type);
     let final_cross = if cross_units.is_auto() || parent_cross == 0.0 {
-        let raw =
-            total_content_cross + padding_cross_before + padding_cross_after;
+        let raw = total_content_cross + padding_cross_before + padding_cross_after;
         let min_c = node.min_cross(store, layout_type).to_px(0.0, DEFAULT_MIN);
         let max_c = node.max_cross(store, layout_type).to_px(0.0, DEFAULT_MAX);
         raw.max(min_c).min(max_c)
@@ -1143,14 +1134,7 @@ where
             (Auto, Auto) => 0.0,
         };
 
-        cache.set_rect(
-            abs_child.node,
-            layout_type,
-            child_main_pos,
-            child_cross_pos,
-            abs_child.main,
-            abs_child.cross,
-        );
+        cache.set_rect(abs_child.node, layout_type, child_main_pos, child_cross_pos, abs_child.main, abs_child.cross);
     }
 
     if parent_layout_type == layout_type {
@@ -1419,8 +1403,7 @@ where
             if parent_layout_type == layout_type {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
-                min_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
@@ -1428,28 +1411,23 @@ where
             if parent_layout_type == layout_type && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
-                max_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
-                min_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                min_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
-                max_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
-                max_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                max_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1507,8 +1485,7 @@ where
             if parent_layout_type == layout_type {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
-                min_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
@@ -1516,28 +1493,23 @@ where
             if parent_layout_type == layout_type && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
-                max_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
-                min_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                min_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
-                max_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
-                max_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                max_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1665,8 +1637,7 @@ where
             if parent_layout_type == layout_type {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
-                min_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
@@ -1674,28 +1645,23 @@ where
             if parent_layout_type == layout_type && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
-                max_main =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_main = cross_max + padding_cross_before + padding_cross_after;
             }
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type {
-                min_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
-                min_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                min_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
             if parent_layout_type == layout_type && cross_max != 0.0 {
-                max_cross =
-                    cross_max + padding_cross_before + padding_cross_after;
+                max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
-                max_cross =
-                    main_sum + padding_main_before + padding_main_after;
+                max_cross = main_sum + padding_main_before + padding_main_after;
             }
         }
     }
@@ -1847,14 +1813,7 @@ where
                 let child_cross_pos =
                     absolute_axis_position(child_cross_before, child_cross_after, parent_cross, child.cross);
 
-                cache.set_rect(
-                    child.node,
-                    layout_type,
-                    child_main_pos,
-                    child_cross_pos,
-                    child.main,
-                    child.cross,
-                );
+                cache.set_rect(child.node, layout_type, child_main_pos, child_cross_pos, child.main, child.cross);
             }
 
             PositionType::Relative => {

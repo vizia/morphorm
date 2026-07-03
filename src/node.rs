@@ -27,10 +27,13 @@ pub trait Node: Sized {
     /// then be used to size an `Auto` layout node using content size.
     type SubLayout<'a>;
 
-    /// Performs layout on the given node returning its computed size.
+    /// Performs layout on the given node.
     ///
-    /// The algorithm recurses down the tree, in depth-first order, and performs
-    /// layout on every node starting from the input `node`.
+    /// The algorithm recurses down the tree in depth-first order and performs
+    /// layout on every node in the restarted subtree. During incremental relayout,
+    /// the input node is treated as dirty and layout may restart from an ancestor
+    /// selected by [`NodeExt::find_relayout_root`]. Calling this on the tree root
+    /// still performs a full layout pass.
     ///
     /// # Arguments
     ///
@@ -369,9 +372,23 @@ pub(crate) trait NodeExt: Node {
     /// A missing width/height is treated as [`Units::Stretch`], matching the default used by the
     /// layout algorithm ([`main`](NodeExt::main)/[`cross`](NodeExt::cross)).
     fn is_restartable(&self, store: &Self::Store) -> bool {
+        fn stable(units: Units) -> bool {
+            units.is_pixels() || units.is_stretch()
+        }
+
         let width = self.width(store).unwrap_or(Units::Stretch(1.0));
         let height = self.height(store).unwrap_or(Units::Stretch(1.0));
-        (width.is_pixels() || width.is_stretch()) && (height.is_pixels() || height.is_stretch())
+        let min_width = self.min_width(store).unwrap_or(Units::Pixels(0.0));
+        let max_width = self.max_width(store).unwrap_or(Units::Pixels(f32::MAX));
+        let min_height = self.min_height(store).unwrap_or(Units::Pixels(0.0));
+        let max_height = self.max_height(store).unwrap_or(Units::Pixels(f32::MAX));
+
+        stable(width)
+            && stable(height)
+            && stable(min_width)
+            && stable(max_width)
+            && stable(min_height)
+            && stable(max_height)
     }
 
     /// Finds the best ancestor to restart layout from for a node which has been marked as dirty.
@@ -382,10 +399,10 @@ pub(crate) trait NodeExt: Node {
     /// [restartable](NodeExt::is_restartable)), stopping at the first restartable ancestor or at the
     /// root of the tree.
     ///
-    /// An [absolutely-positioned](PositionType::Absolute) ancestor is also a valid stopping point:
-    /// it is taken out of its parent's flow, so its size cannot affect the parent's layout even when
-    /// it is [`Units::Auto`] sized. This keeps a relayout of e.g. an absolutely-positioned popup or
-    /// menu contained to that subtree instead of propagating up to the root.
+    /// An [absolutely-positioned](PositionType::Absolute) ancestor is taken out of its parent's flow,
+    /// so it does not affect the parent's size. However, its own position can depend on its size
+    /// (e.g. right/bottom anchoring), so relayout should restart from that absolute ancestor's parent
+    /// to recompute the absolute position.
     ///
     /// If the node is the root of the tree it is returned unchanged, so a call on the root performs
     /// a full layout pass.
@@ -406,10 +423,11 @@ pub(crate) trait NodeExt: Node {
 
         // Walk up while the current ancestor's size could affect its own parent.
         while let Some(parent) = root.parent(tree) {
-            // An absolutely-positioned node is out of its parent's flow, so its size never affects
-            // the parent's layout — stop here regardless of its own sizing.
+            // Absolutely-positioned nodes don't affect their parent's size, but their own
+            // position can depend on their size (e.g. right/bottom anchoring). Restart at the
+            // parent so absolute positioning is recomputed.
             if root.position_type(store).unwrap_or_default() == PositionType::Absolute {
-                break;
+                return parent;
             }
             if root.is_restartable(store) {
                 break;
