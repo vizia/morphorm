@@ -31,9 +31,8 @@ pub trait Node: Sized {
     ///
     /// The algorithm recurses down the tree in depth-first order and performs
     /// layout on every node in the restarted subtree. During incremental relayout,
-    /// the input node is treated as dirty and layout may restart from an ancestor
-    /// selected by [`NodeExt::find_relayout_root`]. Calling this on the tree root
-    /// still performs a full layout pass.
+    /// the input node is treated as dirty and layout may restart from an ancestor.
+    /// Calling this on the tree rootstill performs a full layout pass.
     ///
     /// # Arguments
     ///
