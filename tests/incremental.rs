@@ -145,6 +145,42 @@ fn incremental_restarts_at_stretch_ancestor() {
     assert_eq!(world.cache.bounds(child2).unwrap().posy, 180.0);
 }
 
+/// Calling incremental layout before any full/root pass should still produce valid results.
+/// Regression: non-root restart roots must not seed from uninitialized cached 0x0 bounds.
+#[test]
+fn incremental_before_first_full_layout_matches_full() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_layout_type(root, LayoutType::Column);
+
+    let parent = world.add(Some(root));
+    world.set_width(parent, Units::Pixels(400.0));
+    world.set_height(parent, Units::Pixels(400.0));
+    world.set_layout_type(parent, LayoutType::Column);
+
+    let a = world.add(Some(parent));
+    world.set_width(a, Units::Pixels(100.0));
+    world.set_height(a, Units::Pixels(100.0));
+
+    let b = world.add(Some(parent));
+    world.set_width(b, Units::Pixels(100.0));
+    world.set_height(b, Units::Pixels(100.0));
+
+    // No prior full/root layout here: run incremental directly from a non-root node.
+    incremental_layout(&mut world, a);
+    let incremental = snapshot(&world, &[root, parent, a, b]);
+
+    full_layout(&mut world, root);
+    let full = snapshot(&world, &[root, parent, a, b]);
+
+    assert_eq!(incremental, full);
+    assert_eq!(world.cache.bounds(b).unwrap().posy, 100.0);
+}
+
 /// If an absolutely-positioned ancestor is right/bottom anchored, changing its child size must
 /// restart at the absolute node's parent so the ancestor is repositioned.
 #[test]

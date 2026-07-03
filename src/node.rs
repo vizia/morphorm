@@ -32,7 +32,7 @@ pub trait Node: Sized {
     /// The algorithm recurses down the tree in depth-first order and performs
     /// layout on every node in the restarted subtree. During incremental relayout,
     /// the input node is treated as dirty and layout may restart from an ancestor.
-    /// Calling this on the tree rootstill performs a full layout pass.
+    /// Calling this on the tree root still performs a full layout pass.
     ///
     /// # Arguments
     ///
@@ -55,7 +55,17 @@ pub trait Node: Sized {
         //
         // When `self` is the root of the tree the returned ancestor is `self`, so calling
         // `root.layout(..)` performs a full layout pass exactly as before.
-        let root = self.find_relayout_root(tree, store);
+        let mut root = self.find_relayout_root(tree, store);
+
+        // If incremental relayout restarts from a non-root ancestor before any prior layout pass,
+        // some cache implementations may still hold default 0x0 bounds. In that case, fall back
+        // to the tree root so constraints are computed from source properties instead of stale
+        // cache values.
+        if root.parent(tree).is_some() && cache.width(root) == 0.0 && cache.height(root) == 0.0 {
+            while let Some(parent) = root.parent(tree) {
+                root = parent;
+            }
+        }
 
         // Determine the size of the restart root.
         //
