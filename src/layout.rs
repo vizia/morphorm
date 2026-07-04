@@ -75,6 +75,7 @@ fn same_f32(a: f32, b: f32) -> bool {
     a.to_bits() == b.to_bits()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn clamp_with_aspect_ratio(
     parent_layout_type: LayoutType,
     aspect_ratio: Option<f32>,
