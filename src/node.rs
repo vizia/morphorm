@@ -134,6 +134,13 @@ pub trait Node: Sized {
     /// Returns the desired height of the node.
     fn height(&self, store: &Self::Store) -> Option<Units>;
 
+    /// Returns an optional preferred aspect ratio (`width / height`) for the node.
+    ///
+    /// The layout algorithm may use this to derive an auto axis from the resolved axis.
+    fn aspect_ratio(&self, _store: &Self::Store) -> Option<f32> {
+        None
+    }
+
     /// Returns the desired left-side space of the node.
     fn left(&self, store: &Self::Store) -> Option<Units>;
 

@@ -111,6 +111,11 @@ impl World {
         self.store.height.insert(entity, value);
     }
 
+    /// Set the preferred aspect ratio (`width / height`) of the given entity.
+    pub fn set_aspect_ratio(&mut self, entity: Entity, value: f32) {
+        self.store.aspect_ratio.insert(entity, value);
+    }
+
     /// Set the desired left space of the given entity.
     pub fn set_left(&mut self, entity: Entity, value: Units) {
         self.store.left.insert(entity, value);
