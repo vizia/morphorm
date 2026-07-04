@@ -31,6 +31,7 @@ pub struct Store {
 
     pub width: SecondaryMap<Entity, Units>,
     pub height: SecondaryMap<Entity, Units>,
+    pub aspect_ratio: SecondaryMap<Entity, f32>,
     pub min_width: SecondaryMap<Entity, Units>,
     pub max_width: SecondaryMap<Entity, Units>,
     pub min_height: SecondaryMap<Entity, Units>,
@@ -74,6 +75,7 @@ impl Store {
         self.bottom.remove(entity);
         self.width.remove(entity);
         self.height.remove(entity);
+        self.aspect_ratio.remove(entity);
         self.min_width.remove(entity);
         self.max_width.remove(entity);
         self.min_height.remove(entity);
@@ -108,6 +110,7 @@ impl Store {
         self.bottom.clear();
         self.width.clear();
         self.height.clear();
+        self.aspect_ratio.clear();
         self.min_width.clear();
         self.max_width.clear();
         self.min_height.clear();

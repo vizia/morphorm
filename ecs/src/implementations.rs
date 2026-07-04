@@ -59,6 +59,10 @@ impl Node for Entity {
         store.height.get(*self).copied()
     }
 
+    fn aspect_ratio(&self, store: &Store) -> Option<f32> {
+        store.aspect_ratio.get(*self).copied()
+    }
+
     fn left(&self, store: &Store) -> Option<Units> {
         store.left.get(*self).copied()
     }

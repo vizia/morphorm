@@ -75,6 +75,70 @@ fn same_f32(a: f32, b: f32) -> bool {
     a.to_bits() == b.to_bits()
 }
 
+#[allow(clippy::too_many_arguments)]
+fn clamp_with_aspect_ratio(
+    parent_layout_type: LayoutType,
+    aspect_ratio: Option<f32>,
+    main_is_auto: bool,
+    cross_is_auto: bool,
+    min_main: f32,
+    max_main: f32,
+    min_cross: f32,
+    max_cross: f32,
+    computed_main: &mut f32,
+    computed_cross: &mut f32,
+) {
+    *computed_main = computed_main.max(min_main).min(max_main);
+    *computed_cross = computed_cross.max(min_cross).min(max_cross);
+
+    let Some(ratio) = aspect_ratio else {
+        return;
+    };
+
+    if !ratio.is_finite() || ratio <= 0.0 {
+        return;
+    }
+
+    let derive_main_from_cross = |cross: f32| match parent_layout_type {
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => cross * ratio,
+        LayoutType::Column => cross / ratio,
+    };
+
+    let derive_cross_from_main = |main: f32| match parent_layout_type {
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => main / ratio,
+        LayoutType::Column => main * ratio,
+    };
+
+    match (main_is_auto, cross_is_auto) {
+        (true, false) => {
+            *computed_main = derive_main_from_cross(*computed_cross);
+        }
+
+        (false, true) => {
+            *computed_cross = derive_cross_from_main(*computed_main);
+        }
+
+        (true, true) => {
+            if *computed_main > 0.0 {
+                *computed_cross = derive_cross_from_main(*computed_main);
+            } else if *computed_cross > 0.0 {
+                *computed_main = derive_main_from_cross(*computed_cross);
+            } else if min_main > 0.0 {
+                *computed_main = min_main;
+                *computed_cross = derive_cross_from_main(*computed_main);
+            } else if min_cross > 0.0 {
+                *computed_cross = min_cross;
+                *computed_main = derive_main_from_cross(*computed_cross);
+            }
+        }
+
+        (false, false) => {}
+    }
+
+    *computed_main = computed_main.max(min_main).min(max_main);
+    *computed_cross = computed_cross.max(min_cross).min(max_cross);
+}
+
 fn alignment_fractions(alignment: Alignment) -> (f32, f32) {
     // Convert alignment into normalized horizontal/vertical fractions in [0, 1].
     // These fractions are later multiplied by available free space.
@@ -1186,6 +1250,7 @@ where
     // The desired main-axis and cross-axis sizes of the node.
     let main = node.main(store, parent_layout_type);
     let cross = node.cross(store, parent_layout_type);
+    let aspect_ratio = node.aspect_ratio(store).filter(|ratio| ratio.is_finite() && *ratio > 0.0);
 
     let mut min_main = if main.is_stretch() {
         DEFAULT_MIN
@@ -1258,8 +1323,18 @@ where
         }
     }
 
-    computed_main = computed_main.max(min_main).min(max_main);
-    computed_cross = computed_cross.max(min_cross).min(max_cross);
+    clamp_with_aspect_ratio(
+        parent_layout_type,
+        aspect_ratio,
+        main.is_auto(),
+        cross.is_auto(),
+        min_main,
+        max_main,
+        min_cross,
+        max_cross,
+        &mut computed_main,
+        &mut computed_cross,
+    );
 
     if layout_type == LayoutType::Grid {
         return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
@@ -1432,8 +1507,18 @@ where
         }
     }
 
-    computed_main = computed_main.max(min_main).min(max_main);
-    computed_cross = computed_cross.max(min_cross).min(max_cross);
+    clamp_with_aspect_ratio(
+        parent_layout_type,
+        aspect_ratio,
+        main.is_auto(),
+        cross.is_auto(),
+        min_main,
+        max_main,
+        min_cross,
+        max_cross,
+        &mut computed_main,
+        &mut computed_cross,
+    );
 
     let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
         (computed_main, computed_cross)
@@ -1514,8 +1599,18 @@ where
         }
     }
 
-    computed_main = computed_main.max(min_main).min(max_main);
-    computed_cross = computed_cross.max(min_cross).min(max_cross);
+    clamp_with_aspect_ratio(
+        parent_layout_type,
+        aspect_ratio,
+        main.is_auto(),
+        cross.is_auto(),
+        min_main,
+        max_main,
+        min_cross,
+        max_cross,
+        &mut computed_main,
+        &mut computed_cross,
+    );
 
     // Compute flexible space and size on the main axis for relative children.
     if !main_axis.is_empty() {
@@ -1666,8 +1761,18 @@ where
         }
     }
 
-    computed_main = computed_main.max(min_main).min(max_main);
-    computed_cross = computed_cross.max(min_cross).min(max_cross);
+    clamp_with_aspect_ratio(
+        parent_layout_type,
+        aspect_ratio,
+        main.is_auto(),
+        cross.is_auto(),
+        min_main,
+        max_main,
+        min_cross,
+        max_cross,
+        &mut computed_main,
+        &mut computed_cross,
+    );
 
     let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
         (computed_main, computed_cross)
