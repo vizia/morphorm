@@ -511,6 +511,81 @@ where
         }
     }
 
+    // === Auto column measurement pass ===
+    // For each Auto column, determine its natural width from single-span children in that column.
+    // Only single-span children contribute; multi-span children are not considered.
+    if grid_cols.iter().any(|col| matches!(col, Auto)) {
+        let mut max_col_widths = vec![0.0f32; grid_cols.len()];
+
+        for child in node
+            .children(tree)
+            .filter(|child| child.visible(store))
+            .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
+        {
+            let cs = child.column_start(store).unwrap_or_default();
+            let cspan = child.column_span(store).unwrap_or(1);
+
+            if cspan == 1 && cs < grid_cols.len() && matches!(grid_cols[cs], Auto) {
+                // Lay out with zero parent size to measure the child's natural (min-content) width.
+                // Use the returned Size rather than cache.width(), because layout() stores
+                // the child's own bounds only after the parent calls set_rect.
+                let size = layout(child, LayoutType::Row, 0.0, 0.0, cache, tree, store, sublayout);
+                max_col_widths[cs] = max_col_widths[cs].max(size.main);
+            }
+        }
+
+        for (i, col) in grid_cols.iter().enumerate() {
+            if matches!(col, Auto) {
+                computed_grid_cols[2 * i + 1] = max_col_widths[i];
+            }
+        }
+    }
+
+    // === Auto row measurement pass ===
+    // For each Auto row, determine its natural height from single-span children in that row.
+    // Column widths from the Auto pass above (and Pixels/Percentage) are used so that children
+    // with Auto height can measure themselves against their correct cell width.
+    // Stretch columns are still 0 at this point, which gives a conservative (min-content) height.
+    if grid_rows.iter().any(|row| matches!(row, Auto)) {
+        let mut max_row_heights = vec![0.0f32; grid_rows.len()];
+
+        for child in node
+            .children(tree)
+            .filter(|child| child.visible(store))
+            .filter(|child| child.position_type(store).unwrap_or_default() == PositionType::Relative)
+        {
+            let rs = child.row_start(store).unwrap_or_default();
+            let rspan = child.row_span(store).unwrap_or(1);
+
+            if rspan == 1 && rs < grid_rows.len() && matches!(grid_rows[rs], Auto) {
+                let cs = child.column_start(store).unwrap_or_default();
+                let cspan = child.column_span(store).unwrap_or(1);
+
+                // Sum the column widths and inter-column gaps for the child's cell span
+                // from the pre-prefix-sum computed_grid_cols (indices 2*cs+1 .. 2*(cs+cspan)-1).
+                let col_from = 2 * cs + 1;
+                let col_to = 2 * (cs + cspan) - 1;
+                let cell_width: f32 = if col_from <= col_to && col_to < computed_grid_cols.len() {
+                    computed_grid_cols[col_from..=col_to].iter().sum()
+                } else {
+                    0.0
+                };
+
+                // Lay out with the known cell width and zero height to measure natural height.
+                // Use the returned Size rather than cache.height() (layout() does not write
+                // the node's own bounds; that is the parent's responsibility via set_rect).
+                let size = layout(child, LayoutType::Row, cell_width, 0.0, cache, tree, store, sublayout);
+                max_row_heights[rs] = max_row_heights[rs].max(size.cross);
+            }
+        }
+
+        for (j, row) in grid_rows.iter().enumerate() {
+            if matches!(row, Auto) {
+                computed_grid_rows[2 * j + 1] = max_row_heights[j];
+            }
+        }
+    }
+
     let mut width_sum: f32 = computed_grid_cols.iter().sum();
     let mut height_sum: f32 = computed_grid_rows.iter().sum();
 
