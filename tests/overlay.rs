@@ -153,3 +153,36 @@ fn overlay_preserves_absolute_child_positioning() {
     assert_eq!(world.cache.bounds(relative), Some(&Rect { posx: 0.0, posy: 0.0, width: 50.0, height: 50.0 }));
     assert_eq!(world.cache.bounds(absolute), Some(&Rect { posx: 20.0, posy: 30.0, width: 60.0, height: 70.0 }));
 }
+
+#[test]
+fn overlay_row_child_uses_horizontal_axis_for_stretch_distribution() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(1920.0));
+    world.set_height(root, Units::Pixels(1000.0));
+    world.set_layout_type(root, LayoutType::Overlay);
+
+    let row = world.add(Some(root));
+    world.set_width(row, Units::Stretch(1.0));
+    world.set_height(row, Units::Stretch(1.0));
+    world.set_layout_type(row, LayoutType::Row);
+    world.set_horizontal_gap(row, Units::Pixels(16.0));
+
+    let sidebar = world.add(Some(row));
+    world.set_width(sidebar, Units::Pixels(218.0));
+
+    let stage = world.add(Some(row));
+    world.set_width(stage, Units::Stretch(1.0));
+
+    let queue = world.add(Some(row));
+    world.set_width(queue, Units::Pixels(282.0));
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(world.cache.width(&row), 1920.0);
+    assert_eq!(world.cache.width(&sidebar), 218.0);
+    assert_eq!(world.cache.width(&stage), 1388.0);
+    assert_eq!(world.cache.posx(&queue), 1638.0);
+    assert_eq!(world.cache.width(&queue), 282.0);
+}
