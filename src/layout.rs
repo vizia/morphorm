@@ -75,6 +75,19 @@ fn same_f32(a: f32, b: f32) -> bool {
     a.to_bits() == b.to_bits()
 }
 
+#[inline]
+fn is_horizontal(layout_type: LayoutType) -> bool {
+    match layout_type {
+        LayoutType::Row | LayoutType::Overlay | LayoutType::Grid => true,
+        LayoutType::Column => false,
+    }
+}
+
+#[inline]
+fn same_axis_direction(a: LayoutType, b: LayoutType) -> bool {
+    is_horizontal(a) == is_horizontal(b)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn clamp_with_aspect_ratio(
     parent_layout_type: LayoutType,
@@ -767,8 +780,11 @@ where
 
     // Convert parent-provided main/cross (which are in parent layout axes)
     // into this node's layout axes.
-    let (parent_main, parent_cross) =
-        if parent_layout_type == layout_type { (parent_main, parent_cross) } else { (parent_cross, parent_main) };
+    let (parent_main, parent_cross) = if same_axis_direction(parent_layout_type, layout_type) {
+        (parent_main, parent_cross)
+    } else {
+        (parent_cross, parent_main)
+    };
 
     let padding_main_before = node.padding_main_before(store, layout_type).to_px(parent_main, 0.0);
     let padding_main_after = node.padding_main_after(store, layout_type).to_px(parent_main, 0.0);
@@ -1276,7 +1292,7 @@ where
         cache.set_rect(abs_child.node, layout_type, child_main_pos, child_cross_pos, abs_child.main, abs_child.cross);
     }
 
-    if parent_layout_type == layout_type {
+    if same_axis_direction(parent_layout_type, layout_type) {
         Size { main: final_main, cross: final_cross }
     } else {
         Size { main: final_cross, cross: final_main }
@@ -1425,7 +1441,7 @@ where
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
     // i.e. if the parent layout type and the node layout type are different, swap the main and the cross axes.
-    let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
+    let (mut parent_main, mut parent_cross) = if same_axis_direction(parent_layout_type, layout_type) {
         (computed_main, computed_cross)
     } else {
         (computed_cross, computed_main)
@@ -1550,7 +1566,7 @@ where
     // Determine auto main and cross size from space and size of children.
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1558,7 +1574,7 @@ where
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && main_sum != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1566,7 +1582,7 @@ where
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross = main_sum + padding_main_before + padding_main_after;
@@ -1574,7 +1590,7 @@ where
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && cross_max != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && cross_max != 0.0 {
                 max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross = main_sum + padding_main_before + padding_main_after;
@@ -1595,7 +1611,7 @@ where
         &mut computed_cross,
     );
 
-    let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
+    let (mut parent_main, mut parent_cross) = if same_axis_direction(parent_layout_type, layout_type) {
         (computed_main, computed_cross)
     } else {
         (computed_cross, computed_main)
@@ -1642,7 +1658,7 @@ where
     // Determine auto main and cross size from space and size of children.
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1650,7 +1666,7 @@ where
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && main_sum != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1658,7 +1674,7 @@ where
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross = main_sum + padding_main_before + padding_main_after;
@@ -1666,7 +1682,7 @@ where
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && cross_max != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && cross_max != 0.0 {
                 max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross = main_sum + padding_main_before + padding_main_after;
@@ -1804,7 +1820,7 @@ where
     // Determine auto main and cross size from space and size of children.
     if num_parent_directed_children != 0 {
         if main.is_auto() || node.min_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_main = main_sum + padding_main_before + padding_main_after;
             } else {
                 min_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1812,7 +1828,7 @@ where
         }
 
         if node.max_main(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && main_sum != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && main_sum != 0.0 {
                 max_main = main_sum + padding_main_before + padding_main_after;
             } else if cross_max != 0.0 {
                 max_main = cross_max + padding_cross_before + padding_cross_after;
@@ -1820,7 +1836,7 @@ where
         }
 
         if cross.is_auto() || node.min_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type {
+            if same_axis_direction(parent_layout_type, layout_type) {
                 min_cross = cross_max + padding_cross_before + padding_cross_after;
             } else {
                 min_cross = main_sum + padding_main_before + padding_main_after;
@@ -1828,7 +1844,7 @@ where
         }
 
         if node.max_cross(store, parent_layout_type).is_auto() {
-            if parent_layout_type == layout_type && cross_max != 0.0 {
+            if same_axis_direction(parent_layout_type, layout_type) && cross_max != 0.0 {
                 max_cross = cross_max + padding_cross_before + padding_cross_after;
             } else if main_sum != 0.0 {
                 max_cross = main_sum + padding_main_before + padding_main_after;
@@ -1849,7 +1865,7 @@ where
         &mut computed_cross,
     );
 
-    let (mut parent_main, mut parent_cross) = if parent_layout_type == layout_type {
+    let (mut parent_main, mut parent_cross) = if same_axis_direction(parent_layout_type, layout_type) {
         (computed_main, computed_cross)
     } else {
         (computed_cross, computed_main)
