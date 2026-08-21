@@ -27,3 +27,7 @@ doctest = false
 [[bench]]
 name = "stack"
 harness = false
+
+[[bench]]
+name = "layout_modes"
+harness = false

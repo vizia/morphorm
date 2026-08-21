@@ -1463,17 +1463,17 @@ where
     let padding_cross_before = node.padding_cross_before(store, layout_type).to_px(parent_cross, 0.0);
     let padding_cross_after = node.padding_cross_after(store, layout_type).to_px(parent_cross, 0.0);
 
+    let main_between = if relative_children.len() > 1 { node.main_between(store, layout_type) } else { Auto };
     let min_main_between = node.min_main_between(store, layout_type);
     let max_main_between = node.max_main_between(store, layout_type);
 
     parent_main = parent_main - padding_main_before - padding_main_after;
     parent_cross = parent_cross - padding_cross_before - padding_cross_after;
 
-    let is_row_rtl =
-        layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let direction = node.direction(store).unwrap_or_default();
+    let is_row_rtl = layout_type == LayoutType::Row && direction == Direction::RightToLeft;
 
-    let is_column_rtl =
-        layout_type == LayoutType::Column && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let is_column_rtl = layout_type == LayoutType::Column && direction == Direction::RightToLeft;
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1496,9 +1496,7 @@ where
         let mut computed_child_main_after = 0.0f32;
 
         if last != Some(index) {
-            let child_main_after = node.main_between(store, layout_type);
-
-            if let Stretch(factor) = child_main_after {
+            if let Stretch(factor) = main_between {
                 main_flex_sum += factor;
                 main_axis.push(StretchItem::new(
                     index,
@@ -1509,7 +1507,7 @@ where
                 ));
             } else {
                 computed_child_main_after =
-                    child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
+                    main_between.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
             }
         }
 
@@ -1974,11 +1972,16 @@ where
 
     let mut alignment = node.alignment(store).unwrap_or_default();
 
-    if matches!(layout_type, LayoutType::Row | LayoutType::Column)
-        && node.direction(store).unwrap_or_default() == Direction::RightToLeft
-    {
+    if matches!(layout_type, LayoutType::Row | LayoutType::Column) && direction == Direction::RightToLeft {
         alignment = flip_alignment_horizontal(alignment);
     }
+
+    let (horizontal_alignment, vertical_alignment) = alignment_fractions(alignment);
+    let (main_alignment, cross_alignment) = if layout_type == LayoutType::Row {
+        (horizontal_alignment, vertical_alignment)
+    } else {
+        (vertical_alignment, horizontal_alignment)
+    };
 
     // Set size and position of children in the cache.
     let mut main_pos = padding_main_before;
@@ -2013,24 +2016,8 @@ where
             }
 
             PositionType::Relative => {
-                let (mut child_main_pos, mut child_cross_pos) = match alignment {
-                    Alignment::TopLeft => (0.0, 0.0),
-                    Alignment::TopCenter => (0.0, 0.5),
-                    Alignment::TopRight => (0.0, 1.0),
-                    Alignment::Left => (0.5, 0.0),
-                    Alignment::Center => (0.5, 0.5),
-                    Alignment::Right => (0.5, 1.0),
-                    Alignment::BottomLeft => (1.0, 0.0),
-                    Alignment::BottomCenter => (1.0, 0.5),
-                    Alignment::BottomRight => (1.0, 1.0),
-                };
-
-                if layout_type == LayoutType::Row {
-                    std::mem::swap(&mut child_main_pos, &mut child_cross_pos);
-                }
-
-                child_main_pos *= parent_main - main_sum;
-                child_cross_pos *= parent_cross - child.cross;
+                let child_main_pos = main_alignment * (parent_main - main_sum);
+                let child_cross_pos = cross_alignment * (parent_cross - child.cross);
 
                 cache.set_rect(
                     child.node,
