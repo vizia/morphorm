@@ -48,6 +48,8 @@ pub trait Node: Sized {
         store: &Self::Store,
         sublayout: &mut Self::SubLayout<'_>,
     ) {
+        self.invalidate_layout_cache(cache, tree);
+
         // Incremental layout: `self` is the node which has been marked as dirty. Rather than
         // always laying out from `self`, find the best ancestor to restart layout from based on
         // whether the change can affect the ancestor. Layout is then performed from that ancestor,
@@ -93,6 +95,24 @@ pub trait Node: Sized {
         };
 
         layout(root, layout_type, parent_main, parent_cross, cache, tree, store, sublayout);
+    }
+
+    /// Invalidates cached layout for this subtree and its ancestor path.
+    ///
+    /// Call this for every dirty node before collapsing multiple dirty nodes into a shared
+    /// layout pass. [`layout`](Node::layout) calls it automatically for its input node.
+    fn invalidate_layout_cache<C: Cache<Node = Self>>(&self, cache: &mut C, tree: &Self::Tree) {
+        let mut pending = vec![self];
+        while let Some(node) = pending.pop() {
+            cache.invalidate_cached_layout(node);
+            pending.extend(node.children(tree));
+        }
+
+        let mut parent = self.parent(tree);
+        while let Some(node) = parent {
+            cache.invalidate_cached_layout(node);
+            parent = node.parent(tree);
+        }
     }
 
     /// Returns a key which can be used to set/get computed layout data from the [`cache`](crate::Cache).
