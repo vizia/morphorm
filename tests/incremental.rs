@@ -1,5 +1,6 @@
 use morphorm::*;
 use morphorm_ecs::*;
+use std::{cell::Cell, rc::Rc};
 
 /// Collect the computed bounds of the given entities into a comparable snapshot.
 fn snapshot(world: &World, entities: &[Entity]) -> Vec<Option<Rect>> {
@@ -285,4 +286,45 @@ fn incremental_on_root_is_full_layout() {
 
     assert_eq!(world.cache.bounds(a), Some(&Rect { posx: 0.0, posy: 0.0, width: 100.0, height: 150.0 }));
     assert_eq!(world.cache.bounds(b), Some(&Rect { posx: 100.0, posy: 0.0, width: 120.0, height: 150.0 }));
+}
+
+#[test]
+fn incremental_reuses_unchanged_sibling_subtree() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(600.0));
+    world.set_height(root, Units::Pixels(600.0));
+    world.set_alignment(root, Alignment::TopLeft);
+    world.set_layout_type(root, LayoutType::Column);
+
+    let changed = world.add(Some(root));
+    world.set_width(changed, Units::Pixels(300.0));
+    world.set_height(changed, Units::Pixels(100.0));
+
+    let sibling = world.add(Some(root));
+    world.set_width(sibling, Units::Pixels(300.0));
+    world.set_height(sibling, Units::Pixels(100.0));
+
+    let measurements = Rc::new(Cell::new(0));
+    let content = world.add(Some(sibling));
+    world.set_width(content, Units::Auto);
+    world.set_height(content, Units::Auto);
+    world.set_content_size(content, {
+        let measurements = Rc::clone(&measurements);
+        move |_, _, _| {
+            measurements.set(measurements.get() + 1);
+            (50.0, 20.0)
+        }
+    });
+
+    full_layout(&mut world, root);
+    let measurements_after_full_layout = measurements.get();
+
+    world.set_height(changed, Units::Pixels(120.0));
+    incremental_layout(&mut world, changed);
+
+    assert_eq!(measurements.get(), measurements_after_full_layout);
+    assert_eq!(world.cache.bounds(sibling).unwrap().posy, 120.0);
+    assert_eq!(world.cache.bounds(content).unwrap().width, 50.0);
 }

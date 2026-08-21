@@ -1,7 +1,8 @@
 use smallvec::SmallVec;
 
 use crate::{
-    Alignment, Cache, CacheExt, Direction, LayoutType, LayoutWrap, Node, NodeExt, PositionType, Size, Units, Units::*,
+    Alignment, Cache, CacheExt, CachedLayout, Direction, LayoutType, LayoutWrap, Node, NodeExt, PositionType, Size,
+    Units, Units::*,
 };
 
 const DEFAULT_MIN: f32 = -f32::MAX;
@@ -826,6 +827,9 @@ where
         max_main: f32,
         min_cross: f32,
         max_cross: f32,
+        last_layout_main: f32,
+        last_layout_cross: f32,
+        has_layout_constraints: bool,
     }
 
     // Phase 1: Compute sizes for all relative children.
@@ -856,6 +860,9 @@ where
                 max_main: max_main_px,
                 min_cross: min_cross_px,
                 max_cross: max_cross_px,
+                last_layout_main: 0.0,
+                last_layout_cross: 0.0,
+                has_layout_constraints: false,
             });
         } else {
             let size = layout(*child, layout_type, avail_main, avail_cross, cache, tree, store, sublayout);
@@ -868,6 +875,9 @@ where
                 max_main: max_main_px,
                 min_cross: min_cross_px,
                 max_cross: max_cross_px,
+                last_layout_main: avail_main,
+                last_layout_cross: avail_cross,
+                has_layout_constraints: true,
             });
         }
     }
@@ -986,6 +996,11 @@ where
             }
 
             for item in stretch_items.iter() {
+                if items[item.index].cross_is_stretch {
+                    items[item.index].main = item.computed;
+                    continue;
+                }
+
                 let size = layout(
                     relative_children[item.index],
                     layout_type,
@@ -998,6 +1013,9 @@ where
                 );
                 items[item.index].main = size.main;
                 items[item.index].cross = size.cross;
+                items[item.index].last_layout_main = item.computed;
+                items[item.index].last_layout_cross = avail_cross;
+                items[item.index].has_layout_constraints = true;
             }
         }
     }
@@ -1033,10 +1051,21 @@ where
             for i in start..end {
                 if items[i].cross_is_stretch {
                     let child = relative_children[i];
+                    let layout_main = items[i].main;
                     let clamped_cross = target_cross.clamp(items[i].min_cross, items[i].max_cross);
-                    let size = layout(child, layout_type, items[i].main, clamped_cross, cache, tree, store, sublayout);
+                    if items[i].has_layout_constraints
+                        && same_f32(items[i].last_layout_main, layout_main)
+                        && same_f32(items[i].last_layout_cross, clamped_cross)
+                    {
+                        continue;
+                    }
+
+                    let size = layout(child, layout_type, layout_main, clamped_cross, cache, tree, store, sublayout);
                     items[i].main = size.main;
                     items[i].cross = size.cross;
+                    items[i].last_layout_main = layout_main;
+                    items[i].last_layout_cross = clamped_cross;
+                    items[i].has_layout_constraints = true;
                 }
             }
         };
@@ -1335,6 +1364,18 @@ where
     N: Node,
     C: Cache<Node = N>,
 {
+    let input_parent_main = parent_main;
+    let input_parent_cross = parent_cross;
+
+    if let Some(cached) = cache.cached_layout(node) {
+        if cached.parent_layout_type == parent_layout_type
+            && same_f32(cached.parent_main, parent_main)
+            && same_f32(cached.parent_cross, parent_cross)
+        {
+            return Size { main: cached.main, cross: cached.cross };
+        }
+    }
+
     // The layout type of the node. Determines the main and cross axes of the children.
     let layout_type = node.layout_type(store).unwrap_or_default();
 
@@ -1428,15 +1469,31 @@ where
     );
 
     if layout_type == LayoutType::Grid {
-        return layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        let size = layout_grid(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        cache.set_cached_layout(
+            node,
+            CachedLayout { parent_layout_type, parent_main, parent_cross, main: size.main, cross: size.cross },
+        );
+        return size;
     }
 
     if layout_type == LayoutType::Overlay {
-        return layout_overlay(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        let size =
+            layout_overlay(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        cache.set_cached_layout(
+            node,
+            CachedLayout { parent_layout_type, parent_main, parent_cross, main: size.main, cross: size.cross },
+        );
+        return size;
     }
 
     if node.wrap(store).unwrap_or_default() == LayoutWrap::Wrap {
-        return layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        let size = layout_wrap(node, parent_layout_type, computed_main, computed_cross, cache, tree, store, sublayout);
+        cache.set_cached_layout(
+            node,
+            CachedLayout { parent_layout_type, parent_main, parent_cross, main: size.main, cross: size.cross },
+        );
+        return size;
     }
 
     // Determine the parent_main/cross size to pass to the children based on the layout type of the parent and the node.
@@ -1463,17 +1520,17 @@ where
     let padding_cross_before = node.padding_cross_before(store, layout_type).to_px(parent_cross, 0.0);
     let padding_cross_after = node.padding_cross_after(store, layout_type).to_px(parent_cross, 0.0);
 
+    let main_between = if relative_children.len() > 1 { node.main_between(store, layout_type) } else { Auto };
     let min_main_between = node.min_main_between(store, layout_type);
     let max_main_between = node.max_main_between(store, layout_type);
 
     parent_main = parent_main - padding_main_before - padding_main_after;
     parent_cross = parent_cross - padding_cross_before - padding_cross_after;
 
-    let is_row_rtl =
-        layout_type == LayoutType::Row && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let direction = node.direction(store).unwrap_or_default();
+    let is_row_rtl = layout_type == LayoutType::Row && direction == Direction::RightToLeft;
 
-    let is_column_rtl =
-        layout_type == LayoutType::Column && node.direction(store).unwrap_or_default() == Direction::RightToLeft;
+    let is_column_rtl = layout_type == LayoutType::Column && direction == Direction::RightToLeft;
 
     if is_row_rtl {
         relative_children.reverse();
@@ -1496,9 +1553,7 @@ where
         let mut computed_child_main_after = 0.0f32;
 
         if last != Some(index) {
-            let child_main_after = node.main_between(store, layout_type);
-
-            if let Stretch(factor) = child_main_after {
+            if let Stretch(factor) = main_between {
                 main_flex_sum += factor;
                 main_axis.push(StretchItem::new(
                     index,
@@ -1509,7 +1564,7 @@ where
                 ));
             } else {
                 computed_child_main_after =
-                    child_main_after.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
+                    main_between.to_px_clamped(parent_main, 0.0, min_main_between, max_main_between);
             }
         }
 
@@ -1974,11 +2029,16 @@ where
 
     let mut alignment = node.alignment(store).unwrap_or_default();
 
-    if matches!(layout_type, LayoutType::Row | LayoutType::Column)
-        && node.direction(store).unwrap_or_default() == Direction::RightToLeft
-    {
+    if matches!(layout_type, LayoutType::Row | LayoutType::Column) && direction == Direction::RightToLeft {
         alignment = flip_alignment_horizontal(alignment);
     }
+
+    let (horizontal_alignment, vertical_alignment) = alignment_fractions(alignment);
+    let (main_alignment, cross_alignment) = if layout_type == LayoutType::Row {
+        (horizontal_alignment, vertical_alignment)
+    } else {
+        (vertical_alignment, horizontal_alignment)
+    };
 
     // Set size and position of children in the cache.
     let mut main_pos = padding_main_before;
@@ -2013,24 +2073,8 @@ where
             }
 
             PositionType::Relative => {
-                let (mut child_main_pos, mut child_cross_pos) = match alignment {
-                    Alignment::TopLeft => (0.0, 0.0),
-                    Alignment::TopCenter => (0.0, 0.5),
-                    Alignment::TopRight => (0.0, 1.0),
-                    Alignment::Left => (0.5, 0.0),
-                    Alignment::Center => (0.5, 0.5),
-                    Alignment::Right => (0.5, 1.0),
-                    Alignment::BottomLeft => (1.0, 0.0),
-                    Alignment::BottomCenter => (1.0, 0.5),
-                    Alignment::BottomRight => (1.0, 1.0),
-                };
-
-                if layout_type == LayoutType::Row {
-                    std::mem::swap(&mut child_main_pos, &mut child_cross_pos);
-                }
-
-                child_main_pos *= parent_main - main_sum;
-                child_cross_pos *= parent_cross - child.cross;
+                let child_main_pos = main_alignment * (parent_main - main_sum);
+                let child_cross_pos = cross_alignment * (parent_cross - child.cross);
 
                 cache.set_rect(
                     child.node,
@@ -2046,5 +2090,16 @@ where
     }
 
     // Return the computed size, propagating it back up the tree.
-    Size { main: computed_main, cross: computed_cross }
+    let size = Size { main: computed_main, cross: computed_cross };
+    cache.set_cached_layout(
+        node,
+        CachedLayout {
+            parent_layout_type,
+            parent_main: input_parent_main,
+            parent_cross: input_parent_cross,
+            main: size.main,
+            cross: size.cross,
+        },
+    );
+    size
 }

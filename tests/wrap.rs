@@ -1,5 +1,42 @@
 use morphorm::*;
 use morphorm_ecs::*;
+use std::{cell::Cell, rc::Rc};
+
+#[test]
+fn wrap_stretch_child_does_not_repeat_identical_sublayout() {
+    let mut world = World::default();
+
+    let root = world.add(None);
+    world.set_width(root, Units::Pixels(300.0));
+    world.set_height(root, Units::Pixels(300.0));
+    world.set_layout_type(root, LayoutType::Row);
+    world.set_wrap(root, LayoutWrap::Wrap);
+    world.set_alignment(root, Alignment::TopLeft);
+
+    let card = world.add(Some(root));
+    world.set_width(card, Units::Stretch(1.0));
+    world.set_height(card, Units::Stretch(1.0));
+    world.set_min_width(card, Units::Pixels(100.0));
+    world.set_min_height(card, Units::Pixels(100.0));
+
+    let measurements = Rc::new(Cell::new(0));
+    let content = world.add(Some(card));
+    world.set_width(content, Units::Stretch(1.0));
+    world.set_height(content, Units::Auto);
+    world.set_content_size(content, {
+        let measurements = Rc::clone(&measurements);
+        move |_, width, _| {
+            measurements.set(measurements.get() + 1);
+            (width.unwrap_or_default(), 20.0)
+        }
+    });
+
+    root.layout(&mut world.cache, &world.tree, &world.store, &mut ());
+
+    assert_eq!(measurements.get(), 1);
+    assert_eq!(world.cache.bounds(card), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 100.0 }));
+    assert_eq!(world.cache.bounds(content), Some(&Rect { posx: 0.0, posy: 0.0, width: 300.0, height: 20.0 }));
+}
 
 #[test]
 fn wrap_row_basic() {

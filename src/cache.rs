@@ -1,5 +1,15 @@
 use crate::{LayoutType, Node};
 
+/// The inputs and result of a completed node layout, used to reuse unchanged subtrees.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CachedLayout {
+    pub parent_layout_type: LayoutType,
+    pub parent_main: f32,
+    pub parent_cross: f32,
+    pub main: f32,
+    pub cross: f32,
+}
+
 /// The `Cache` is a store which contains the computed size and position of nodes
 /// after a layout calculation.
 ///
@@ -20,6 +30,17 @@ pub trait Cache {
 
     /// Sets the cached position and size of the given node.
     fn set_bounds(&mut self, node: &Self::Node, posx: f32, posy: f32, width: f32, height: f32);
+
+    /// Returns the inputs and result of the node's most recent valid layout.
+    fn cached_layout(&self, _node: &Self::Node) -> Option<CachedLayout> {
+        None
+    }
+
+    /// Stores the inputs and result of a completed node layout.
+    fn set_cached_layout(&mut self, _node: &Self::Node, _layout: CachedLayout) {}
+
+    /// Invalidates a previously cached node layout.
+    fn invalidate_cached_layout(&mut self, _node: &Self::Node) {}
 }
 
 /// Helper trait for getting/setting node position/size in a direction agnostic way.

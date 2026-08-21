@@ -181,6 +181,7 @@ pub struct Rect {
 pub struct NodeCache {
     // Computed size and position of nodes.
     pub rect: SecondaryMap<Entity, Rect>,
+    pub layout: SecondaryMap<Entity, CachedLayout>,
 }
 
 impl NodeCache {
@@ -190,10 +191,12 @@ impl NodeCache {
 
     pub fn remove(&mut self, entity: Entity) {
         self.rect.remove(entity);
+        self.layout.remove(entity);
     }
 
     pub fn clear(&mut self) {
         self.rect.clear();
+        self.layout.clear();
     }
 
     pub fn bounds(&self, entity: Entity) -> Option<&Rect> {
@@ -244,10 +247,22 @@ impl Cache for NodeCache {
 
         0.0
     }
+
+    fn cached_layout(&self, node: &Self::Node) -> Option<CachedLayout> {
+        self.layout.get(*node).copied()
+    }
+
+    fn set_cached_layout(&mut self, node: &Self::Node, layout: CachedLayout) {
+        self.layout.insert(*node, layout);
+    }
+
+    fn invalidate_cached_layout(&mut self, node: &Self::Node) {
+        self.layout.remove(*node);
+    }
 }
 
 impl Default for NodeCache {
     fn default() -> Self {
-        Self { rect: SecondaryMap::new() }
+        Self { rect: SecondaryMap::new(), layout: SecondaryMap::new() }
     }
 }
