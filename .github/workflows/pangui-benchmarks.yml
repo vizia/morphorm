@@ -1,0 +1,25 @@
+name: Pangui Benchmarks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  benchmark:
+    name: Generate benchmark report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libwayland-dev libxkbcommon-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo pangui-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pangui-benchmark-results
+          path: |
+            benches/pangui-results.md
+            target/criterion/Pangui/report

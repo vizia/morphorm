@@ -2,6 +2,16 @@
 
 Morphorm is a crate for efficiently determining the size and position of UI elements which are organized into a tree structure.
 
+## Benchmarks
+
+Run the Pangui fixture benchmarks and generate `benches/pangui-results.md` with:
+
+```sh
+cargo pangui-report
+```
+
+The command is implemented as a cross-platform Rust `xtask` and is also available through the manually triggered Pangui Benchmarks GitHub Actions workflow. Pass `--no-bench` to regenerate the Markdown from existing Criterion data, or `--output PATH` to choose another report path.
+
 ## Description
 
 Morphorm is a 'one-pass' algorithm which recurses down the layout tree (depth-first), and determines the position and size of nodes based on their parent and children. It can produce similar layouts to flexbox, but with fewer concepts that need to be learned.
