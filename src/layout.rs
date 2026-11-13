@@ -1890,9 +1890,7 @@ where
         child.cross = parent_cross.clamp(child_min_cross, child_max_cross);
     }
 
-    // Re-run relative children with their final resolved constraints so descendant
-    // layout uses the same dimensions that are ultimately cached for each child.
-    // Only rerun children that have descendants (skip leaf nodes).
+    // Rerun containers only when their sizes or limits depend on changed parent dimensions.
     for child in children
         .iter_mut()
         .filter(|child| child.node.position_type(store).unwrap_or_default() == PositionType::Relative)
@@ -1904,10 +1902,18 @@ where
         let target_main = if child_main_is_stretch { child.main } else { parent_main };
         let target_cross = if child_cross_is_stretch { child.cross } else { parent_cross };
 
-        if child.has_layout_constraints
-            && same_f32(child.last_layout_main, target_main)
-            && same_f32(child.last_layout_cross, target_cross)
-        {
+        let main_constraints_changed = !same_f32(child.last_layout_main, target_main)
+            && (child_main_is_stretch
+                || child.node.main(store, layout_type).is_percentage()
+                || child.node.min_main(store, layout_type).is_percentage()
+                || child.node.max_main(store, layout_type).is_percentage());
+        let cross_constraints_changed = !same_f32(child.last_layout_cross, target_cross)
+            && (child_cross_is_stretch
+                || child.node.cross(store, layout_type).is_percentage()
+                || child.node.min_cross(store, layout_type).is_percentage()
+                || child.node.max_cross(store, layout_type).is_percentage());
+
+        if child.has_layout_constraints && !main_constraints_changed && !cross_constraints_changed {
             continue;
         }
 
